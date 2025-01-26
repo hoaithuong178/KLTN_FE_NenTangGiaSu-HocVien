@@ -15,11 +15,11 @@ export interface IRoute {
 const publicRoutes: Array<IRoute> = [
     { path: '/', component: Home },
     { path: '/sign-in', component: SignIn },
-    { path: '*', component: NotFound },
     { path: '/posts', component: Posts },
     { path: '/tutors', component: Tutors },
     { path: '/faqs', component: Faqs },
     { path: '/contact', component: Contacts },
+    { path: '*', component: NotFound },
 ];
 
 const privateRoutes: Array<IRoute> = [];
