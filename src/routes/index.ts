@@ -1,6 +1,10 @@
+import Contacts from '../pages/Contacts';
+import Faqs from '../pages/Faqs';
 import Home from '../pages/Home';
 import NotFound from '../pages/NotFound';
+import Posts from '../pages/Posts';
 import SignIn from '../pages/SignIn';
+import Tutors from '../pages/Tutors';
 
 export interface IRoute {
     path: string;
@@ -12,6 +16,10 @@ const publicRoutes: Array<IRoute> = [
     { path: '/', component: Home },
     { path: '/sign-in', component: SignIn },
     { path: '*', component: NotFound },
+    { path: '/posts', component: Posts },
+    { path: '/tutors', component: Tutors },
+    { path: '/faqs', component: Faqs },
+    { path: '/contact', component: Contacts },
 ];
 
 const privateRoutes: Array<IRoute> = [];
