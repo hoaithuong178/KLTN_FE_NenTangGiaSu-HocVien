@@ -1,8 +1,14 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-    content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+module.exports = {
+    content: [
+        './src/**/*.{js,jsx,ts,tsx}', // Đảm bảo Tailwind quét các file trong src
+    ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                customYellow: '#FFC569', // Thêm màu tùy chỉnh
+            },
+        },
     },
     plugins: [],
 };
