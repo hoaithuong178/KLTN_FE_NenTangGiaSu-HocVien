@@ -1,4 +1,6 @@
+import ForgotPassword from '../pages/ForgotPassword';
 import Home from '../pages/Home';
+import NewPassword from '../pages/NewPassword';
 import NotFound from '../pages/NotFound';
 import NotifySuccess from '../pages/NotifySuccess';
 import VerifyOTP from '../pages/OTP';
@@ -18,6 +20,8 @@ const publicRoutes: Array<IRoute> = [
     { path: '/register', component: Register },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
+    { path: '/forgot-password', component: ForgotPassword },
+    { path: '/new-password', component: NewPassword },
 ];
 
 const privateRoutes: Array<IRoute> = [];
