@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Kein1 from '../assets/Kein.jpg';
-import Kein2 from '../assets/Kein.jpg';
-import Kein3 from '../assets/Kein.jpg';
+import { useEffect, useState } from 'react';
+import { default as Kein1, default as Kein2, default as Kein3 } from '../assets/Kein.jpg';
 import Facebook from '../assets/facebook.svg';
 import Google from '../assets/google.svg';
 const SignIn = () => {

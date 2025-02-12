@@ -1,7 +1,6 @@
-import React from 'react';
-import TutorCard from '../components/TutorCard';
 import tutorImage from '../assets/Kein.jpg';
 import ReviewCard from '../components/ReviewCard';
+import TutorCard from '../components/TutorCard';
 
 const LandingSection = () => {
     return (

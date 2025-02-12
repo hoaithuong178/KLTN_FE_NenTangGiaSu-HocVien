@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
