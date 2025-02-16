@@ -267,7 +267,7 @@ const Register: React.FC = () => {
                 <Text size="small" color="text-gray-500">
                     Đã có tài khoản?{' '}
                 </Text>
-                <a href="/login">
+                <a href="/sign-in">
                     <Text size="small" color="text-blue-500" underline>
                         Đăng nhập
                     </Text>
