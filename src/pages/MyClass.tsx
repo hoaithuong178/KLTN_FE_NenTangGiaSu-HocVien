@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import TopNavbar from '../components/TopNavbar';
+import React, { useEffect, useState } from 'react';
 
-const Faqs: React.FC = () => {
+const MyClass: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         // Kiểm tra trạng thái từ localStorage
         const storedState = localStorage.getItem('navbarExpanded');
@@ -33,4 +33,4 @@ const Faqs: React.FC = () => {
     );
 };
 
-export default Faqs;
+export default MyClass;
