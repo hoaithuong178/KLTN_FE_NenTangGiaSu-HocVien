@@ -128,7 +128,7 @@ const Post: React.FC = () => {
     const bgColors = ['#e3f5ef', '#fadfdf', '#FDEDD7'];
 
     return (
-        <div className="absolute top-0 left-0 flex h-screen w-screen">
+        <div className="absolute top-0 left-0 flex h-screen w-screen bg-white z-10">
             {/* Sử dụng Navbar với các props */}
             <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
             <TopNavbar />
