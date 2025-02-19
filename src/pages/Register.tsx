@@ -263,11 +263,11 @@ const Register: React.FC = () => {
             <TitleText level={1} className="text-center mt-8" color="text-customYellow">
                 Đăng ký tài khoản TeachMe.vn
             </TitleText>
-            <div className="flex justify-center items-center mt-4">
+            <div className="text-center">
                 <Text size="small" color="text-gray-500">
-                    Đã có tài khoản?
+                    Đã có tài khoản?{' '}
                 </Text>
-                <a href="/login" className="ml-2">
+                <a href="/sign-in">
                     <Text size="small" color="text-blue-500" underline>
                         Đăng nhập
                     </Text>
