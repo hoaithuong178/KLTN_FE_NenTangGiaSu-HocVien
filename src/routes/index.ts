@@ -3,6 +3,7 @@ import Contacts from '../pages/Contacts';
 import Dashboard from '../pages/Dashboard';
 import Faqs from '../pages/Faqs';
 import ForgotPassword from '../pages/ForgotPassword';
+import Home from '../pages/Home';
 import MyClass from '../pages/MyClass';
 import NewPassword from '../pages/NewPassword';
 import NotFound from '../pages/NotFound';
@@ -21,7 +22,7 @@ export interface IRoute {
 }
 
 const publicRoutes: Array<IRoute> = [
-    { path: '/', component: Post },
+    { path: '/', component: Home },
     { path: '/sign-in', component: SignIn },
     { path: '/posts', component: Posts },
     { path: '/tutors', component: Tutors },
