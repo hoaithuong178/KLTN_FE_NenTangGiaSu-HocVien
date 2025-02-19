@@ -63,7 +63,7 @@ const ForgotPassword: React.FC = () => {
             />
             {/* Quay lại đăng nhập */}
             <div className="flex mt-4">
-                <a href="/login">
+                <a href="/sign-in">
                     <Text size="small" color="text-gray-400">
                         Quay lại{'  '}
                     </Text>

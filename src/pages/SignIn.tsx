@@ -2,27 +2,62 @@ import { useEffect, useState } from 'react';
 import { default as Kein1, default as Kein2, default as Kein3 } from '../assets/Kein.jpg';
 import Facebook from '../assets/facebook.svg';
 import Google from '../assets/google.svg';
+import { InputField } from '../components/InputField';
+import { Button } from '../components/Button';
+import { useNavigate } from 'react-router-dom';
+
 const SignIn = () => {
     const images = [Kein1, Kein2, Kein3];
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const navigate = useNavigate();
+    const handleClickSignIn = () => {
+        const newErrors: { [key: string]: string } = {};
+
+        // Kiểm tra các trường nhập vào với các điều kiện tương ứng
+        if (!email) {
+            newErrors.email = 'Vui lòng nhập Email!';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            newErrors.email = 'Email không hợp lệ!';
+        }
+        if (!password) {
+            newErrors.password = 'Vui lòng nhập Password!';
+        } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
+            newErrors.password = 'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ cái và số!';
+        }
+        // Cập nhật lỗi vào state
+        setErrors(newErrors);
+
+        // Kiểm tra nếu không có lỗi thì tiếp tục
+        if (Object.keys(newErrors).length === 0) {
+            console.log({
+                email,
+            });
+
+            // Chuyển sang trang verify-otp với state "register"
+            navigate('/verify-otp', { state: { type: 'register' } });
+        } else {
+            console.log('Có lỗi, không thể đăng ký');
+        }
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         }, 3000);
-
         return () => clearInterval(interval);
     }, [images.length]);
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen bg-white">
             {/* Slide Section */}
-            <div className="w-1/2 flex justify-center items-center bg-gray-100 overflow-hidden relative">
+            <div className="w-1/2 flex justify-center items-center overflow-hidden relative">
                 <div
                     className="flex transition-transform duration-1000 ease-in-out"
-                    style={{
-                        transform: `translateX(-${currentImageIndex * 100}%)`,
-                    }}
+                    style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
                 >
                     {images.map((image, index) => (
                         <img
@@ -51,62 +86,55 @@ const SignIn = () => {
             <div className="w-1/2 flex flex-col justify-center items-center px-10">
                 <h2 className="text-3xl font-bold mb-8 text-[#1b223b]">Đăng nhập</h2>
                 <form className="w-full max-w-sm">
-                    <div className="mb-4">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email:
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#ffc569] focus:border-[#ffc569]"
-                            placeholder="email"
-                        />
-                    </div>
+                    <InputField
+                        type="text"
+                        title="Email Address"
+                        placeholder="Enter your email"
+                        errorTitle={errors.email}
+                        titleColor="text-customYellow"
+                        onChange={(value) => setEmail(value)}
+                        required
+                    />
+                    <InputField
+                        type="password"
+                        title="Password"
+                        placeholder="Enter your password"
+                        errorTitle={errors.password}
+                        titleColor="text-customYellow"
+                        onChange={(value) => setPassword(value)}
+                        required
+                    />
 
-                    <div className="mb-4">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Password:
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#ffc569] focus:border-[#ffc569]"
-                            placeholder="password"
-                        />
-                    </div>
                     <div className="text-right mt-4">
-                        <a href="#" className="text-sm text-[#1b223b] font-medium hover:underline">
-                            Forgot Password?
+                        <a href="/forgot-password" className="text-sm text-[#1b223b] font-medium hover:underline">
+                            Quên mật khẩu?
                         </a>
                     </div>
 
-                    <div className="flex justify-between items-center mb-4">
-                        <button
-                            type="submit"
-                            className="w-full bg-[#ffc569] text-[#1b223b] py-2 px-4 rounded-lg font-medium hover:bg-[#f9b24e] transition duration-300"
-                        >
-                            Sign In
-                        </button>
-                    </div>
+                    <Button
+                        title="Register"
+                        foreColor="#1B223B"
+                        backgroundColor="#FFC569"
+                        className="w-full h-12"
+                        onClick={handleClickSignIn}
+                    />
 
-                    <div className="text-center text-gray-500 mb-4">or</div>
+                    <div className="text-center text-gray-500 my-4">hoặc</div>
 
-                    <div className="flex flex-col space-y-4">
-                        <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center">
-                            <img src={Google} alt="Google logo" className="w-6 h-6 mr-2" />
-                            Login with Google
-                        </button>
-                        <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center">
-                            <img src={Facebook} alt="Facebook logo" className="w-6 h-6 mr-2" />
-                            Login with Facebook
-                        </button>
-                    </div>
+                    <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                        <img src={Google} alt="Google logo" className="w-6 h-6 mr-2" />
+                        Đăng nhập với Google
+                    </button>
+                    <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center mt-2">
+                        <img src={Facebook} alt="Facebook logo" className="w-6 h-6 mr-2" />
+                        Đăng nhập với Facebook
+                    </button>
                 </form>
 
                 <div className="text-sm text-gray-600 mt-4">
-                    Don't have an account yet?{' '}
-                    <a href="#" className="text-[#1b223b] font-medium hover:underline">
-                        Sign up
+                    Chưa có tài khoản?{' '}
+                    <a href="/register" className="text-[#1b223b] font-medium hover:underline">
+                        Đăng ký ngay
                     </a>
                 </div>
             </div>
