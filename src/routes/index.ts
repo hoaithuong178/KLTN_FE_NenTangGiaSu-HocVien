@@ -11,9 +11,9 @@ import NotifySuccess from '../pages/NotifySuccess';
 import VerifyOTP from '../pages/OTP';
 import Post from '../pages/Post';
 import Register from '../pages/Register';
-import Setting from '../pages/Setting';
 import SignIn from '../pages/SignIn';
-import Tutors from '../pages/Tutors';
+import Tutor from '../pages/Tutor';
+import Transaction from '../pages/Transaction';
 
 export interface IRoute {
     path: string;
@@ -24,8 +24,8 @@ export interface IRoute {
 const publicRoutes: Array<IRoute> = [
     { path: '/', component: Home },
     { path: '/sign-in', component: SignIn },
-    { path: '/posts', component: Post },
-    { path: '/tutors', component: Tutors },
+    { path: '/post', component: Post },
+    { path: '/tutors', component: Tutor },
     { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
     { path: '/verify-otp', component: VerifyOTP },
@@ -35,7 +35,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/my-class', component: MyClass },
     { path: '/conservation', component: Chat },
     { path: '/dashboard', component: Dashboard },
-    { path: '/setting', component: Setting },
+    { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
     { path: '*', component: NotFound },
 ];

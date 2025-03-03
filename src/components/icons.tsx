@@ -256,9 +256,10 @@ export const MapIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
-export const FilterIcon = ({ className }: { className?: string }) => (
+export const FilterIcon = ({ className, onClick }: { className?: string; onClick?: () => void }) => (
     <svg
         className={className}
+        onClick={onClick} // Thêm sự kiện onClick vào SVG
         xmlns="http://www.w3.org/2000/svg"
         width={24}
         height={24}
@@ -274,9 +275,11 @@ export const FilterIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
-export const HeartIcon = ({ className }: { className?: string }) => (
+
+export const HeartIcon = ({ className, onClick }: { className?: string; onClick?: () => void }) => (
     <svg
         className={className}
+        onClick={onClick} // Thêm sự kiện onClick vào SVG
         xmlns="http://www.w3.org/2000/svg"
         width={24}
         height={24}
@@ -292,27 +295,16 @@ export const HeartIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
-export const MarkIcon = ({ className }: { className?: string }) => (
+export const CoppyLinkIcon = ({
+    className,
+    onClick,
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent, postId: number) => void;
+}) => (
     <svg
         className={className}
-        xmlns="http://www.w3.org/2000/svg"
-        width={24}
-        height={24}
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="1.5"
-        stroke="currentColor"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
-        />
-    </svg>
-);
-export const CoppyLinkIcon = ({ className }: { className?: string }) => (
-    <svg
-        className={className}
+        onClick={(e) => onClick?.(e, 0)} // Truyền event và một giá trị mặc định
         xmlns="http://www.w3.org/2000/svg"
         width={24}
         height={24}
@@ -328,6 +320,7 @@ export const CoppyLinkIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
+
 export const LikeIcon = ({ className }: { className?: string }) => (
     <svg
         className={className}
@@ -361,6 +354,24 @@ export const DisLikeIcon = ({ className }: { className?: string }) => (
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M7.498 15.25H4.372c-1.026 0-1.945-.694-2.054-1.715a12.137 12.137 0 0 1-.068-1.285c0-2.848.992-5.464 2.649-7.521C5.287 4.247 5.886 4 6.504 4h4.016a4.5 4.5 0 0 1 1.423.23l3.114 1.04a4.5 4.5 0 0 0 1.423.23h1.294M7.498 15.25c.618 0 .991.724.725 1.282A7.471 7.471 0 0 0 7.5 19.75 2.25 2.25 0 0 0 9.75 22a.75.75 0 0 0 .75-.75v-.633c0-.573.11-1.14.322-1.672.304-.76.93-1.33 1.653-1.715a9.04 9.04 0 0 0 2.86-2.4c.498-.634 1.226-1.08 2.032-1.08h.384m-10.253 1.5H9.7m8.075-9.75c.01.05.027.1.05.148.593 1.2.925 2.55.925 3.977 0 1.487-.36 2.89-.999 4.125m.023-8.25c-.076-.365.183-.75.575-.75h.908c.889 0 1.713.518 1.972 1.368.339 1.11.521 2.287.521 3.507 0 1.553-.295 3.036-.831 4.398-.306.774-1.086 1.227-1.918 1.227h-1.053c-.472 0-.745-.556-.5-.96a8.95 8.95 0 0 0 .303-.54"
+        />
+    </svg>
+);
+export const MoneyIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
         />
     </svg>
 );
