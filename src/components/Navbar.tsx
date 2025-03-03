@@ -6,10 +6,10 @@ import {
     MyClassIcon,
     NewsIcon,
     UserIcon,
-    SettingIcon,
     QuestionIcon,
     ArrowLeftIcon,
     ArrowRightIcon,
+    MoneyIcon,
 } from '../components/icons';
 import { Text } from '../components/Text';
 import FullLogo from '../assets/FullLogo.png';
@@ -65,15 +65,15 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
             {/* Menu Items */}
             <div className="flex-1">
                 <ul className="space-y-4">
-                    <Link to="/" className="text-decoration-none">
+                    <Link to="/post" className="text-decoration-none">
                         <li
                             className={`flex items-center ${
                                 isExpanded ? 'space-x-4' : 'justify-center'
-                            } p-2 ${getLinkClass('/')}`}
+                            } p-2 ${getLinkClass('/post')}`}
                         >
                             <NewsIcon className="w-6 h-6" />
                             {isExpanded && (
-                                <Text size="medium" weight="bold" color={getTextColor('/')}>
+                                <Text size="medium" weight="bold" color={getTextColor('/post')}>
                                     Bài đăng
                                 </Text>
                             )}
@@ -135,16 +135,16 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                             )}
                         </li>
                     </Link>
-                    <Link to="/setting" className="text-decoration-none">
+                    <Link to="/transaction" className="text-decoration-none">
                         <li
                             className={`flex items-center ${
                                 isExpanded ? 'space-x-4' : 'justify-center'
-                            } p-2 ${getLinkClass('/setting')}`}
+                            } p-2 ${getLinkClass('/transaction')}`}
                         >
-                            <SettingIcon className="w-6 h-6" />
+                            <MoneyIcon className="w-6 h-6" />
                             {isExpanded && (
-                                <Text size="medium" weight="bold" color={getTextColor('/setting')}>
-                                    Cài đặt
+                                <Text size="medium" weight="bold" color={getTextColor('/transaction')}>
+                                    Giao dịch
                                 </Text>
                             )}
                         </li>
