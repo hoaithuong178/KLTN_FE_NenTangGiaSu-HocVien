@@ -1,4 +1,6 @@
 import tutorImage from '../assets/Kein.jpg';
+import Footer from '../components/Footer';
+import Header from '../components/Header';
 import ReviewCard from '../components/ReviewCard';
 import TutorCard from '../components/TutorCard';
 
@@ -321,6 +323,7 @@ const CommitSection = () => {
 const Home = () => {
     return (
         <>
+            <Header />
             <LandingSection />
             <SubjectSection />
             <TutorSection />
@@ -328,6 +331,7 @@ const Home = () => {
             <StartSection />
             <ReviewSection />
             <CommitSection />
+            <Footer />
         </>
     );
 };

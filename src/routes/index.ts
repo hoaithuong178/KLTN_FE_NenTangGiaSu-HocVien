@@ -14,6 +14,9 @@ import Register from '../pages/Register';
 import SignIn from '../pages/SignIn';
 import Tutor from '../pages/Tutor';
 import Transaction from '../pages/Transaction';
+import PostsLanding from '../pages/PostsLanding';
+import Tutors from '../pages/Tutors';
+import PersonalInfor from '../pages/PersonalInfor';
 
 export interface IRoute {
     path: string;
@@ -28,6 +31,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutors', component: Tutor },
     { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
+    { path: '/dashboard', component: Dashboard },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
     { path: '/forgot-password', component: ForgotPassword },
@@ -37,6 +41,9 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
+    { path: '/personal-information', component: PersonalInfor },
+    { path: '/posts-landing', component: PostsLanding },
+    { path: '/tutors', component: Tutors },
     { path: '*', component: NotFound },
 ];
 

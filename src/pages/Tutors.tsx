@@ -1,14 +1,14 @@
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 
-function Contacts() {
+function Tutors() {
     return (
         <>
             <Header />
-            <div>Contacts</div>
+            <div>Tutors</div>
             <Footer />
         </>
     );
 }
 
-export default Contacts;
+export default Tutors;
