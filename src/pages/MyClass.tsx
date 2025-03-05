@@ -1,6 +1,6 @@
+import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import TopNavbar from '../components/TopNavbar';
-import React, { useEffect, useState } from 'react';
 
 const MyClass: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {

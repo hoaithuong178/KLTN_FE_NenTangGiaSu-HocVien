@@ -17,6 +17,7 @@ import Transaction from '../pages/Transaction';
 import PostsLanding from '../pages/PostsLanding';
 import Tutors from '../pages/Tutors';
 import PersonalInfor from '../pages/PersonalInfor';
+import TutorProfile from '../pages/TutorProfile';
 
 export interface IRoute {
     path: string;
@@ -44,6 +45,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/personal-information', component: PersonalInfor },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors', component: Tutors },
+    { path: '/tutor-profile', component: TutorProfile },
     { path: '*', component: NotFound },
 ];
 

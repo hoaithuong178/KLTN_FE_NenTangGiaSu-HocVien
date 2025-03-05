@@ -375,3 +375,35 @@ export const MoneyIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
+export const StarIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 3l2.09 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21l1.09-6.86-5-4.87 6.91-1.01L12 3z"
+        />
+    </svg>
+);
+export const XIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
