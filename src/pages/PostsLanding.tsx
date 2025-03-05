@@ -1,14 +1,14 @@
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 
-function Faqs() {
+function PostsLanding() {
     return (
         <>
             <Header />
-            <div>Faqs</div>
+            <div>PostsLanding</div>
             <Footer />
         </>
     );
 }
 
-export default Faqs;
+export default PostsLanding;

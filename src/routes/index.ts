@@ -6,10 +6,13 @@ import NewPassword from '../pages/NewPassword';
 import NotFound from '../pages/NotFound';
 import NotifySuccess from '../pages/NotifySuccess';
 import VerifyOTP from '../pages/OTP';
-import Posts from '../pages/Posts';
+import Posts from '../pages/PostsLanding';
 import Register from '../pages/Register';
 import SignIn from '../pages/SignIn';
 import Tutors from '../pages/Tutors';
+import Dashboard from '../pages/Dashboard';
+import PersonalInfor from '../pages/PersonalInfor';
+import PostsLanding from '../pages/PostsLanding';
 
 export interface IRoute {
     path: string;
@@ -25,10 +28,13 @@ const publicRoutes: Array<IRoute> = [
     { path: '/faqs', component: Faqs },
     { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
+    { path: '/dashboard', component: Dashboard },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
     { path: '/forgot-password', component: ForgotPassword },
     { path: '/new-password', component: NewPassword },
+    { path: '/personal-information', component: PersonalInfor },
+    { path: '/posts-landing', component: PostsLanding },
     { path: '*', component: NotFound },
 ];
 
