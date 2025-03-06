@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import Chat from '../pages/Chat';
 import Contacts from '../pages/Contacts';
 import Dashboard from '../pages/Dashboard';
@@ -14,21 +15,27 @@ import Register from '../pages/Register';
 import SignIn from '../pages/SignIn';
 import Tutor from '../pages/Tutor';
 import Transaction from '../pages/Transaction';
+import PostsLanding from '../pages/PostsLanding';
+import Tutors from '../pages/Tutors';
+import PersonalInfor from '../pages/PersonalInfor';
+import TutorProfile from '../pages/TutorProfile';
 import ClassDetail from '../pages/ClassDetail';
+import DefaultLayout from '../layouts/DefaultLayout';
 
 export interface IRoute {
     path: string;
     component: React.FC;
-    layout?: React.FC;
+    layout?: ({ children }: { children: ReactNode }) => React.ReactNode;
 }
 
 const publicRoutes: Array<IRoute> = [
-    { path: '/', component: Home },
-    { path: '/sign-in', component: SignIn },
+    { path: '/', component: Home, layout: DefaultLayout },
+    { path: '/sign-in', component: SignIn, layout: DefaultLayout },
     { path: '/post', component: Post },
     { path: '/tutors', component: Tutor },
     { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
+    { path: '/dashboard', component: Dashboard },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
     { path: '/forgot-password', component: ForgotPassword },
@@ -38,6 +45,10 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
+    { path: '/personal-information', component: PersonalInfor },
+    { path: '/posts-landing', component: PostsLanding },
+    { path: '/tutors', component: Tutors },
+    { path: '/tutor-profile', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '*', component: NotFound },
 ];
