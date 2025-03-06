@@ -14,6 +14,7 @@ type ButtonProps = {
     className?: string; // ClassName để tùy chỉnh width và height
     onClick?: () => void; // Hàm callback khi nút được nhấn
     disabled?: boolean; // Trạng thái nút bị vô hiệu hóa
+    type?: 'button' | 'submit' | 'reset'; // Loại nút
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -29,9 +30,11 @@ export const Button: React.FC<ButtonProps> = ({
     className = '',
     onClick,
     disabled = false,
+    type = 'button',
 }) => {
     return (
         <button
+            type={type}
             onClick={onClick}
             disabled={disabled}
             className={`py-2 px-4 rounded ${className} transition duration-300`}
