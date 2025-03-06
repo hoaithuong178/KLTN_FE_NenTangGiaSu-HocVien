@@ -7,7 +7,7 @@ import { TitleText } from '../components/Text';
 
 const PersonalInfor: React.FC = () => {
     const [avatar, setAvatar] = useState<string>('../assets/avatar.jpg');
-    const [userData, setUserData] = useState({
+    const [userData] = useState({
         name: 'Nguyen Van A',
         age: '25',
         email: 'nguyenvana@example.com',
@@ -25,7 +25,7 @@ const PersonalInfor: React.FC = () => {
 
     const [provinces, setProvinces] = useState<string[]>([]);
     const [districts, setDistricts] = useState<string[]>([]);
-    const [selectedProvince, setSelectedProvince] = useState<string>('');
+    const [, setSelectedProvince] = useState<string>('');
 
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         // Kiểm tra trạng thái từ localStorage
@@ -36,14 +36,14 @@ const PersonalInfor: React.FC = () => {
     useEffect(() => {
         fetch('https://provinces.open-api.vn/api/?depth=1')
             .then((res) => res.json())
-            .then((data) => setProvinces(data.map((prov: any) => prov.name)));
+            .then((data) => setProvinces(data.map((prov: { name: string }) => prov.name)));
     }, []);
 
     const handleProvinceChange = (province: string) => {
         setSelectedProvince(province);
         fetch(`https://provinces.open-api.vn/api/p/${province}?depth=2`)
             .then((res) => res.json())
-            .then((data) => setDistricts(data.districts.map((dist: any) => dist.name)));
+            .then((data) => setDistricts(data.districts.map((dist: { name: string }) => dist.name)));
     };
 
     const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {

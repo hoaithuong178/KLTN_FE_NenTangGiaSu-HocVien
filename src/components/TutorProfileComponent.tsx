@@ -2,7 +2,18 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, ChatIcon, HeartIcon, StarIcon } from './icons';
 
-type TutorProfileComponentProps = {
+export type ScheduleDetail = {
+    morning?: [string, string][];
+    afternoon?: [string, string][];
+    evening?: [string, string][];
+    [key: string]: [string, string][] | undefined;
+};
+
+export type Schedule = {
+    [key: string]: ScheduleDetail;
+};
+
+export type TutorProfileComponentProps = {
     id: number;
     avatar: string;
     name: string;
@@ -17,13 +28,7 @@ type TutorProfileComponentProps = {
     birthYear: number;
     totalClasses: number;
     location: string;
-    schedule: {
-        [key: string]: {
-            morning?: [string, string];
-            afternoon?: [string, string];
-            evening?: [string, string];
-        };
-    };
+    schedule: Schedule;
     rating: number;
     reviews: {
         avatar: string;
@@ -80,7 +85,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
         setRequestForm((prev) => ({ ...prev, mode }));
     };
 
-    const [favoritePosts, setFavoritePosts] = useState<number[]>([]);
+    const [, setFavoritePosts] = useState<number[]>([]);
 
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
         message: '',
@@ -336,10 +341,10 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                             {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((day) => (
                                 <div
                                     key={`${day}-${time}`}
-                                    className={`p-2 ${schedule[day]?.[time] ? 'bg-green-200' : 'bg-gray-200'}`}
+                                    className={`p-2 ${schedule[day]?.[time]?.length ? 'bg-green-200' : 'bg-gray-200'}`}
                                 >
                                     {schedule[day]?.[time]
-                                        ? `${schedule[day]?.[time]?.[0]} - ${schedule[day]?.[time]?.[1]}`
+                                        ? `${schedule[day][time][0]} - ${schedule[day][time][1]}`
                                         : '✖'}
                                 </div>
                             ))}

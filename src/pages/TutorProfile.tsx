@@ -1,7 +1,6 @@
-import React from 'react';
-import TutorProfileComponent from '../components/TutorProfileComponent';
+import TutorProfileComponent, { TutorProfileComponentProps } from '../components/TutorProfileComponent';
 
-const sampleTutor = {
+const sampleTutor: TutorProfileComponentProps = {
     id: 1,
     avatar: 'https://i.pravatar.cc/150?img=3',
     name: 'Nguyễn Văn A',
@@ -22,13 +21,13 @@ const sampleTutor = {
                 ['07:00', '09:00'],
                 ['10:00', '11:00'],
             ],
-            afternoon: ['14:00', '16:00'],
+            afternoon: [['14:00', '16:00']],
         },
-        'Thứ 3': { evening: ['19:00', '21:00'] },
-        'Thứ 5': { morning: ['08:00', '10:00'] },
-        'Thứ 6': { afternoon: ['13:00', '15:00'], evening: ['18:00', '20:00'] },
-        'Thứ 7': { morning: ['09:00', '11:00'] },
-        CN: { afternoon: ['14:00', '16:00'], evening: ['19:00', '21:00'] },
+        'Thứ 3': { evening: [['19:00', '21:00']] },
+        'Thứ 5': { morning: [['08:00', '10:00']] },
+        'Thứ 6': { afternoon: [['13:00', '15:00']], evening: [['18:00', '20:00']] },
+        'Thứ 7': { morning: [['09:00', '11:00']] },
+        CN: { afternoon: [['14:00', '16:00']], evening: [['19:00', '21:00']] },
     },
     rating: 4.5,
     reviews: [

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import TopNavbar from '../components/TopNavbar';
-import { FilterIcon, XIcon } from '../components/icons';
+import { FilterIcon } from '../components/icons';
 import TutorDetailCard from '../components/TutorDetailCard';
 
 const Tutor: React.FC = () => {
@@ -70,7 +70,15 @@ const Tutor: React.FC = () => {
 
     const [showPopup, setShowPopup] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<{
+        priceFrom: number | null;
+        priceTo: number | null;
+        selectedSubject: string;
+        selectedRating: number | null;
+        classFrom: number | null;
+        classTo: number | null;
+        isFavorited: boolean;
+    }>({
         priceFrom: null,
         priceTo: null,
         selectedSubject: '',
@@ -81,7 +89,7 @@ const Tutor: React.FC = () => {
     });
 
     const subjects = ['Toán học', 'Tiếng Anh', 'Vật lý', 'Hóa học', 'Ngữ văn', 'Lịch sử'];
-    const [favoritePosts, setFavoritePosts] = useState<number[]>([]);
+    const [favoritePosts] = useState<number[]>([]);
 
     const togglePopupFilter = () => setShowPopup((prev) => !prev);
 
@@ -136,10 +144,10 @@ const Tutor: React.FC = () => {
                         <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                             <div className="flex justify-between items-center border-b pb-3">
                                 <h2 className="text-lg font-semibold">Bộ lọc</h2>
-                                <XIcon
+                                {/* <XIcon
                                     className="w-6 h-6 cursor-pointer text-gray-500 hover:text-gray-800"
                                     onClick={togglePopupFilter}
-                                />
+                                /> */}
                             </div>
 
                             <div className="mt-4">
@@ -233,7 +241,7 @@ const Tutor: React.FC = () => {
                         <TutorDetailCard
                             key={tutor.id}
                             {...tutor}
-                            className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
+                            // className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
                         />
                     ))}
                 </div>

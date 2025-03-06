@@ -135,9 +135,10 @@ type RadioButtonProps = {
     options: string[]; // Danh sách các lựa chọn
     onChange?: (value: string) => void; // Hàm callback khi giá trị thay đổi
     titleColor?: string; // Tailwind class cho màu tiêu đề (optional)
-    optionColor: string;
+    optionColor?: string;
     required?: boolean; // Field is required (optional)
     value?: string; // Giá trị mặc định của radio button (optional)
+    selected?: string;
 };
 
 export const RadioButton: React.FC<RadioButtonProps> = ({
@@ -148,8 +149,9 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
     optionColor = 'text-black', // Màu cho các lựa chọn mặc định
     required = false, // Default to not required
     value = '', // Giá trị mặc định
+    selected = '',
 }) => {
-    const [selectedOption, setSelectedOption] = useState<string>(value);
+    const [selectedOption, setSelectedOption] = useState<string>(selected);
 
     useEffect(() => {
         if (value !== selectedOption) {
