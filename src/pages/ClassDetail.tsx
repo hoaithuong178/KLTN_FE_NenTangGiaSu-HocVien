@@ -1,0 +1,274 @@
+import React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeftIcon } from '../components/icons';
+
+// Mock data cho chi tiết lớp học
+const mockClassDetail = {
+    id: 1,
+    name: 'Toán 12',
+    description:
+        'Khóa học Toán 12 tập trung vào các chuyên đề trọng tâm, giúp học sinh nắm vững kiến thức cơ bản và nâng cao',
+    teacher: {
+        id: 1,
+        name: 'Nguyễn Văn A',
+        avatar: 'https://via.placeholder.com/100',
+        profileUrl: '/teacher/1',
+    },
+    contract: {
+        id: 'HD001',
+        status: 'Đã ký',
+        date: '2024-03-15',
+        amount: 2000000,
+    },
+    priceNegotiations: [
+        {
+            id: 1,
+            date: '2024-03-10',
+            originalPrice: 2200000,
+            negotiatedPrice: 2000000,
+            status: 'Đã chấp nhận',
+        },
+    ],
+    payments: [
+        {
+            id: 1,
+            date: '2024-03-15',
+            amount: 1000000,
+            status: 'Đã thanh toán',
+            description: 'Thanh toán đợt 1',
+        },
+        {
+            id: 2,
+            date: '2024-04-15',
+            amount: 1000000,
+            status: 'Chưa thanh toán',
+            description: 'Thanh toán đợt 2',
+        },
+    ],
+    timeline: [
+        {
+            id: 1,
+            name: 'Buổi 1: Giới thiệu tổng quan',
+            date: '2024-03-20',
+            time: '09:00 - 10:30',
+            paymentStatus: 'Đã thanh toán',
+            homeworkStatus: 'Đã nộp',
+            homeworkUrl: '/homework/1',
+        },
+        {
+            id: 2,
+            name: 'Buổi 2: Hàm số và đồ thị',
+            date: '2024-03-22',
+            time: '09:00 - 10:30',
+            paymentStatus: 'Đã thanh toán',
+            homeworkStatus: 'Chưa nộp',
+            homeworkUrl: '/homework/2',
+        },
+        {
+            id: 3,
+            name: 'Buổi 3: Đạo hàm',
+            date: '2024-03-24',
+            time: '09:00 - 10:30',
+            paymentStatus: 'Chưa thanh toán',
+            homeworkStatus: 'Chưa có bài tập',
+            homeworkUrl: null,
+        },
+    ],
+};
+
+const ClassDetail: React.FC = () => {
+    const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const classDetail = mockClassDetail; // Trong thực tế sẽ fetch data dựa vào id
+
+    // Log id để sử dụng (trong thực tế sẽ dùng để fetch data)
+    console.log('Class ID:', id);
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <div className="bg-white shadow">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <button
+                        onClick={() => navigate('/my-class')}
+                        className="flex items-center text-gray-600 hover:text-gray-900"
+                    >
+                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                        <span>Quay lại lớp học của tôi</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column - Class Info */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Basic Info */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h1 className="text-2xl font-bold text-gray-900 mb-4">{classDetail.name}</h1>
+                            <p className="text-gray-600 mb-6">{classDetail.description}</p>
+
+                            {/* Teacher Info */}
+                            <div className="flex items-center space-x-4">
+                                <img
+                                    src={classDetail.teacher.avatar}
+                                    alt={classDetail.teacher.name}
+                                    className="h-12 w-12 rounded-full"
+                                />
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900">{classDetail.teacher.name}</h3>
+                                    <a
+                                        href={classDetail.teacher.profileUrl}
+                                        className="text-blue-600 hover:text-blue-800"
+                                    >
+                                        Xem trang cá nhân
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Timeline */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Tiến độ lớp học</h2>
+                            <div className="space-y-8">
+                                {classDetail.timeline.map((session, index) => (
+                                    <div key={session.id} className="relative pl-8">
+                                        {/* Timeline line */}
+                                        {index !== classDetail.timeline.length - 1 && (
+                                            <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-gray-200"></div>
+                                        )}
+                                        {/* Timeline dot */}
+                                        <div className="absolute left-0 top-2 h-6 w-6 rounded-full border-4 border-blue-500 bg-white"></div>
+
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <h3 className="font-medium text-gray-900">{session.name}</h3>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                {session.date} | {session.time}
+                                            </p>
+                                            <div className="mt-3 flex items-center justify-between">
+                                                <span
+                                                    className={`text-sm ${
+                                                        session.paymentStatus === 'Đã thanh toán'
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    {session.paymentStatus}
+                                                </span>
+                                                <div className="flex items-center space-x-4">
+                                                    {session.homeworkUrl && (
+                                                        <a
+                                                            href={session.homeworkUrl}
+                                                            className="text-sm text-blue-600 hover:text-blue-800"
+                                                        >
+                                                            Xem bài tập
+                                                        </a>
+                                                    )}
+                                                    <span
+                                                        className={`text-sm ${
+                                                            session.homeworkStatus === 'Đã nộp'
+                                                                ? 'text-green-600'
+                                                                : 'text-yellow-600'
+                                                        }`}
+                                                    >
+                                                        {session.homeworkStatus}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Contract & Payment Info */}
+                    <div className="space-y-8">
+                        {/* Contract Info */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Thông tin hợp đồng</h2>
+                            <div className="space-y-3">
+                                <p className="flex justify-between">
+                                    <span className="text-gray-600">Mã hợp đồng:</span>
+                                    <span className="font-medium">{classDetail.contract.id}</span>
+                                </p>
+                                <p className="flex justify-between">
+                                    <span className="text-gray-600">Trạng thái:</span>
+                                    <span className="text-green-600">{classDetail.contract.status}</span>
+                                </p>
+                                <p className="flex justify-between">
+                                    <span className="text-gray-600">Ngày ký:</span>
+                                    <span>{classDetail.contract.date}</span>
+                                </p>
+                                <p className="flex justify-between">
+                                    <span className="text-gray-600">Tổng giá trị:</span>
+                                    <span className="font-medium">
+                                        {classDetail.contract.amount.toLocaleString('vi-VN')}đ
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Price Negotiations */}
+                        {classDetail.priceNegotiations.length > 0 && (
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">Lịch sử thương lượng giá</h2>
+                                <div className="space-y-4">
+                                    {classDetail.priceNegotiations.map((negotiation) => (
+                                        <div key={negotiation.id} className="border-b pb-4">
+                                            <p className="text-sm text-gray-500">{negotiation.date}</p>
+                                            <div className="mt-2 space-y-2">
+                                                <p className="flex justify-between">
+                                                    <span className="text-gray-600">Giá ban đầu:</span>
+                                                    <span>{negotiation.originalPrice.toLocaleString('vi-VN')}đ</span>
+                                                </p>
+                                                <p className="flex justify-between">
+                                                    <span className="text-gray-600">Giá đề xuất:</span>
+                                                    <span>{negotiation.negotiatedPrice.toLocaleString('vi-VN')}đ</span>
+                                                </p>
+                                                <p className="flex justify-between">
+                                                    <span className="text-gray-600">Trạng thái:</span>
+                                                    <span className="text-green-600">{negotiation.status}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Payment History */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Lịch sử thanh toán</h2>
+                            <div className="space-y-4">
+                                {classDetail.payments.map((payment) => (
+                                    <div key={payment.id} className="border-b pb-4">
+                                        <p className="text-sm text-gray-500">{payment.date}</p>
+                                        <p className="font-medium mt-1">{payment.description}</p>
+                                        <div className="mt-2 flex justify-between items-center">
+                                            <span
+                                                className={`text-sm ${
+                                                    payment.status === 'Đã thanh toán'
+                                                        ? 'text-green-600'
+                                                        : 'text-red-600'
+                                                }`}
+                                            >
+                                                {payment.status}
+                                            </span>
+                                            <span className="font-medium">
+                                                {payment.amount.toLocaleString('vi-VN')}đ
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ClassDetail;

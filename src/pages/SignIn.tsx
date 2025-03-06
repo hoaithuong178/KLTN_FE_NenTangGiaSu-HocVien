@@ -5,16 +5,18 @@ import Google from '../assets/google.svg';
 import { InputField } from '../components/InputField';
 import { Button } from '../components/Button';
 import { useNavigate } from 'react-router-dom';
+import axiosClient from '../configs/axios.config';
 
 const SignIn = () => {
     const images = [Kein1, Kein2, Kein3];
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [, setIsLoading] = useState(false);
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const navigate = useNavigate();
-    const handleClickSignIn = () => {
+    const handleClickSignIn = async () => {
         const newErrors: { [key: string]: string } = {};
 
         // Kiểm tra các trường nhập vào với các điều kiện tương ứng
@@ -37,8 +39,37 @@ const SignIn = () => {
                 email,
             });
 
-            // Chuyển sang trang verify-otp với state "register"
-            navigate('/verify-otp', { state: { type: 'register' } });
+            try {
+                setIsLoading(true);
+                const response = await axiosClient.post(
+                    '/auth/login',
+                    {
+                        email,
+                        password,
+                    },
+                    {
+                        params: {
+                            page: 1,
+                        },
+                    },
+                );
+                console.log(response);
+
+                axiosClient.get('', {
+                    params: {
+                        page: 1,
+                    },
+                });
+
+                localStorage.setItem('token', response.data.accessToken);
+                localStorage.setItem('refreshToken', response.data.refreshToken);
+                navigate('/', { state: { type: 'register' } });
+            } catch (error) {
+                console.log('Có lỗi, không thể đăng nhập');
+                console.log(error);
+            } finally {
+                setIsLoading(false);
+            }
         } else {
             console.log('Có lỗi, không thể đăng ký');
         }
@@ -112,6 +143,7 @@ const SignIn = () => {
                     </div>
 
                     <Button
+                        type="button"
                         title="Register"
                         foreColor="#1B223B"
                         backgroundColor="#FFC569"

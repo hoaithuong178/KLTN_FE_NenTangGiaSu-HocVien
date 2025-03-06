@@ -281,7 +281,7 @@ const Post: React.FC = () => {
             <div className={`flex-1 p-6 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
                 {/* Thanh tìm kiếm */}
                 <div
-                    className={`fixed top-12 flex space-x-4 pb-4 z-20 ${
+                    className={`fixed top-14 flex space-x-4 pb-4 z-20 ${
                         isExpanded ? 'left-60 right-5' : 'left-20 right-5'
                     }`}
                 >
@@ -304,7 +304,7 @@ const Post: React.FC = () => {
                     </div>
                     <button
                         onClick={togglePopup}
-                        className="text-left p-3 bg-[#FFC569] text-[#1B223B] rounded-lg flex-1"
+                        className="text-left p-3 bg-[#ffdda7] text-[#1B223B] rounded-lg flex-1"
                     >
                         Bạn có nhu cầu tìm gia sư ư?
                     </button>
