@@ -154,7 +154,7 @@ const MyClass: React.FC = () => {
                                     {mockClasses.map((classInfo) => (
                                         <div
                                             key={classInfo.id}
-                                            onClick={() => navigate(`/class`)}
+                                            onClick={() => navigate(`/class-detail`)}
                                             className="cursor-pointer"
                                         >
                                             <ClassCard classInfo={classInfo} />

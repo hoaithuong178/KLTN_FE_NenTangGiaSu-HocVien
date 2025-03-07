@@ -15,6 +15,7 @@ import SignIn from '../pages/SignIn';
 import Tutor from '../pages/Tutor';
 import Transaction from '../pages/Transaction';
 import ClassDetail from '../pages/ClassDetail';
+import ClassDetailTutor from '../pages/ClassDetailTutor';
 
 export interface IRoute {
     path: string;
@@ -38,7 +39,8 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
-    { path: '/class', component: ClassDetail },
+    { path: '/class-detail', component: ClassDetail },
+    { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '*', component: NotFound },
 ];
 

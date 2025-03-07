@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeftIcon } from '../components/icons';
+import { Modal, Button, Input, Upload, message } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
+import { UploadIcon, DownloadIcon } from '../components/icons';
 
 // Mock data cho chi tiết lớp học
 const mockClassDetail = {
@@ -76,6 +79,27 @@ const mockClassDetail = {
     ],
 };
 
+// Thêm interface cho bài tập
+interface Assignment {
+    id: string;
+    title: string;
+    content: string;
+    dueDate: string;
+    dueTime: string;
+    attachments?: string[];
+    submission?: {
+        content?: string;
+        files?: string[];
+        submittedAt?: string;
+    };
+    evaluation?: {
+        score: number;
+        feedback: string;
+        correctedFiles?: string[];
+        evaluatedAt: string;
+    };
+}
+
 const ClassDetail: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -84,10 +108,156 @@ const ClassDetail: React.FC = () => {
     // Log id để sử dụng (trong thực tế sẽ dùng để fetch data)
     console.log('Class ID:', id);
 
+    const [isViewAssignmentModal, setIsViewAssignmentModal] = useState(false);
+    const [isViewEvaluationModal, setIsViewEvaluationModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [submissionContent, setSubmissionContent] = useState('');
+    const [submissionFiles, setSubmissionFiles] = useState<UploadFile[]>([]);
+
+    // Modal xem bài tập và nộp bài
+    const ViewAssignmentModal = () => (
+        <Modal
+            title={selectedAssignment?.title}
+            open={isViewAssignmentModal}
+            onCancel={() => setIsViewAssignmentModal(false)}
+            footer={[
+                <Button key="cancel" onClick={() => setIsViewAssignmentModal(false)}>
+                    Đóng
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleSubmitAssignment}>
+                    Nộp bài
+                </Button>,
+            ]}
+            width={800}
+        >
+            <div className="space-y-6">
+                {/* Thông tin bài tập */}
+                <div>
+                    <h3 className="font-medium text-gray-900">Đề bài:</h3>
+                    <p className="mt-2 text-gray-600">{selectedAssignment?.content}</p>
+                </div>
+
+                <div className="flex justify-between text-sm text-gray-500">
+                    <span>
+                        Hạn nộp: {selectedAssignment?.dueDate} {selectedAssignment?.dueTime}
+                    </span>
+                    {selectedAssignment?.submission?.submittedAt && (
+                        <span>Đã nộp: {selectedAssignment.submission.submittedAt}</span>
+                    )}
+                </div>
+
+                {/* Form nộp bài */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Nội dung bài làm</label>
+                        <Input.TextArea
+                            rows={4}
+                            value={submissionContent}
+                            onChange={(e) => setSubmissionContent(e.target.value)}
+                            className="mt-1"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">File đính kèm</label>
+                        <Upload fileList={submissionFiles} onChange={({ fileList }) => setSubmissionFiles(fileList)}>
+                            <Button icon={<UploadIcon className="w-4 h-4" />}>Tải file lên</Button>
+                        </Upload>
+                    </div>
+                </div>
+
+                {/* Nút xem đánh giá nếu đã có */}
+                {selectedAssignment?.evaluation && (
+                    <Button
+                        type="link"
+                        onClick={() => {
+                            setIsViewAssignmentModal(false);
+                            setIsViewEvaluationModal(true);
+                        }}
+                    >
+                        Xem đánh giá của gia sư
+                    </Button>
+                )}
+            </div>
+        </Modal>
+    );
+
+    // Modal xem đánh giá
+    const ViewEvaluationModal = () => (
+        <Modal
+            title="Đánh giá của gia sư"
+            open={isViewEvaluationModal}
+            onCancel={() => setIsViewEvaluationModal(false)}
+            footer={[
+                <Button key="close" onClick={() => setIsViewEvaluationModal(false)}>
+                    Đóng
+                </Button>,
+            ]}
+            width={600}
+        >
+            {selectedAssignment?.evaluation && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Thời gian chấm:</span>
+                        <span>{selectedAssignment.evaluation.evaluatedAt}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Điểm số:</span>
+                        <span className="text-xl font-medium">{selectedAssignment.evaluation.score}/10</span>
+                    </div>
+
+                    <div>
+                        <h3 className="text-gray-600 mb-2">Nhận xét:</h3>
+                        <p className="text-gray-900">{selectedAssignment.evaluation.feedback}</p>
+                    </div>
+
+                    {selectedAssignment.evaluation.correctedFiles && (
+                        <div>
+                            <h3 className="text-gray-600 mb-2">Bài đã sửa:</h3>
+                            <div className="space-y-2">
+                                {selectedAssignment.evaluation.correctedFiles.map((file: string, index: number) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                                    >
+                                        <span>{file}</span>
+                                        <Button
+                                            type="link"
+                                            icon={<DownloadIcon className="w-4 h-4" />}
+                                            onClick={() => handleDownload(file)}
+                                        >
+                                            Tải về
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </Modal>
+    );
+
+    const handleSubmitAssignment = () => {
+        // Xử lý nộp bài
+        console.log('Submitting:', {
+            content: submissionContent,
+            files: submissionFiles,
+        });
+        message.success('Đã nộp bài thành công');
+        setIsViewAssignmentModal(false);
+    };
+
+    const handleDownload = (file: string) => {
+        // Xử lý tải file
+        console.log('Downloading:', file);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-white shadow">
+            <div className="fixed top-0 left-0 right-0 bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <button
                         onClick={() => navigate('/my-class')}
@@ -100,7 +270,7 @@ const ClassDetail: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-8 pt-20">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column - Class Info */}
                     <div className="lg:col-span-2 space-y-8">
@@ -158,12 +328,31 @@ const ClassDetail: React.FC = () => {
                                                 </span>
                                                 <div className="flex items-center space-x-4">
                                                     {session.homeworkUrl && (
-                                                        <a
-                                                            href={session.homeworkUrl}
-                                                            className="text-sm text-blue-600 hover:text-blue-800"
+                                                        <Button
+                                                            type="link"
+                                                            onClick={() => {
+                                                                setSelectedAssignment({
+                                                                    id: session.id.toString(),
+                                                                    title: session.name,
+                                                                    content: 'Nội dung bài tập...',
+                                                                    dueDate: '2024-03-25',
+                                                                    dueTime: '23:59',
+                                                                    submission: {
+                                                                        content: 'Bài làm của học viên...',
+                                                                        submittedAt: '2024-03-24 15:30',
+                                                                    },
+                                                                    evaluation: {
+                                                                        score: 8,
+                                                                        feedback: 'Bài làm tốt...',
+                                                                        correctedFiles: ['bai_da_sua.pdf'],
+                                                                        evaluatedAt: '2024-03-25 10:00',
+                                                                    },
+                                                                });
+                                                                setIsViewAssignmentModal(true);
+                                                            }}
                                                         >
                                                             Xem bài tập
-                                                        </a>
+                                                        </Button>
                                                     )}
                                                     <span
                                                         className={`text-sm ${
@@ -267,6 +456,9 @@ const ClassDetail: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <ViewAssignmentModal />
+            <ViewEvaluationModal />
         </div>
     );
 };
