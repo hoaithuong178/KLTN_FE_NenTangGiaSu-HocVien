@@ -1,14 +1,14 @@
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 
-function Contacts() {
+function PostsLanding() {
     return (
         <>
             <Header />
-            <div>Contacts</div>
+            <div>PostsLanding</div>
             <Footer />
         </>
     );
 }
 
-export default Contacts;
+export default PostsLanding;
