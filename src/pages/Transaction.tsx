@@ -69,7 +69,7 @@ const Transaction: React.FC = () => {
                 <Card className="mb-6 top-10">
                     <div className="text-center">
                         <p className="text-gray-600 mb-2">Số dư hiện tại</p>
-                        <h2 className="text-3xl font-bold text-blue-600">{mockData.balance}</h2>
+                        <h2 className="text-3xl font-bold text-blue-900">{mockData.balance}</h2>
                     </div>
                 </Card>
 
@@ -87,7 +87,7 @@ const Transaction: React.FC = () => {
                                 </div>
                                 <div className="flex items-center space-x-4">
                                     <span className="font-medium text-gray-900">{transaction.amount}</span>
-                                    <Button type="primary">Thanh toán</Button>
+                                    <Button className="bg-blue-900 text-white font-bold">Thanh toán</Button>
                                 </div>
                             </div>
                         ))}

@@ -17,7 +17,7 @@ const mockClasses = [
         teacherName: 'Nguyễn Văn A',
         teacherAvatar: 'https://via.placeholder.com/40',
         totalSessions: 5,
-        completedSessions: 3,
+        completedSessions: 1,
         paymentStatus: 'Đã thanh toán',
         schedule: {
             dayOfWeek: 1, // Thứ 2
@@ -107,7 +107,7 @@ const MyClass: React.FC = () => {
     };
 
     return (
-        <div className="absolute top-0 left-0 flex h-screen w-screen">
+        <div className="absolute top-0 left-0 flex h-screen w-screen ">
             <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
             <div className="flex-1 flex flex-col">
                 <TopNavbar />
@@ -118,11 +118,11 @@ const MyClass: React.FC = () => {
                         <input
                             type="text"
                             placeholder="Tìm kiếm lớp học..."
-                            className="w-full p-3 pl-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 pl-10 rounded-md border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-blue-400" />
                     </div>
                 </div>
 
@@ -130,7 +130,7 @@ const MyClass: React.FC = () => {
                 <div className={`mt-28 flex-1 px-6 py-4 ${isExpanded ? 'ml-56' : 'ml-16'} overflow-y-auto`}>
                     {/* Tabs */}
                     <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-                        <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/20 p-1 mb-6">
+                        <Tab.List className="flex space-x-1 rounded-xl bg-blue-100 p-1 mb-6">
                             {tabs.map((tab) => (
                                 <Tab
                                     key={tab}
@@ -138,8 +138,8 @@ const MyClass: React.FC = () => {
                                         `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all
                                         ${
                                             selected
-                                                ? 'bg-[#1B223B] text-[#FFC569] shadow'
-                                                : 'text-gray-600 hover:bg-white/[0.12] hover:text-[#1B223B]'
+                                                ? 'bg-blue-900 text-white shadow'
+                                                : 'text-blue-900 hover:bg-blue-200/80 hover:text-blue-900'
                                         }`
                                     }
                                 >
@@ -184,18 +184,18 @@ const MyClass: React.FC = () => {
                                     newDate.setDate(currentWeek.getDate() - 7);
                                     setCurrentWeek(newDate);
                                 }}
-                                className="p-2 rounded-full hover:bg-gray-100"
+                                className="p-2 rounded-full hover:bg-blue-100 text-blue-600"
                             >
                                 <ArrowLeftIcon className="h-5 w-5" />
                             </button>
-                            <h2 className="text-lg font-semibold">Lịch học tuần</h2>
+                            <h2 className="text-lg font-semibold text-blue-900">Lịch học tuần</h2>
                             <button
                                 onClick={() => {
                                     const newDate = new Date(currentWeek);
                                     newDate.setDate(currentWeek.getDate() + 7);
                                     setCurrentWeek(newDate);
                                 }}
-                                className="p-2 rounded-full hover:bg-gray-100"
+                                className="p-2 rounded-full hover:bg-blue-100 text-blue-600"
                             >
                                 <ArrowRightIcon className="h-5 w-5" />
                             </button>

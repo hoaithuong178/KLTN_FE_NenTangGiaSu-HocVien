@@ -28,23 +28,23 @@ const NotifySuccess: React.FC = () => {
     const { title, description } = getMessage();
 
     return (
-        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-[#1B223B] text-white h-screen w-screen">
+        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-white text-blue-900 h-screen w-screen">
             {/* Tiêu đề */}
-            <TitleText level={1} className="text-center mb-4" color="text-customYellow">
+            <TitleText level={1} className="text-center mb-4" color="text-blue-900">
                 {title}
             </TitleText>
             {/* Mô tả */}
-            <Text size="medium" color="text-gray-400" className="mb-8">
+            <Text size="medium" color="text-gray-600" className="mb-8">
                 {description}
             </Text>
 
-            <div className="flex margin-top-4">
+            <div className="flex items-center space-x-1">
                 {/* Quay lại Đăng nhập */}
+                <Text size="small" color="text-gray-600">
+                    Quay lại
+                </Text>
                 <a href="/login">
-                    <Text size="small" color="text-gray-400">
-                        Quay lại{'  '}
-                    </Text>
-                    <Text size="small" color="text-blue-500">
+                    <Text size="small" color="text-blue-700" className="hover:text-blue-800 hover:underline">
                         Đăng nhập
                     </Text>
                 </a>

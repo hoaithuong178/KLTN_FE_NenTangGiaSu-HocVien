@@ -56,7 +56,7 @@ const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ currentWeek, scheduleDa
                 <div className="font-medium text-[#1B223B]">{session.className}</div>
                 <div className="text-sm text-gray-600">{session.time}</div>
                 {session.isAttendable && (
-                    <button className="mt-2 w-full text-sm bg-[#1B223B] text-[#FFC569] py-1 px-2 rounded hover:bg-[#5d6fb1] transition-colors">
+                    <button className="w-full bg-blue-900 font-bold text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                         Điểm danh
                     </button>
                 )}

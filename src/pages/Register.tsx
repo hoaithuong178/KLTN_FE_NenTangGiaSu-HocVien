@@ -259,16 +259,16 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="absolute top-0 left-0 overflow-x-hidden overflow-y-auto justify-center items-center bg-[#1B223B] text-white h-screen w-screen overflow-hidden">
-            <TitleText level={1} className="text-center mt-8" color="text-customYellow">
+        <div className="absolute top-0 left-0 overflow-x-hidden overflow-y-auto justify-center items-center bg-white text-blue-900 h-screen w-screen overflow-hidden">
+            <TitleText level={1} className="text-center mt-8" color="text-blue-900">
                 Đăng ký tài khoản TeachMe.vn
             </TitleText>
             <div className="text-center">
-                <Text size="small" color="text-gray-500">
+                <Text size="small" color="text-gray-600">
                     Đã có tài khoản?{' '}
                 </Text>
                 <a href="/sign-in">
-                    <Text size="small" color="text-blue-500" underline>
+                    <Text size="small" color="text-blue-700" underline>
                         Đăng nhập
                     </Text>
                 </a>
@@ -281,7 +281,7 @@ const Register: React.FC = () => {
                         title="First Name"
                         placeholder="Enter your firstname"
                         errorTitle={errors.firstName}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setFirstName(value)}
                         required
                     />
@@ -290,7 +290,7 @@ const Register: React.FC = () => {
                         title="Last Name"
                         placeholder="Enter your lastname"
                         errorTitle={errors.lastName}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setLastName(value)}
                         required
                     />
@@ -299,7 +299,7 @@ const Register: React.FC = () => {
                         title="Email Address"
                         placeholder="Enter your email"
                         errorTitle={errors.email}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setEmail(value)}
                         required
                     />
@@ -308,7 +308,7 @@ const Register: React.FC = () => {
                         title="Password"
                         placeholder="Enter your password"
                         errorTitle={errors.password}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setPassword(value)}
                         required
                     />
@@ -317,7 +317,7 @@ const Register: React.FC = () => {
                         title="Re-Password"
                         placeholder="Re-enter your password"
                         errorTitle={errors.rePassword}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setRePassword(value)}
                         required
                     />
@@ -328,7 +328,7 @@ const Register: React.FC = () => {
                         title="Phone number"
                         placeholder="Enter your phone number"
                         errorTitle={errors.phoneNumber}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setPhoneNumber(value)}
                         required
                     />
@@ -336,7 +336,7 @@ const Register: React.FC = () => {
                         title="City and Province"
                         options={cityOptions}
                         onChange={(value) => setCity(value)}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         required
                     />
                     {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
@@ -344,8 +344,8 @@ const Register: React.FC = () => {
                         title="Gender"
                         options={['Male', 'Female', 'Other']}
                         onChange={(value) => setGender(value)}
-                        titleColor="text-customYellow"
-                        optionColor="text-customYellow"
+                        titleColor="text-blue-900"
+                        optionColor="text-blue-900"
                         required
                     />
                     {errors.gender && <p className="text-red-500 text-sm">{errors.gender}</p>}
@@ -353,7 +353,7 @@ const Register: React.FC = () => {
                         title="Year of Birth"
                         options={yearOptions}
                         onChange={(value) => setYearOfBirth(value)}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         required
                     />
                     {errors.yearOfBirth && <p className="text-red-500 text-sm">{errors.yearOfBirth}</p>}
@@ -362,7 +362,7 @@ const Register: React.FC = () => {
                         title="Identity Card"
                         placeholder="Enter your Identity Card"
                         errorTitle={errors.identityCard}
-                        titleColor="text-customYellow"
+                        titleColor="text-blue-900"
                         onChange={(value) => setIdentityCard(value)}
                         required
                     />
@@ -370,8 +370,13 @@ const Register: React.FC = () => {
             </div>
             <div className="flex flex-col items-center mt-4">
                 <div className="flex items-center mb-2">
-                    <input type="checkbox" checked={isTutor} onChange={() => setIsTutor(!isTutor)} className="mr-2" />
-                    <Text size="small" color="text-gray-500">
+                    <input
+                        type="checkbox"
+                        checked={isTutor}
+                        onChange={() => setIsTutor(!isTutor)}
+                        className="mr-2 accent-blue-900"
+                    />
+                    <Text size="small" color="text-gray-600">
                         Đăng ký làm gia sư?
                     </Text>
                 </div>
@@ -380,22 +385,22 @@ const Register: React.FC = () => {
                         type="checkbox"
                         checked={isAccept}
                         onChange={() => setIsAccept(!isAccept)}
-                        className="mr-2"
+                        className="mr-2 accent-blue-900"
                     />
-                    <Text size="small" color="text-gray-500">
+                    <Text size="small" color="text-gray-600">
                         Tôi đồng ý với các điều khoản trong{' '}
                     </Text>
                     <a href="/terms">
-                        <Text size="small" color="text-blue-500" underline>
+                        <Text size="small" color="text-blue-700" underline>
                             Điều khoản sử dụng
                         </Text>
                     </a>
                 </div>
                 <Button
                     title="Register"
-                    foreColor="#1B223B"
-                    backgroundColor="#FFC569"
-                    className="w-80 h-12"
+                    foreColor="white"
+                    backgroundColor="bg-blue-900"
+                    className="w-80 h-12 hover:bg-blue-800 hover:text-white transition-colors"
                     onClick={handleClickRegister}
                     disabled={!isAccept}
                 />

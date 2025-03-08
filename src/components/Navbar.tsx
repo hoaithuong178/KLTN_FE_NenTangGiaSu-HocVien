@@ -26,20 +26,20 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
     // Hàm để kiểm tra xem mục menu nào đang được chọn
     const getLinkClass = (path: string) => {
         return location.pathname === path
-            ? 'bg-[#FFC569] text-[#1B223B]' // Màu khi đang ở trang này
-            : 'hover:bg-gray-700 text-[#FFC569]'; // Màu khi chưa chọn trang
+            ? 'bg-blue-300 text-blue-900' // Màu nền khi active
+            : 'hover:bg-blue-700/30 text-blue-100'; // Màu nền khi hover
     };
 
     // Hàm để lấy màu chữ cho các mục menu
     const getTextColor = (path: string) => {
         return location.pathname === path
-            ? 'text-[#1B223B]' // Màu chữ khi trang được chọn
-            : 'text-[#FFC569]'; // Màu chữ khi chưa chọn trang
+            ? 'text-blue-900' // Màu chữ khi active
+            : 'text-blue-100'; // Màu chữ mặc định
     };
 
     return (
         <div
-            className={`fixed h-full transition-all duration-300 bg-gray-800 text-white ${
+            className={`fixed h-full transition-all duration-300 bg-blue-900 text-white ${
                 isExpanded ? 'w-56' : 'w-16'
             } flex flex-col`}
         >
@@ -52,12 +52,12 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                 )}
                 <button
                     onClick={toggleNavbar}
-                    className="absolute top-1/2 right-[-12px] transform -translate-y-1/2 bg-[#FFC569] p-2 rounded-full shadow-lg hover:bg-[#e5ac4e] transition-all"
+                    className="absolute top-1/2 right-[-12px] transform -translate-y-1/2 bg-blue-200 p-2 rounded-full shadow-lg hover:bg-blue-300 transition-all"
                 >
                     {isExpanded ? (
-                        <ArrowLeftIcon className="w-2 h-2 text-[#1B223B]" />
+                        <ArrowLeftIcon className="w-2 h-2 text-blue-900" />
                     ) : (
-                        <ArrowRightIcon className="w-2 h-2 text-[#1B223B]" />
+                        <ArrowRightIcon className="w-2 h-2 text-blue-900" />
                     )}
                 </button>
             </div>

@@ -125,8 +125,8 @@ const Post: React.FC = () => {
         },
     ];
 
-    // Mảng màu nền cho bài đăng
-    const bgColors = ['#e3f5ef', '#fadfdf', '#FDEDD7'];
+    // Thay đổi màu nền cho các bài đăng
+    const bgColors = ['#EBF5FF', '#E6F0FD', '#F0F7FF']; // Các tông màu xanh nhạt
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -304,7 +304,7 @@ const Post: React.FC = () => {
                     </div>
                     <button
                         onClick={togglePopup}
-                        className="text-left p-3 bg-[#ffdda7] text-[#1B223B] rounded-lg flex-1"
+                        className="text-left p-3 bg-blue-100 text-blue-900 rounded-lg flex-1 hover:bg-blue-200 transition-colors"
                     >
                         Bạn có nhu cầu tìm gia sư ư?
                     </button>
@@ -317,7 +317,7 @@ const Post: React.FC = () => {
                         onClick={closePopupPost}
                     >
                         <div
-                            className="bg-white p-6 rounded-md w-[500px] max-w-full my-8"
+                            className="bg-white p-6 rounded-md w-[700px] max-w-full my-8"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <TitleText level={2} size="large" weight="bold">
@@ -560,13 +560,13 @@ const Post: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={togglePopup}
-                                        className="px-4 py-2 bg-[#F97564] text-[#1B223B] rounded-md"
+                                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
                                     >
                                         Đóng
                                     </button>
                                     <button
                                         type="button"
-                                        className="px-4 py-2 bg-[#7beed7] text-[#1B223B] rounded-md"
+                                        className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
                                         onClick={() => {
                                             // Xử lý đăng bài ở đây
                                             console.log({
@@ -613,7 +613,7 @@ const Post: React.FC = () => {
                     {posts.map((post, index) => (
                         <div
                             key={post.id}
-                            className="relative border p-4 rounded-md mb-4"
+                            className="relative border p-4  mb-4 shadow-md"
                             style={{ backgroundColor: bgColors[index % bgColors.length] }}
                         >
                             {/* Các button yêu thích và ghim */}
@@ -644,7 +644,7 @@ const Post: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div className="col-span-1">
-                                    <p className="text-lg text-[#e4655f] font-bold">Giá: {post.price}</p>
+                                    <p className="text-lg text-blue-800 font-bold">Giá: {post.price}</p>
                                     <p className="text-sm text-gray-600">Hình thức học: {post.studyMode}</p>
                                 </div>
                                 <div className="col-span-1">
@@ -663,13 +663,13 @@ const Post: React.FC = () => {
                             <div className="flex justify-end space-x-4 pt-3 mr-0">
                                 <button
                                     onClick={() => openNegotiationPopup(post)}
-                                    className="px-4 py-2 bg-[#F97564] text-[#1B223B] rounded-md"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                 >
                                     Thương lượng giá
                                 </button>
                                 <button
                                     onClick={() => openConfirmPopup(post)}
-                                    className="px-4 py-2 bg-[#7beed7] text-[#1B223B] rounded-md font-bold"
+                                    className="px-4 py-2 bg-blue-900 text-white rounded-md font-bold hover:bg-blue-800 transition-colors"
                                 >
                                     Nhận lớp
                                 </button>
@@ -681,7 +681,10 @@ const Post: React.FC = () => {
             {/* Popup Thương lượng giá */}
             {isNegotiationOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                        className="bg-white p-6 rounded-lg shadow-lg w-1/2 border border-blue-100"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h2 className="text-xl font-semibold mb-4">Thương lượng giá</h2>
                         <p className="text-lg text-gray-600">Giá cũ: {selectedPost?.price}</p>
                         <div className="mt-4">
@@ -696,7 +699,7 @@ const Post: React.FC = () => {
                         <div className="flex justify-between mt-4">
                             <button
                                 onClick={closeNegotiationPopup}
-                                className="bg-[#F97564] text-[#1B223B] px-4 py-2 rounded-md"
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
                             >
                                 Hủy
                             </button>
@@ -705,7 +708,7 @@ const Post: React.FC = () => {
                                     console.log('Yêu cầu thương lượng giá:', negotiatedPrice);
                                     closeNegotiationPopup();
                                 }}
-                                className="bg-[#7beed7] text-[#1B223B] px-4 py-2 rounded-md"
+                                className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
                             >
                                 Gửi yêu cầu
                             </button>
@@ -725,7 +728,7 @@ const Post: React.FC = () => {
                         <div className="flex justify-between mt-4">
                             <button
                                 onClick={closeConfirmPopup}
-                                className="bg-[#F97564] text-[#1B223B] px-4 py-2 rounded-md"
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
                             >
                                 Hủy
                             </button>
@@ -734,7 +737,7 @@ const Post: React.FC = () => {
                                     console.log('Gửi yêu cầu nhận lớp');
                                     closeConfirmPopup();
                                 }}
-                                className="bg-[#7beed7] text-[#1B223B] px-4 py-2 rounded-md"
+                                className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
                             >
                                 Gửi yêu cầu
                             </button>
@@ -749,7 +752,7 @@ const Post: React.FC = () => {
                     onClick={closePopupFilter}
                 >
                     <div
-                        className="bg-white p-6 rounded-lg shadow-lg w-[500px] max-w-full my-8"
+                        className="bg-white p-6 rounded-lg shadow-lg w-[700px] max-w-full my-8"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Tiêu đề */}
@@ -961,11 +964,14 @@ const Post: React.FC = () => {
 
                         {/* Button Thiết lập lại & Áp dụng */}
                         <div className="flex justify-between mt-6">
-                            <button className="px-4 py-2 bg-gray-200 rounded" onClick={resetFilters}>
+                            <button
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded transition-colors"
+                                onClick={resetFilters}
+                            >
                                 Thiết lập lại
                             </button>
                             <button
-                                className="px-4 py-2 bg-[#7beed7] text-[#1B223B] rounded"
+                                className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors"
                                 onClick={() => {
                                     console.log('Áp dụng filter');
                                     closePopupFilter();

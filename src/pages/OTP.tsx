@@ -61,13 +61,13 @@ const VerifyOTP: React.FC = () => {
     };
 
     return (
-        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-[#1B223B] text-white h-screen w-screen">
+        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-white h-screen w-screen">
             {/* Tiêu đề */}
-            <TitleText level={1} className="text-center mb-4" color="text-customYellow">
+            <TitleText level={1} className="text-center mb-4" color="text-blue-900">
                 Xác minh
             </TitleText>
             {/* Mô tả */}
-            <Text size="medium" color="text-gray-400" className="mb-8">
+            <Text size="medium" color="text-gray-600" className="mb-8">
                 Mã xác thực đã được gửi đến email của bạn
             </Text>
             {/* Nhập mã OTP */}
@@ -79,7 +79,7 @@ const VerifyOTP: React.FC = () => {
                         type="text"
                         value={digit}
                         onChange={(e) => handleChange(index, e.target.value)}
-                        className="w-14 h-14 text-center text-lg font-bold border border-gray-300 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-14 h-14 text-center text-lg font-bold border-2 border-blue-900 rounded-md bg-white text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         maxLength={1}
                     />
                 ))}
@@ -87,14 +87,17 @@ const VerifyOTP: React.FC = () => {
             {/* Nút xác thực */}
             <Button
                 title="Xác thực"
-                foreColor="#1B223B"
-                backgroundColor="#FFC569"
-                className="w-60 h-12 mb-4"
+                foreColor="white"
+                backgroundColor="#1E3A8A"
+                className="w-60 h-12 mb-4 hover:bg-blue-800 transition-colors"
                 onClick={handleSubmit}
             />
             {/* Gửi lại mã xác thực */}
             <div className="flex items-center space-x-2 mb-2">
-                <button className="text-sm underline text-gray-400" onClick={handleResendOTP}>
+                <button
+                    className="text-sm text-blue-700 hover:text-blue-800 hover:underline transition-colors"
+                    onClick={handleResendOTP}
+                >
                     Gửi lại mã xác thực
                 </button>
                 {/* Đồng hồ đếm ngược */}
@@ -102,13 +105,13 @@ const VerifyOTP: React.FC = () => {
                     {timer}s
                 </Text>
             </div>
-            <div className="flex margin-top-4">
+            <div className="flex items-center space-x-1">
                 {/* Quay lại Đăng nhập */}
+                <Text size="small" color="text-gray-600">
+                    Quay lại
+                </Text>
                 <a href="/login">
-                    <Text size="small" color="text-gray-400">
-                        Quay lại{'  '}
-                    </Text>
-                    <Text size="small" color="text-blue-500">
+                    <Text size="small" color="text-blue-700" className="hover:text-blue-800 hover:underline">
                         Đăng nhập
                     </Text>
                 </a>
