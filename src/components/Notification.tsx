@@ -7,11 +7,11 @@ interface NotiTrueProps {
 export const NotiTrue: React.FC<NotiTrueProps> = ({ message }) => {
     return (
         <div className="fixed top-4 right-4 z-50 animate-fade-in-out">
-            <div className="bg-white border-l-4 border-[#7beed7] shadow-lg rounded-lg p-4 min-w-[300px] max-w-[400px]">
+            <div className="bg-white border-l-4 border-blue-300 shadow-lg rounded-lg p-4 min-w-[300px] max-w-[400px]">
                 <div className="flex items-center">
                     <div className="flex-shrink-0">
                         <svg
-                            className="h-6 w-6 text-[#7beed7]"
+                            className="h-6 w-6 text-blue-500"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -26,7 +26,7 @@ export const NotiTrue: React.FC<NotiTrueProps> = ({ message }) => {
                         <p className="text-sm font-medium text-gray-900">{message}</p>
                         <div className="mt-1">
                             <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#7beed7] animate-progress"></div>
+                                <div className="h-full bg-blue-300 animate-progress"></div>
                             </div>
                         </div>
                     </div>

@@ -25,7 +25,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ className, classInfo }) => {
             <div className="mb-3">
                 <div className="w-full bg-gray-300 rounded-full h-2.5">
                     <div
-                        className="bg-[#5d6fb1] h-2.5 rounded-full"
+                        className="bg-blue-900 h-2.5 rounded-full"
                         style={{ width: `${(classInfo.completedSessions / classInfo.totalSessions) * 100}%` }}
                     />
                 </div>
@@ -39,7 +39,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ className, classInfo }) => {
                 className={`w-full py-2 px-4 rounded-lg text-sm font-medium
                     ${
                         classInfo.paymentStatus === 'Đã thanh toán'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-blue-100 text-blue-900'
                             : 'bg-red-100 text-red-800'
                     }`}
             >

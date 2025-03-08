@@ -127,7 +127,7 @@ const Chat: React.FC = () => {
                                 <div
                                     className={`max-w-[70%] ${
                                         message.senderId === 'me'
-                                            ? 'bg-blue-500 text-white rounded-l-lg rounded-tr-lg'
+                                            ? 'bg-blue-800 text-white rounded-l-lg rounded-tr-lg'
                                             : 'bg-white rounded-r-lg rounded-tl-lg'
                                     } p-3 shadow`}
                                 >

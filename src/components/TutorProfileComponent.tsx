@@ -137,7 +137,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg text-center">
                     <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg mb-2"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                         onClick={() => setShowRequestModal(true)}
                     >
                         Gửi yêu cầu dạy

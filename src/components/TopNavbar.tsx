@@ -13,8 +13,8 @@ interface TopNavbarProps {
 
 const TopNavbar: React.FC<TopNavbarProps> = ({
     backgroundColor = 'white',
-    textColor = 'text-[#1B223B]',
-    iconColor = 'text-[#1B223B]',
+    textColor = 'text-black',
+    iconColor = 'text-black',
 }) => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -102,14 +102,14 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                                     key={notification.id}
                                     onClick={() => handleNotificationClick(notification.id)}
                                     className={`p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors ${
-                                        !notification.isRead ? 'bg-[#e3f5ef]' : ''
+                                        !notification.isRead ? 'bg-blue-100' : ''
                                     }`}
                                 >
                                     <TitleText level={4} size="small" weight="bold">
                                         {notification.title}
                                     </TitleText>
                                     <Text size="small" color="text-gray-600">
-                                        {truncateText(notification.content, 200)}
+                                        {truncateText(notification.content, 200)}{' '}
                                     </Text>
                                     <Text size="small" color="text-gray-400">
                                         {notification.time}
@@ -121,9 +121,11 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                         <div className="p-4 border-t">
                             <button
                                 onClick={markAllAsRead}
-                                className="w-full py-2 bg-[#7beed7] text-[#1B223B] rounded-md hover:bg-[#6adbc6] transition-colors"
+                                className="w-full bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
                             >
-                                <Text weight="bold">Đánh dấu tất cả là đã đọc</Text>
+                                <Text weight="bold" color="white">
+                                    Đánh dấu tất cả là đã đọc
+                                </Text>
                             </button>
                         </div>
                     </div>
@@ -133,9 +135,9 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Button chuyển ngôn ngữ */}
             <button
                 onClick={() => setLanguage(language === 'En' ? 'Vi' : 'En')}
-                className="bg-[#FFC569] text-[#1B223B] py-1 px-3 rounded-full hover:bg-[#e5ac4e] transition-all"
+                className="bg-white py-1 px-3 rounded-md hover:bg-blue-800 transition-all border border-blue-800 group"
             >
-                <Text size="small" weight="bold" color="text-[#1B223B]">
+                <Text size="small" weight="bold" color="text-black group-hover:text-white">
                     {language}
                 </Text>
             </button>

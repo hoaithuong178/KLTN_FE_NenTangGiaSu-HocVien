@@ -30,13 +30,13 @@ const ForgotPassword: React.FC = () => {
     };
 
     return (
-        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-[#1B223B] text-white h-screen w-screen">
+        <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-white h-screen w-screen">
             {/* Tiêu đề */}
-            <TitleText level={1} className="text-center mb-4" color="text-customYellow">
+            <TitleText level={1} className="text-center mb-4" color="text-blue-900">
                 Quên mật khẩu
             </TitleText>
             {/* Mô tả */}
-            <Text size="medium" color="text-gray-400" className="mb-8">
+            <Text size="medium" color="text-gray-600" className="mb-8">
                 Nhập email để nhận mã xác thực
             </Text>
 
@@ -46,28 +46,29 @@ const ForgotPassword: React.FC = () => {
                 title="Email"
                 placeholder="Enter your email to reset your password"
                 errorTitle={error} // Đảm bảo lỗi sẽ được hiển thị ở đây
-                titleColor="text-customYellow"
+                titleColor="text-blue-900"
                 regex={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
                 onChange={handleInputChange}
                 required
-                className="w-[400px]"
+                className="w-full max-w-2xl px-4"
             />
 
             {/* Nút xác nhận */}
             <Button
                 title="Gửi mã xác thực"
-                foreColor="#1B223B"
-                backgroundColor="#FFC569"
+                foreColor="white"
+                backgroundColor="#1E3A8A"
+                hoverBackgroundColor="#1E40AF"
                 className="w-60 h-12 mt-4"
                 onClick={handleSubmit}
             />
             {/* Quay lại đăng nhập */}
             <div className="flex mt-4">
-                <a href="/sign-in">
-                    <Text size="small" color="text-gray-400">
-                        Quay lại{'  '}
+                <a href="/sign-in" className="flex items-center space-x-1">
+                    <Text size="small" color="text-gray-600">
+                        Quay lại
                     </Text>
-                    <Text size="small" color="text-blue-500">
+                    <Text size="small" color="text-blue-700" className="hover:text-blue-800 hover:underline">
                         Đăng nhập
                     </Text>
                 </a>
