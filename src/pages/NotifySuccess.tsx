@@ -43,7 +43,7 @@ const NotifySuccess: React.FC = () => {
                 <Text size="small" color="text-gray-600">
                     Quay lại
                 </Text>
-                <a href="/login">
+                <a href="/sign-in">
                     <Text size="small" color="text-blue-700" className="hover:text-blue-800 hover:underline">
                         Đăng nhập
                     </Text>
