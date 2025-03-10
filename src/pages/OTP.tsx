@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../components/Button';
 import { Text, TitleText } from '../components/Text';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axiosClient from '../configs/axios.config';
 
 const VerifyOTP: React.FC = () => {
     const navigate = useNavigate();
-    const location = useLocation(); // Lấy thông tin từ props navigate
-    const [otp, setOtp] = useState(['', '', '', '']); // Mỗi ô nhập ký tự
+    const location = useLocation();
+    const { registrationData, type } = location.state || {};
+    const [otp, setOtp] = useState(['', '', '', '', '', '']); // Mỗi ô nhập ký tự
     const [timer, setTimer] = useState(60); // Đồng hồ đếm ngược
 
     useEffect(() => {
@@ -25,10 +27,21 @@ const VerifyOTP: React.FC = () => {
         return () => clearInterval(countdown);
     }, [timer]);
 
-    const handleResendOTP = () => {
-        setTimer(60); // Đặt lại thời gian
-        console.log('Mã xác thực mới đã được gửi.');
-        // Thực hiện gửi mã OTP ở đây, ví dụ gọi API
+    const handleResendOTP = async () => {
+        try {
+            if (type === 'register' && registrationData?.email) {
+                // Gửi lại OTP bất cứ khi nào
+                await axiosClient.post('/auth/otp-register', {
+                    email: registrationData.email,
+                });
+                // Reset OTP inputs
+                setOtp(['', '', '', '', '', '']);
+                // Reset timer
+                setTimer(60);
+            }
+        } catch (error: unknown) {
+            console.error('Error resending OTP:', error);
+        }
     };
 
     const handleChange = (index: number, value: string) => {
@@ -42,21 +55,40 @@ const VerifyOTP: React.FC = () => {
                 const nextInput = document.getElementById(`otp-${index + 1}`);
                 nextInput?.focus();
             }
+            // Tự động submit khi nhập xong ô cuối cùng
+            if (value && index === otp.length - 1) {
+                handleSubmit();
+            }
         }
     };
 
-    const handleSubmit = () => {
-        const otpValue = otp.join('');
-        console.log(`OTP nhập: ${otpValue}`);
-        if (otpValue === '8888') {
-            // Kiểm tra props, nếu là "register" thì chuyển sang trang "register-success", còn nếu là "forgot-password" thì chuyển sang "new-password"
-            if (location.state?.type === 'register') {
-                navigate('/notify-success', { state: { type: 'register', from: 'verify-otp' } });
-            } else if (location.state?.type === 'forgot-password') {
-                navigate('/new-password');
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Submit khi nhấn Enter ở bất kỳ ô nào
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
+    const handleSubmit = async () => {
+        try {
+            if (type === 'register') {
+                const finalRegistrationData = {
+                    ...registrationData,
+                    otp: otp.join(''),
+                };
+
+                await axiosClient.post('/auth/register', finalRegistrationData);
+
+                navigate('/notify-success', {
+                    state: {
+                        title: 'Đăng ký thành công!',
+                        description: 'Bạn có thể đăng nhập ngay bây giờ.',
+                        register: true,
+                    },
+                });
             }
-        } else {
-            alert('OTP không chính xác!');
+        } catch (error: unknown) {
+            console.error('Error during registration:', error);
         }
     };
 
@@ -79,6 +111,7 @@ const VerifyOTP: React.FC = () => {
                         type="text"
                         value={digit}
                         onChange={(e) => handleChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e)}
                         className="w-14 h-14 text-center text-lg font-bold border-2 border-blue-900 rounded-md bg-white text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         maxLength={1}
                     />
@@ -110,7 +143,7 @@ const VerifyOTP: React.FC = () => {
                 <Text size="small" color="text-gray-600">
                     Quay lại
                 </Text>
-                <a href="/login">
+                <a href="/sign-in">
                     <Text size="small" color="text-blue-700" className="hover:text-blue-800 hover:underline">
                         Đăng nhập
                     </Text>
