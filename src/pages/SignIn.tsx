@@ -63,6 +63,8 @@ const SignIn = () => {
 
                 localStorage.setItem('token', response.data.accessToken);
                 localStorage.setItem('refreshToken', response.data.refreshToken);
+                localStorage.setItem('role', response.data.role);
+                console.log(response.data.role);
                 navigate('/post', { state: { type: 'register' } });
             } catch (error) {
                 console.log('Có lỗi, không thể đăng nhập');
