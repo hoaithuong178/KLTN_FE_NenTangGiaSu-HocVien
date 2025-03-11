@@ -17,14 +17,11 @@ import Tutor from '../pages/Tutor';
 import Transaction from '../pages/Transaction';
 import PostsLanding from '../pages/PostsLanding';
 import Tutors from '../pages/Tutors';
-import PersonalInfor from '../pages/PersonalInfor';
 import TutorProfile from '../pages/TutorProfile';
 import ClassDetail from '../pages/ClassDetail';
-
 import ClassDetailTutor from '../pages/ClassDetailTutor';
-
 import DefaultLayout from '../layouts/DefaultLayout';
-
+import StudentProfile from '../pages/StudentProfile';
 
 export interface IRoute {
     path: string;
@@ -49,11 +46,9 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
-
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
-
-    { path: '/personal-information', component: PersonalInfor },
+    { path: '/information', component: StudentProfile },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors', component: Tutors },
     { path: '/tutor-profile', component: TutorProfile },
