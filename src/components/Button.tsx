@@ -14,27 +14,30 @@ type ButtonProps = {
     className?: string; // ClassName để tùy chỉnh width và height
     onClick?: () => void; // Hàm callback khi nút được nhấn
     disabled?: boolean; // Trạng thái nút bị vô hiệu hóa
+    type?: 'button' | 'submit' | 'reset'; // Loại nút
 };
 
 export const Button: React.FC<ButtonProps> = ({
     title,
-    foreColor = '#FFC569',
-    backgroundColor = '#1B223B',
-    hoverForeColor = '#FFC569',
-    hoverBackgroundColor = '#1B223B',
-    disabledForeColor = '#B2B2B2',
-    disabledBackgroundColor = '#E0E0E0',
+    foreColor = 'white',
+    backgroundColor = '#1E3A8A', // blue-900
+    hoverForeColor = 'white',
+    hoverBackgroundColor = '#1E40AF', // blue-800
+    disabledForeColor = '#9CA3AF', // gray-400
+    disabledBackgroundColor = '#F3F4F6', // gray-100
     size = 'medium',
     weight = 'normal',
     className = '',
     onClick,
     disabled = false,
+    type = 'button',
 }) => {
     return (
         <button
+            type={type}
             onClick={onClick}
             disabled={disabled}
-            className={`py-2 px-4 rounded ${className} transition duration-300`}
+            className={`py-2 px-4 rounded-md ${className} transition-all duration-300`}
             style={{
                 backgroundColor: disabled ? disabledBackgroundColor : backgroundColor,
                 color: disabled ? disabledForeColor : foreColor,

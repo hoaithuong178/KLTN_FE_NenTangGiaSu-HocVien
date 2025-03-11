@@ -1,14 +1,14 @@
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 
-function Tutors() {
+function PostsLanding() {
     return (
         <>
             <Header />
-            <div>Tutors</div>
+            <div>PostsLanding</div>
             <Footer />
         </>
     );
 }
 
-export default Tutors;
+export default PostsLanding;
