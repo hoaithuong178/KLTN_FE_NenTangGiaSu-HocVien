@@ -5,10 +5,12 @@ import Header from '../components/Header';
 import ReviewCard from '../components/ReviewCard';
 import TutorCard from '../components/TutorCard';
 import { Button } from '../components/Button';
+import { useNavigate } from 'react-router-dom';
 
 const LandingSection = () => {
+    const navigate = useNavigate();
     return (
-        <div className="flex flex-row items-center justify-between h-screen bg-[#1b223b] px-12">
+        <div className="flex flex-row mt-16 items-center justify-between h-screen bg-[#1b223b] px-12">
             {/* Left Side - Text & Form */}
             <div className="flex flex-col max-w-lg text-white">
                 <h1 className="text-5xl font-bold mb-4 text-[#ffc569]">TeachMe</h1>
@@ -48,10 +50,16 @@ const LandingSection = () => {
                             className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 h-24"
                         ></textarea>
                         <div className="flex space-x-4">
-                            <button className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#e0aa4d]">
+                            <button
+                                className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                                onClick={() => navigate('/sign-in')}
+                            >
                                 Đăng bài
                             </button>
-                            <button className="border-2 border-[#ffc569] text-[#ffc569] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#ffc569] hover:text-[#1b223b]">
+                            <button
+                                className="border-2 border-[#ffc569] text-[#ffc569] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#ffc569] hover:text-[#1b223b]"
+                                onClick={() => navigate('/tutors-landing')}
+                            >
                                 Tìm gia sư
                             </button>
                         </div>
@@ -183,10 +191,14 @@ const ProgressSection = () => {
 };
 
 const StartSection = () => {
+    const navigate = useNavigate();
     return (
         <div className="bg-[#1b223b] text-white font-sans text-center p-20">
             <h1 className="text-4xl font-bold mb-6">Hàng ngàn học viên lựa chọn tham gia với TeachMe hằng tháng!</h1>
-            <button className="bg-[#ffc569] text-[#1b223b] px-5 py-2 rounded-md text-lg cursor-pointer">
+            <button
+                className="bg-[#ffc569] text-[#1b223b] px-5 py-2 rounded-md text-lg cursor-pointer"
+                onClick={() => navigate('/sign-in')}
+            >
                 Bắt đầu học!
             </button>
         </div>
@@ -289,8 +301,9 @@ const ReviewSection = () => {
 };
 
 const CommitSection = () => {
+    const navigate = useNavigate();
     return (
-        <div className="space-y-12 px-6">
+        <div className="space-y-12 px-6 mb-8">
             {/* Dòng 1 */}
             <div className="grid md:grid-cols-2 items-center gap-6 bg-[#ffc569] p-6 rounded-lg shadow-md">
                 <img src={tutorImage} alt="Step 1" className="w-36 h-48 rounded-lg shadow-md mx-auto" />
@@ -323,7 +336,10 @@ const CommitSection = () => {
                         </a>
                     </div>
 
-                    <button className="mt-4 bg-[#ffc569] hover:bg-[#e0aa4d] text-white font-bold py-2 px-6 rounded-lg shadow-md">
+                    <button
+                        className="mt-4 bg-[#ffc569] hover:bg-[#e0aa4d] text-white font-bold py-2 px-6 rounded-lg shadow-md"
+                        onClick={() => navigate('/sign-in')}
+                    >
                         Trở thành gia sư
                     </button>
                 </div>
@@ -341,7 +357,10 @@ const CommitSection = () => {
                         Bạn sẽ tìm được gia sư hợp theo từng nhu cầu mà bạn đưa ra, từ giới tính, độ tuổi, trình độ lẫn
                         hình thức học!
                     </p>
-                    <button className="mt-4 bg-[#1b223b] hover:bg-[#2a3349] text-white font-bold py-2 px-6 rounded-lg shadow-md">
+                    <button
+                        className="mt-4 bg-[#1b223b] hover:bg-[#2a3349] text-white font-bold py-2 px-6 rounded-lg shadow-md"
+                        onClick={() => navigate('/tuors-landing')}
+                    >
                         Tìm gia sư ngay
                     </button>
                 </div>

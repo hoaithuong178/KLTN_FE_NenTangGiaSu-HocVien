@@ -5,7 +5,7 @@ const Header = () => {
     const location = useLocation();
 
     return (
-        <header className="flex justify-between items-center bg-[#1b223b] px-8 py-4 text-white shadow-md">
+        <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center bg-[#1b223b] px-8 py-4 text-white shadow-md">
             {/* Logo */}
             <div className="flex items-center">
                 <img src={Logo} alt="Logo" className="h-10 w-auto object-contain" />
@@ -22,7 +22,7 @@ const Header = () => {
                     Trang chủ
                 </Link>
                 <Link
-                    to="/posts"
+                    to="/posts-landing"
                     className={`${
                         location.pathname === '/posts' ? 'text-[#ffc569]' : 'hover:text-[#ffc569]'
                     } transition-all duration-300 underline-offset-4 hover:underline`}
@@ -30,7 +30,7 @@ const Header = () => {
                     Bài đăng
                 </Link>
                 <Link
-                    to="/tutors"
+                    to="/tutors-landing"
                     className={`${
                         location.pathname === '/tutors' ? 'text-[#ffc569]' : 'hover:text-[#ffc569]'
                     } transition-all duration-300 underline-offset-4 hover:underline`}
