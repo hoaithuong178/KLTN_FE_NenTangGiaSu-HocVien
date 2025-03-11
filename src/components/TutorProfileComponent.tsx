@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeftIcon, ChatIcon, HeartIcon, StarIcon } from './icons';
+import { AddressIcon, ArrowLeftIcon, ChatIcon, FlagIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from './icons';
+import { Button } from './Button';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -19,6 +20,7 @@ export type TutorProfileComponentProps = {
     name: string;
     pricePerSession: number;
     email: string;
+    phone: string;
     isFavorite: boolean;
     violations: number;
     subjects: string[];
@@ -45,6 +47,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
     name,
     pricePerSession,
     email,
+    phone,
     isFavorite,
     violations,
     subjects,
@@ -64,7 +67,6 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
         content: '',
         subject: subjects[0] || '',
         location: '',
-        sessions: 1,
         duration: 60, // phút
         mode: 'online',
         pricePerSession: pricePerSession, // Gợi ý giá theo thời lượng
@@ -81,8 +83,25 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
     };
 
     // Cập nhật hình thức học
-    const handleModeChange = (mode: string) => {
-        setRequestForm((prev) => ({ ...prev, mode }));
+    // const handleModeChange = (mode: string) => {
+    //     setRequestForm((prev) => ({ ...prev, mode }));
+    // };
+
+    const handleSubmit = () => {
+        console.log('Yêu cầu đã được gửi!');
+        // Thêm logic gửi yêu cầu ở đây, ví dụ: gọi API
+    };
+
+    const [selectedDay, setSelectedDay] = useState<string | null>(null);
+    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+    const [sessionCount, setSessionCount] = useState<number>(1);
+
+    const toggleTimeSelection = (timeRange: string) => {
+        if (selectedTimes.includes(timeRange)) {
+            setSelectedTimes(selectedTimes.filter((t) => t !== timeRange));
+        } else if (selectedTimes.length < sessionCount) {
+            setSelectedTimes([...selectedTimes, timeRange]);
+        }
     };
 
     const [, setFavoritePosts] = useState<number[]>([]);
@@ -112,6 +131,10 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
         });
     };
 
+    const getAge = (birthYear: number): number => {
+        return new Date().getFullYear() - birthYear;
+    };
+
     return (
         <div className="max-w-4xl mx-auto bg-white p-4 rounded-lg shadow-md">
             <header className="flex items-center space-x-2 mb-4">
@@ -128,11 +151,27 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                     <img src={avatar} alt={name} className="w-24 h-24 rounded-full mr-4" />
                     <div>
                         <h1 className="text-2xl font-bold">{name}</h1>
-                        <p className="text-lg text-gray-700">
+                        <p className="text-lg text-gray-700 font-bold">
                             {new Intl.NumberFormat('vi-VN').format(pricePerSession)}đ/buổi
                         </p>
-                        <p className="text-gray-600">{email}</p>
-                        <p className="text-gray-600">Số lần vi phạm: {violations}</p>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="flex items-center gap-2">
+                                <MailIcon className="w-5 h-5 text-gray-600" />
+                                <p className="text-gray-600">{email}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <PhoneIcon className="w-5 h-5 text-gray-600" />
+                                <p className="text-gray-600">{phone}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <AddressIcon className="w-5 h-5 text-gray-600" />
+                                <p className="text-gray-600">{location}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FlagIcon className="w-5 h-5 text-gray-600" />
+                                <p className="text-gray-600">Số lần vi phạm: {violations}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg text-center">
@@ -142,11 +181,10 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                     >
                         Gửi yêu cầu dạy
                     </button>
-
                     {/* Modal Popup */}
                     {showRequestModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                            <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                            <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full max-h-[80vh] overflow-auto">
                                 <h2 className="text-xl font-bold mb-4">Gửi yêu cầu dạy</h2>
 
                                 <label className="block font-semibold">Tiêu đề</label>
@@ -189,14 +227,17 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                     className="w-full border p-2 rounded mb-2"
                                 />
 
+                                {/* Chọn số buổi và thời lượng */}
                                 <div className="flex space-x-2">
                                     <div className="flex-1">
                                         <label className="block font-semibold">Số buổi</label>
                                         <input
                                             type="number"
                                             name="sessions"
-                                            value={requestForm.sessions}
-                                            onChange={handleChange}
+                                            value={sessionCount}
+                                            onChange={(e) =>
+                                                setSessionCount(Math.max(1, parseInt(e.target.value) || 1))
+                                            }
                                             className="w-full border p-2 rounded mb-2"
                                             min="1"
                                         />
@@ -215,6 +256,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                     </div>
                                 </div>
 
+                                {/* Chọn hình thức học */}
                                 <label className="block font-semibold">Hình thức học</label>
                                 <div className="flex space-x-4 mb-2">
                                     <label className="flex items-center space-x-2">
@@ -223,7 +265,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                             name="mode"
                                             value="online"
                                             checked={requestForm.mode === 'online'}
-                                            onChange={() => handleModeChange('online')}
+                                            onChange={handleChange}
                                         />
                                         <span>Online</span>
                                     </label>
@@ -233,12 +275,66 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                             name="mode"
                                             value="offline"
                                             checked={requestForm.mode === 'offline'}
-                                            onChange={() => handleModeChange('offline')}
+                                            onChange={handleChange}
                                         />
                                         <span>Offline</span>
                                     </label>
                                 </div>
 
+                                {/* Chọn ngày & giờ học */}
+                                <label className="block font-semibold">Chọn ngày và giờ học</label>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2 flex-wrap">
+                                        {Object.keys(schedule).map((day) => (
+                                            <Button
+                                                key={day}
+                                                title={day}
+                                                className={
+                                                    selectedDay === day ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                                                }
+                                                onClick={() => setSelectedDay(day)}
+                                            />
+                                        ))}
+                                    </div>
+                                    {selectedDay && (
+                                        <div className="mt-4">
+                                            <h3 className="text-lg font-semibold">Chọn khung giờ:</h3>
+                                            <div className="flex gap-2 flex-wrap mt-2">
+                                                {Object.entries(schedule[selectedDay]).map(([period, times]) => (
+                                                    <div key={period} className="flex flex-col gap-1">
+                                                        <h4 className="font-medium">{period}</h4>
+                                                        {times?.map(([start, end]) => {
+                                                            const timeRange = `${start} - ${end}`;
+                                                            return (
+                                                                <Button
+                                                                    key={timeRange}
+                                                                    title={timeRange}
+                                                                    className={
+                                                                        selectedTimes.includes(timeRange)
+                                                                            ? 'bg-blue-500 text-white'
+                                                                            : 'bg-gray-200'
+                                                                    }
+                                                                    onClick={() => toggleTimeSelection(timeRange)}
+                                                                    disabled={
+                                                                        selectedTimes.length >= sessionCount &&
+                                                                        !selectedTimes.includes(timeRange)
+                                                                    }
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="mt-2 text-right">
+                                                <span className="text-sm text-gray-600">
+                                                    Đã chọn {selectedTimes.length}/{sessionCount} khung giờ
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Giá tiền */}
                                 <div className="bg-gray-100 p-2 rounded-md mb-2">
                                     <label className="block font-semibold">Giá/buổi:</label>
                                     <input
@@ -261,7 +357,9 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                     >
                                         Đóng
                                     </button>
-                                    <button className="px-4 py-2 bg-blue-500 text-white rounded">Gửi yêu cầu</button>
+                                    <button onClick={handleSubmit} className="px-4 py-2 bg-blue-500 text-white rounded">
+                                        Gửi yêu cầu
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -274,7 +372,9 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                 }`}
                                 onClick={() => handleFavorite(id)}
                             />
-                            <ChatIcon className="text-gray-500 cursor-pointer" />
+                            <Link to="/conservation">
+                                <ChatIcon className="text-gray-500 cursor-pointer" />
+                            </Link>
                         </div>
                         <div className="flex items-center space-x-1">
                             <span className="text-lg font-semibold">{rating}</span>
@@ -301,26 +401,50 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
             )}
 
             {/* Thông tin gia sư */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="col-span-2 bg-white p-4 rounded-lg shadow-md">
-                    <h2 className="text-xl font-bold mb-2">Về gia sư</h2>
-                    <div className="flex space-x-2 mb-2">
+
+            <div className="space-y-4 mb-4 p-4 bg-white rounded-lg shadow-md">
+                <div className="grid grid-cols-4 gap-4">
+                    <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
+                    <p className="text-gray-800 col-span-3">
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat, ullam dicta. Laborum
+                        consequatur vel doloremque libero inventore, molestiae doloribus! Ipsa expedita libero, iste sed
+                        pariatur mollitia non nihil ullam eum.
+                    </p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
+                    <p className="text-gray-800 col-span-3">{gender}</p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
+                    <p className="text-gray-800 col-span-3">
+                        {birthYear} ({getAge(birthYear)} tuổi)
+                    </p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Trình độ</p>
+                    <p className="col-span-3">
+                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg inline-block">
+                            {educationLevel}
+                        </span>
+                    </p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Kinh nghiệm</p>
+                    <p className="text-gray-800 col-span-3">{experience} năm</p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Số học sinh đã dạy</p>
+                    <p className="text-gray-800 col-span-3">{totalClasses} học sinh</p>
+
+                    <p className="text-gray-600 font-semibold col-span-1">Nơi dạy</p>
+                    <p className="text-gray-800 col-span-3">{location}</p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 items-start">
+                    <p className="text-gray-600 font-semibold col-span-1">Môn</p>
+                    <div className="flex flex-wrap gap-2 col-span-3">
                         {subjects.map((subject) => (
-                            <span key={subject} className="bg-red-200 text-red-800 px-2 py-1 rounded-full">
+                            <span key={subject} className="bg-pink-200 text-pink-700 px-3 py-1 rounded-lg">
                                 {subject}
                             </span>
                         ))}
                     </div>
-                    <p>Thông tin chi tiết về gia sư...</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <h2 className="text-xl font-bold mb-2">Thông tin thêm</h2>
-                    <p>Giới tính: {gender}</p>
-                    <p>Trình độ: {educationLevel}</p>
-                    <p>Kinh nghiệm: {experience} năm</p>
-                    <p>Năm sinh: {birthYear}</p>
-                    <p>Số lớp: {totalClasses}</p>
-                    <p>Nơi có thể dạy: {location}</p>
                 </div>
             </div>
             {/* Thời gian rảnh */}
@@ -363,10 +487,14 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = ({
                                 <h3 className="text-lg font-bold">{review.name}</h3>
                                 <p className="text-sm text-gray-500">{review.date}</p>
                                 <p className="text-gray-700">{review.content}</p>
-                                <div className="text-yellow-500">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <span key={i}>{i < review.rating ? '⭐' : '☆'}</span>
-                                    ))}
+                                <div className="flex text-yellow-500">
+                                    {Array.from({ length: 5 }).map((_, i) =>
+                                        i < review.rating ? (
+                                            <StarIcon key={i} className="w-5 h-5 fill-yellow-500" />
+                                        ) : (
+                                            <StarIcon key={i} className="w-5 h-5" />
+                                        ),
+                                    )}
                                 </div>
                             </div>
                         </div>

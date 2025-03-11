@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { default as Kein1, default as Kein2, default as Kein3 } from '../assets/Kein.jpg';
+import SignInPic1 from '../assets/SignIn1.jpg';
+import SignInPic2 from '../assets/SignIn2.jpg';
+import SignInPic3 from '../assets/SignIn3.jpg';
 import Facebook from '../assets/facebook.svg';
 import Google from '../assets/google.svg';
 import { InputField } from '../components/InputField';
@@ -8,18 +10,18 @@ import { useNavigate } from 'react-router-dom';
 import axiosClient from '../configs/axios.config';
 
 const SignIn = () => {
-    const images = [Kein1, Kein2, Kein3];
+    const images = [SignInPic1, SignInPic2, SignInPic3];
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [, setIsLoading] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
     const navigate = useNavigate();
+
     const handleClickSignIn = async () => {
         const newErrors: { [key: string]: string } = {};
 
-        // Kiểm tra các trường nhập vào với các điều kiện tương ứng
         if (!email) {
             newErrors.email = 'Vui lòng nhập Email!';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -30,50 +32,23 @@ const SignIn = () => {
         } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
             newErrors.password = 'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ cái và số!';
         }
-        // Cập nhật lỗi vào state
+
         setErrors(newErrors);
 
-        // Kiểm tra nếu không có lỗi thì tiếp tục
         if (Object.keys(newErrors).length === 0) {
-            console.log({
-                email,
-            });
-
+            setIsLoading(true);
             try {
-                setIsLoading(true);
-                const response = await axiosClient.post(
-                    '/auth/login',
-                    {
-                        email,
-                        password,
-                    },
-                    {
-                        params: {
-                            page: 1,
-                        },
-                    },
-                );
-                console.log(response);
-
-                axiosClient.get('', {
-                    params: {
-                        page: 1,
-                    },
-                });
+                const response = await axiosClient.post('/api/auth/login', { email, password });
 
                 localStorage.setItem('token', response.data.accessToken);
                 localStorage.setItem('refreshToken', response.data.refreshToken);
-                localStorage.setItem('role', response.data.role);
-                console.log(response.data.role);
+
                 navigate('/post', { state: { type: 'register' } });
             } catch (error) {
-                console.log('Có lỗi, không thể đăng nhập');
-                console.log(error);
+                console.error('Có lỗi, không thể đăng nhập', error);
             } finally {
                 setIsLoading(false);
             }
-        } else {
-            console.log('Có lỗi, không thể đăng ký');
         }
     };
 
@@ -82,8 +57,7 @@ const SignIn = () => {
             setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         }, 3000);
         return () => clearInterval(interval);
-    }, [images.length]);
-
+    });
     return (
         <div className="flex h-screen bg-white">
             {/* Slide Section */}
@@ -97,7 +71,7 @@ const SignIn = () => {
                             key={index}
                             src={image}
                             alt={`Slide ${index + 1}`}
-                            className="w-full h-96 object-cover rounded-2xl flex-shrink-0"
+                            className="w-full h-96 object-contain rounded-2xl flex-shrink-0"
                         />
                     ))}
                 </div>
@@ -124,7 +98,7 @@ const SignIn = () => {
                         title="Email Address"
                         placeholder="Enter your email"
                         errorTitle={errors.email}
-                        titleColor="text-customYellow"
+                        titleColor="#1B223B"
                         onChange={(value) => setEmail(value)}
                         required
                     />
@@ -133,7 +107,7 @@ const SignIn = () => {
                         title="Password"
                         placeholder="Enter your password"
                         errorTitle={errors.password}
-                        titleColor="text-customYellow"
+                        titleColor="#1B223B"
                         onChange={(value) => setPassword(value)}
                         required
                     />
@@ -146,11 +120,14 @@ const SignIn = () => {
 
                     <Button
                         type="button"
-                        title="Register"
+                        title={isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                         foreColor="#1B223B"
                         backgroundColor="#FFC569"
+                        hoverForeColor="#1B223B"
+                        hoverBackgroundColor="#FFB347"
                         className="w-full h-12"
                         onClick={handleClickSignIn}
+                        disabled={isLoading}
                     />
 
                     <div className="text-center text-gray-500 my-4">hoặc</div>
