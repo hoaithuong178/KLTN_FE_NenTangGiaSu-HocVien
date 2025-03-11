@@ -6,6 +6,7 @@ const sampleTutor: TutorProfileComponentProps = {
     name: 'Nguyễn Văn A',
     pricePerSession: 200000,
     email: 'nguyenvana@gmail.com',
+    phone: '0333 333 333',
     violations: 0,
     isFavorite: false,
     subjects: ['Toán', 'Lý', 'Hóa'],

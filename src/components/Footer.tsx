@@ -1,10 +1,11 @@
+import Logo from '../assets/FullLogo.png';
 const Footer = () => {
     return (
         <footer className="bg-[#1b223b] text-white px-8 py-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Column 1 */}
                 <div>
-                    <img src="/path-to-your-logo.png" alt="Logo" className="h-12 object-contain mb-4" />
+                    <img src={Logo} alt="Logo" className="h-12 object-contain mb-4" />
                     <div className="flex space-x-4 mb-4">
                         <a href="#" className="hover:text-[#ffc569]">
                             <i className="fab fa-facebook-f"></i>
