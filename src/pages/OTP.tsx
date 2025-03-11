@@ -62,13 +62,6 @@ const VerifyOTP: React.FC = () => {
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        // Submit khi nhấn Enter ở bất kỳ ô nào
-        if (e.key === 'Enter') {
-            handleSubmit();
-        }
-    };
-
     const handleSubmit = async () => {
         try {
             if (type === 'register') {
@@ -92,6 +85,37 @@ const VerifyOTP: React.FC = () => {
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text').slice(0, 6); // Lấy 6 ký tự đầu
+        const newOtp = [...otp];
+
+        // Điền từng ký tự vào mảng OTP
+        for (let i = 0; i < Math.min(6, pastedData.length); i++) {
+            newOtp[i] = pastedData[i];
+        }
+
+        setOtp(newOtp);
+
+        // Nếu đủ 6 số thì tự động submit
+        if (pastedData.length >= 6) {
+            handleSubmit();
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        const currentIndex = parseInt(e.currentTarget.id.split('-')[1]);
+
+        if (e.key === 'Enter') {
+            handleSubmit();
+        } else if (e.key === 'Backspace' && !otp[currentIndex]) {
+            // Nếu ô hiện tại trống và nhấn Backspace
+            if (currentIndex > 0) {
+                const prevInput = document.getElementById(`otp-${currentIndex - 1}`);
+                prevInput?.focus();
+            }
+        }
+    };
     return (
         <div className="absolute top-0 left-0 flex flex-col justify-center items-center bg-white h-screen w-screen">
             {/* Tiêu đề */}
@@ -111,7 +135,8 @@ const VerifyOTP: React.FC = () => {
                         type="text"
                         value={digit}
                         onChange={(e) => handleChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e)}
+                        onKeyDown={handleKeyDown}
+                        onPaste={index === 0 ? handlePaste : undefined} // Chỉ cho phép paste ở ô đầu tiên
                         className="w-14 h-14 text-center text-lg font-bold border-2 border-blue-900 rounded-md bg-white text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         maxLength={1}
                     />
