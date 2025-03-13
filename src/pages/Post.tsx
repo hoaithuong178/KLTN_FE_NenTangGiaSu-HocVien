@@ -7,8 +7,10 @@ import { CoppyLinkIcon, FilterIcon, HeartIcon } from '../components/icons';
 import { Checkbox, ComboBox, InputField, RadioButton } from '../components/InputField';
 import { TitleText } from '../components/Text';
 import { Notification } from '../components/Notification';
-
+import { useAuthStore } from '../store/authStore';
 const Post: React.FC = () => {
+    const { user } = useAuthStore();
+    console.log(user);
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         // Kiểm tra trạng thái từ localStorage
         const storedState = localStorage.getItem('navbarExpanded');

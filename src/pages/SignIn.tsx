@@ -6,8 +6,9 @@ import Facebook from '../assets/facebook.svg';
 import Google from '../assets/google.svg';
 import { InputField } from '../components/InputField';
 import { Button } from '../components/Button';
-import { useNavigate } from 'react-router-dom';
-import axiosClient from '../configs/axios.config';
+// import axiosClient from '../configs/axios.config';
+// import { useAuthStore } from '../store/authStore';
+// import { AxiosError } from 'axios';
 
 const SignIn = () => {
     const images = [SignInPic1, SignInPic2, SignInPic3];
@@ -17,16 +18,17 @@ const SignIn = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-    const navigate = useNavigate();
-
     const handleClickSignIn = async () => {
         const newErrors: { [key: string]: string } = {};
 
+        // Kiểm tra email
         if (!email) {
             newErrors.email = 'Vui lòng nhập Email!';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             newErrors.email = 'Email không hợp lệ!';
         }
+
+        // Kiểm tra mật khẩu
         if (!password) {
             newErrors.password = 'Vui lòng nhập Password!';
         } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
@@ -37,19 +39,35 @@ const SignIn = () => {
 
         if (Object.keys(newErrors).length === 0) {
             setIsLoading(true);
-            try {
-                const response = await axiosClient.post('/api/auth/login', { email, password });
-
-                localStorage.setItem('token', response.data.accessToken);
-                localStorage.setItem('refreshToken', response.data.refreshToken);
-
-                navigate('/post', { state: { type: 'register' } });
-            } catch (error) {
-                console.error('Có lỗi, không thể đăng nhập', error);
-            } finally {
-                setIsLoading(false);
-            }
+            // Nếu không có lỗi, chuyển hướng đến trang /post
+            window.location.href = '/post';
         }
+        // // Xử lý đăng nhập
+        // const newErrors: { [key: string]: string } = {};
+        // if (!email) {
+        //     newErrors.email = 'Vui lòng nhập Email!';
+        // } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        //     newErrors.email = 'Email không hợp lệ!';
+        // }
+        // if (!password) {
+        //     newErrors.password = 'Vui lòng nhập Password!';
+        // } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
+        //     newErrors.password = 'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ cái và số!';
+        // }
+        // setErrors(newErrors);
+
+        // if (Object.keys(newErrors).length === 0) {
+        //     setIsLoading(true);
+        //     try {
+        //         const response = await axiosClient.post('/api/auth/login', { email, password });
+        //         const { user, token } = response.data;
+        //         useAuthStore.getState().login(user, token);
+        //     } catch (error) {
+        //         console.error('Login failed', error);
+        //     } finally {
+        //         setIsLoading(false);
+        //     }
+        // }
     };
 
     useEffect(() => {

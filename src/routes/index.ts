@@ -20,11 +20,8 @@ import Tutors from '../pages/Tutors';
 import PersonalInfor from '../pages/PersonalInfor';
 import TutorProfile from '../pages/TutorProfile';
 import ClassDetail from '../pages/ClassDetail';
-
 import ClassDetailTutor from '../pages/ClassDetailTutor';
-
 import DefaultLayout from '../layouts/DefaultLayout';
-
 
 export interface IRoute {
     path: string;
@@ -49,10 +46,8 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
-
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
-
     { path: '/personal-information', component: PersonalInfor },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors', component: Tutors },
