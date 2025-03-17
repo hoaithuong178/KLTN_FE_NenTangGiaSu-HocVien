@@ -8,16 +8,22 @@ import { Checkbox, ComboBox, InputField, RadioButton } from '../components/Input
 import { TitleText } from '../components/Text';
 import { Notification } from '../components/Notification';
 import axiosClient from '../configs/axios.config';
+import { Slider } from 'antd';
+import FreeTimeSelection from '../components/FreeTimeSelection';
+import { AxiosError } from 'axios';
 
 const Post: React.FC = () => {
+    const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
+    const [filterAvailableTimes, setFilterAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
+
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         const storedState = localStorage.getItem('navbarExpanded');
         return storedState ? JSON.parse(storedState) : true;
     });
     const [showPopup, setShowPopup] = useState(false);
-    const [minPrice, setMinPrice] = useState(100000);
-    const [maxPrice, setMaxPrice] = useState(500000);
-    const [availableTimes, setAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
+    const [minPrice, setMinPrice] = useState(20000);
+    const [maxPrice, setMaxPrice] = useState(50000);
+    // const [availableTimes] = useState([{ day: '', from: '', to: '' }]);
     const toggleNavbar = () => {
         setIsExpanded((prev) => !prev);
     };
@@ -83,14 +89,17 @@ const Post: React.FC = () => {
         setSelectedDistrict('');
         setSelectedWard('');
         setSelectedStudyMode([]);
-        setAvailableTimes([{ day: '', from: '', to: '' }]);
+        setSelectedGrade('');
+        setSelectedSessionPerWeek([]);
+        setSelectedDuration([]);
+        setFilterAvailableTimes([{ day: '', from: '', to: '' }]); // Reset filter times
     };
 
     const [isNegotiationOpen, setIsNegotiationOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [negotiatedPrice, setNegotiatedPrice] = useState('');
     const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Sửa để ban đầu là null
-    const [postTitle, setPostTitle] = useState('');
+    const [, setPostTitle] = useState('');
     const [subject, setSubject] = useState('');
     const [grade, setGrade] = useState('');
     const [studyMode, setStudyMode] = useState('');
@@ -153,7 +162,22 @@ const Post: React.FC = () => {
         requirements: string[];
         schedule: Schedule[];
         title: string;
+        createdAt: string;
     };
+    const [subjects, setSubjects] = useState<string[]>([]);
+    // const [customSubject, setCustomSubject] = useState('');
+
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                const response = await axiosClient.get('/subjects');
+                setSubjects(response.data.map((subject: { name: string }) => subject.name));
+            } catch (error) {
+                console.error('Error fetching subjects:', error);
+            }
+        };
+        fetchSubjects();
+    }, []);
 
     const openNegotiationPopup = (post: Post) => {
         setSelectedPost(post);
@@ -180,36 +204,6 @@ const Post: React.FC = () => {
         y: 0,
     });
 
-    const formatTime = (timeString: string) => {
-        const time = new Date(timeString);
-        return time.toLocaleTimeString('vi-VN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-        });
-    };
-    const getDayOfWeek = (timeString: string) => {
-        const date = new Date(timeString);
-        const day = date.getDay();
-        switch (day) {
-            case 0:
-                return 'Chủ nhật';
-            case 1:
-                return 'Thứ 2';
-            case 2:
-                return 'Thứ 3';
-            case 3:
-                return 'Thứ 4';
-            case 4:
-                return 'Thứ 5';
-            case 5:
-                return 'Thứ 6';
-            case 6:
-                return 'Thứ 7';
-            default:
-                return '';
-        }
-    };
     const handleCopyLink = (e: React.MouseEvent, postId: number) => {
         const x = e.clientX;
         const y = e.clientY;
@@ -223,17 +217,145 @@ const Post: React.FC = () => {
 
     const userRole = 'TUTOR';
 
-    const MultiLineText = ({ text }: { text: string }) => (
-        <>
-            {text.split('\n').map((line, i) => (
-                <span key={i}>
-                    {line}
-                    <br />
-                </span>
-            ))}
-        </>
-    );
+    const MultiLineText = ({
+        text,
+        locations,
+        schedule,
+    }: {
+        text?: string;
+        locations?: string[];
+        schedule?: Schedule[];
+    }) => {
+        if (locations) {
+            return (
+                <>
+                    {locations.map((location, i) => (
+                        <span key={i} className="mr-8">
+                            {location}
+                        </span>
+                    ))}
+                </>
+            );
+        }
+        if (schedule) {
+            return (
+                <div className="mt-1">
+                    {schedule.map((time, i) => (
+                        <div key={i} className="ml-2">
+                            {'- '}
+                            {String(time)}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        // Giữ lại logic cũ cho text thông thường
+        return (
+            <>
+                {text?.split('\n').map((line, i) => (
+                    <span key={i}>
+                        {line}
+                        <br />
+                    </span>
+                ))}
+            </>
+        );
+    };
 
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            try {
+                setLoading(true);
+                if (!searchTerm.trim()) {
+                    // Nếu thanh tìm kiếm trống, lấy tất cả bài viết
+                    const response = await axiosClient.get('/posts');
+                    const formattedPosts = response.data.map((post: APIPost) => ({
+                        ...post,
+                        mode: post.mode === 'true' ? true : false,
+                    }));
+                    setPosts(formattedPosts);
+                } else {
+                    // Tìm kiếm theo title
+                    const response = await axiosClient.get('/posts/search', {
+                        params: {
+                            page: 1,
+                            limit: 5,
+                            title: searchTerm.trim(),
+                        },
+                    });
+
+                    if (response.data.length === 0) {
+                        setPosts([]);
+                        setNotification({
+                            message: 'Không tìm thấy kết quả phù hợp',
+                            show: true,
+                            type: 'error',
+                        });
+                        setTimeout(() => {
+                            setNotification((prev) => ({ ...prev, show: false }));
+                        }, 2000);
+                    } else {
+                        const formattedPosts = response.data.map((post: APIPost) => ({
+                            ...post,
+                            mode: post.mode === 'true' ? true : false,
+                        }));
+                        setPosts(formattedPosts);
+                    }
+                }
+            } catch (error) {
+                console.error('Error searching posts:', error);
+                if (error instanceof Error) {
+                    console.log('Error details:', (error as AxiosError).response);
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleApplyFilter = async () => {
+        try {
+            setLoading(true);
+            const response = await axiosClient.get('/posts/search', {
+                params: {
+                    page: 1,
+                    limit: 5,
+                    grade: selectedGrade || null,
+                    title: null,
+                    content: null,
+                    location: selectedCity || selectedDistrict || selectedWard || null,
+                    minSessionPerWeek: selectedSessionPerWeek.length > 0 ? selectedSessionPerWeek[0] : null,
+                    maxSessionPerWeek: selectedSessionPerWeek.length > 0 ? selectedSessionPerWeek[0] : null,
+                    minDuration: selectedDuration.length > 0 ? selectedDuration[0] : null,
+                    maxDuration: selectedDuration.length > 0 ? selectedDuration[0] : null,
+                    subject: selectedSubject || null,
+                    requirements: null,
+                    mode: selectedStudyMode.length > 0 ? (selectedStudyMode[0] === 'Online' ? 'true' : 'false') : null,
+                    minFeePerSession: minPrice || null,
+                    maxFeePerSession: maxPrice || null,
+                    sessionPerWeek: null,
+                },
+            });
+
+            console.log('Filter response:', response.data); // Log để debug
+            const formattedPosts = response.data.map((post: APIPost) => ({
+                ...post,
+                mode: post.mode === 'true' ? true : false,
+            }));
+            setPosts(formattedPosts);
+            closePopupFilter();
+        } catch (error) {
+            console.error('Error filtering posts:', error);
+            if (error instanceof Error) {
+                console.log('Error details:', (error as AxiosError).response);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+    const [selectedGrade, setSelectedGrade] = useState('');
     return (
         <div className="absolute top-0 left-0 flex h-screen w-screen bg-white z-10">
             <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
@@ -249,6 +371,9 @@ const Post: React.FC = () => {
                         type="text"
                         placeholder="Nhập nội dung cần tìm kiếm"
                         className="p-3 rounded-md border border-gray-300 flex-1"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={handleSearch}
                     />
                     <FilterIcon className="h-9 w-9 text-gray-500 mt-1 cursor-pointer" onClick={togglePopupFilter} />
                 </div>
@@ -352,7 +477,7 @@ const Post: React.FC = () => {
                                     onChange={(value) => setDuration(value)}
                                 />
                                 <div className="mt-4 mb-4">
-                                    <label className="block text-gray-700 font-bold mb-2">Khoảng giá / Buổi</label>
+                                    <label className="block text-gray-700 font-bold mb-2">Khoảng giá / Giờ</label>
                                     <div className="flex items-center space-x-2">
                                         <input
                                             type="text"
@@ -414,80 +539,12 @@ const Post: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="mt-4">
-                                    <label className="block text-gray-700 font-bold mb-2">Thời gian rảnh</label>
-                                    {availableTimes.map((time, index) => (
-                                        <div key={index} className="flex space-x-2 mt-2">
-                                            <select
-                                                value={time.day}
-                                                onChange={(e) => {
-                                                    const newTimes = [...availableTimes];
-                                                    newTimes[index].day = e.target.value;
-                                                    setAvailableTimes(newTimes);
-                                                }}
-                                                className="border p-2 rounded w-1/3"
-                                            >
-                                                <option value="">Chọn thứ</option>
-                                                <option value="2">Thứ 2</option>
-                                                <option value="3">Thứ 3</option>
-                                                <option value="4">Thứ 4</option>
-                                                <option value="5">Thứ 5</option>
-                                                <option value="6">Thứ 6</option>
-                                                <option value="7">Thứ 7</option>
-                                                <option value="CN">Chủ nhật</option>
-                                            </select>
-                                            <input
-                                                type="time"
-                                                value={time.from}
-                                                onChange={(e) => {
-                                                    const newTimes = [...availableTimes];
-                                                    newTimes[index].from = e.target.value;
-                                                    setAvailableTimes(newTimes);
-                                                }}
-                                                className="border p-2 rounded w-1/3"
-                                            />
-                                            <input
-                                                type="time"
-                                                value={time.to}
-                                                onChange={(e) => {
-                                                    const newTimes = [...availableTimes];
-                                                    newTimes[index].to = e.target.value;
-                                                    setAvailableTimes(newTimes);
-                                                }}
-                                                className="border p-2 rounded w-1/3"
-                                            />
-                                        </div>
-                                    ))}
-                                    <button
-                                        className="mt-2 px-3 py-1 bg-gray-300 rounded text-sm"
-                                        onClick={() =>
-                                            setAvailableTimes([...availableTimes, { day: '', from: '', to: '' }])
-                                        }
-                                    >
-                                        + Thêm thời gian rảnh
-                                    </button>
+                                    <FreeTimeSelection
+                                        times={postAvailableTimes}
+                                        onTimesChange={setPostAvailableTimes}
+                                    />
                                 </div>
-                                <div className="mt-4">
-                                    <h3 className="font-bold">Hiển thị thời gian rảnh:</h3>
-                                    <ul>
-                                        {availableTimes.map((time, index) => {
-                                            const days: { [key: string]: string } = {
-                                                '2': 'Thứ 2',
-                                                '3': 'Thứ 3',
-                                                '4': 'Thứ 4',
-                                                '5': 'Thứ 5',
-                                                '6': 'Thứ 6',
-                                                '7': 'Thứ 7',
-                                                CN: 'Chủ nhật',
-                                            };
-                                            const dayName = days[time.day as keyof typeof days] || '';
-                                            return (
-                                                <li key={index}>
-                                                    {dayName} từ {time.from} - {time.to}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </div>
+
                                 <div className="flex justify-between mt-6">
                                     <button
                                         type="button"
@@ -501,16 +558,8 @@ const Post: React.FC = () => {
                                         className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
                                         onClick={() => {
                                             console.log({
-                                                postTitle,
-                                                subject,
-                                                grade,
-                                                studyMode,
-                                                location,
-                                                sessionsPerWeek,
-                                                duration,
-                                                requirements,
-                                                minPrice,
-                                                maxPrice,
+                                                // ... other data ...
+                                                availableTimes: postAvailableTimes,
                                             });
                                             togglePopup();
                                         }}
@@ -548,78 +597,89 @@ const Post: React.FC = () => {
                         posts.map((post, index) => (
                             <div
                                 key={post.id}
-                                className="relative border p-4 mb-4 shadow-md"
+                                className="relative border p-4 mb-4 shadow-md rounded-lg"
                                 style={{ backgroundColor: bgColors[index % bgColors.length] }}
                             >
+                                {/* Header: Icons */}
                                 <div className="absolute top-2 right-2 flex space-x-4">
                                     <HeartIcon
-                                        className={`h-6 w-6 cursor-pointer transition-colors duration-200 ${
+                                        className={`h-5 w-5 cursor-pointer transition-colors duration-200 ${
                                             favoritePosts.includes(post.id) ? 'text-red-500 fill-current' : ''
                                         }`}
                                         onClick={() => handleFavorite(post.id)}
                                     />
                                     <CoppyLinkIcon
-                                        className="h-6 w-6 cursor-pointer"
+                                        className="h-5 w-5 cursor-pointer"
                                         onClick={(e) => handleCopyLink(e, post.id)}
                                     />
                                 </div>
 
+                                {/* User Info & Title Section */}
                                 <div className="flex items-center space-x-4 mb-2">
-                                    {/* Sử dụng ảnh mặc định nếu avatar không phải URL hợp lệ */}
-                                    <img
-                                        src={Avatar} // Thay vì post.user.avatar, sử dụng ảnh mặc định
-                                        alt={post.user.name}
-                                        className="w-10 h-10 rounded-full"
-                                    />
-                                    <div>
-                                        <p className="font-semibold text-lg">{post.user.name}</p>
-                                        <p className="text-sm text-gray-600">
-                                            {post.subject.name} - {post.grade}
-                                        </p>
+                                    <img src={Avatar} alt={post.user.name} className="w-10 h-10 rounded-full" />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-semibold text-lg">{post.user.name}</p>
+                                        </div>
+                                        <span className="text-sm text-gray-500 block mt-1">
+                                            {new Date(post.createdAt).toLocaleString('vi-VN', {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                            })}
+                                        </span>
                                     </div>
                                 </div>
-                                <h3 className="font-bold text-xl">{post.title}</h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Title & Subject Info */}
+                                <h3 className="font-bold text-xl p-1">{post.title}</h3>
+                                <p className="text-sm text-gray-600 p-1">
+                                    {post.subject.name} - {post.grade}
+                                </p>
+
+                                {/* Main Info Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                                     <div className="col-span-1">
                                         <p className="text-lg text-blue-800 font-bold">
                                             Giá: {post.feePerSession} {'vnđ/ giờ'}
                                         </p>
                                         <p className="text-sm text-gray-600 pt-2">
-                                            Thời gian rảnh:{'\n'}
-                                            {post.schedule.map((time, index) => (
-                                                <span key={index}>
-                                                    {getDayOfWeek(time.startTime)} {formatTime(time.startTime)} -{' '}
-                                                    {formatTime(time.endTime)}
-                                                    <br />
-                                                </span>
-                                            ))}
+                                            Địa điểm:{' '}
+                                            <MultiLineText
+                                                locations={Array.isArray(post.locations) ? post.locations : []}
+                                            />
                                         </p>
                                     </div>
                                     <div className="col-span-1">
                                         <p className="text-sm text-gray-600">Số buổi/tuần: {post.sessionPerWeek}</p>
-                                    </div>
-                                    <div className="col-span-1">
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-gray-600 mt-2">
                                             Hình thức học: {post.mode ? 'Trực tuyến' : 'Trực tiếp'}
                                         </p>
                                     </div>
+                                    <div className="col-span-1">
+                                        <p className="text-sm text-gray-600">
+                                            Thời gian rảnh:
+                                            <MultiLineText
+                                                schedule={Array.isArray(post.schedule) ? post.schedule : []}
+                                            />
+                                        </p>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-gray-600 pt-2">
-                                    Địa điểm:{' '}
-                                    <MultiLineText
-                                        text={Array.isArray(post.locations) ? post.locations.join('\n') : ''}
-                                    />
-                                </p>
 
-                                <p className="text-sm text-gray-600 mt-2">
-                                    Yêu cầu:{' '}
-                                    <MultiLineText
-                                        text={Array.isArray(post.requirements) ? post.requirements.join(', ') : ''}
-                                    />
-                                </p>
+                                {/* Requirements Section */}
+                                <div className="mt-3 p-2 bg-gray-50 rounded-md">
+                                    <p className="text-sm text-gray-600">
+                                        <span className="font-medium">Yêu cầu: </span>
+                                        <MultiLineText
+                                            text={Array.isArray(post.requirements) ? post.requirements.join(', ') : ''}
+                                        />
+                                    </p>
+                                </div>
 
-                                <div className="flex justify-end space-x-4 pt-3 mr-0">
+                                {/* Action Buttons */}
+                                <div className="flex justify-end space-x-4 mt-4">
                                     <button
                                         onClick={() => openNegotiationPopup(post)}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -713,7 +773,7 @@ const Post: React.FC = () => {
                     )}
                 </>
             )}
-
+            {/*popup filter */}
             {isOpen && (
                 <div
                     className="fixed inset-0 overflow-y-auto bg-gray-700 bg-opacity-50 flex justify-center items-start z-50"
@@ -726,34 +786,44 @@ const Post: React.FC = () => {
                         <TitleText level={2} size="large" weight="bold">
                             Bộ lọc
                         </TitleText>
+                        <div className="mt-4">
+                            <label className="block text-gray-700 font-bold mb-2">Môn học</label>
+                            <input
+                                list="subjects"
+                                value={selectedSubject}
+                                onChange={(e) => setSelectedSubject(e.target.value)}
+                                onFocus={(e) => e.target.select()} // Tự động bôi đen khi focus
+                                placeholder="Chọn hoặc nhập môn học"
+                                className="border p-2 rounded w-full"
+                            />
+                            <datalist id="subjects">
+                                {subjects.map((subject, index) => (
+                                    <option key={index} value={subject} />
+                                ))}
+                            </datalist>
+                        </div>
                         <ComboBox
-                            title="Môn học"
-                            options={['Toán', 'Lý', 'Hóa', 'Anh']}
-                            value={selectedSubject}
-                            onChange={(value) => setSelectedSubject(value)}
-                        />
-                        <ComboBox
-                            title="Khôi học"
+                            title="Khối học"
                             options={[
-                                '1',
-                                '2',
-                                '3',
-                                '4',
-                                '5',
-                                '6',
-                                '7',
-                                '8',
-                                '9',
-                                '10',
-                                '11',
-                                '12',
-                                'Đại học',
-                                'Sau đại học',
-                                'Ký năng mềm',
-                                'Khác',
+                                'GRADE_1',
+                                'GRADE_2',
+                                'GRADE_3',
+                                'GRADE_4',
+                                'GRADE_5',
+                                'GRADE_6',
+                                'GRADE_7',
+                                'GRADE_8',
+                                'GRADE_9',
+                                'GRADE_10',
+                                'GRADE_11',
+                                'GRADE_12',
+                                'UNIVERSITY',
+                                'AFTER UNIVERSITY',
+                                'SOFT SKILL',
+                                'OTHER',
                             ]}
-                            value={selectedSubject}
-                            onChange={(value) => setSelectedSubject(value)}
+                            value={selectedGrade}
+                            onChange={(value) => setSelectedGrade(value)}
                         />
                         <div className="mt-4">
                             <label className="block text-gray-700 font-bold mb-2">Địa điểm</label>
@@ -798,35 +868,30 @@ const Post: React.FC = () => {
                                 <input
                                     type="text"
                                     className="border px-2 py-1 w-24 text-center"
-                                    value={minPrice.toLocaleString('vi-VN') + 'đ'}
+                                    value={`${minPrice.toLocaleString('vi-VN')}đ`}
                                     readOnly
                                 />
                                 <span>-</span>
                                 <input
                                     type="text"
                                     className="border px-2 py-1 w-24 text-center"
-                                    value={maxPrice.toLocaleString('vi-VN') + 'đ'}
+                                    value={`${maxPrice.toLocaleString('vi-VN')}đ`}
                                     readOnly
                                 />
                             </div>
                             <div className="relative">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="500000"
-                                    step="10000"
-                                    value={minPrice}
-                                    onChange={(e) => setMinPrice(Number(e.target.value))}
-                                    className="absolute top-2 left-0 w-full opacity-50"
-                                />
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="500000"
-                                    step="10000"
-                                    value={maxPrice}
-                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                                    className="relative w-full"
+                                <Slider
+                                    range
+                                    min={100000}
+                                    max={500000}
+                                    step={10000}
+                                    defaultValue={[minPrice, maxPrice]}
+                                    onChange={(values) => {
+                                        if (Array.isArray(values)) {
+                                            setMinPrice(values[0]);
+                                            setMaxPrice(values[1]);
+                                        }
+                                    }}
                                 />
                             </div>
                         </div>
@@ -838,78 +903,9 @@ const Post: React.FC = () => {
                             optionColor="text-gray-700"
                         />
                         <div className="mt-4">
-                            <label className="block text-gray-700 font-bold mb-2">Thời gian rảnh</label>
-                            {availableTimes.map((time, index) => (
-                                <div key={index} className="flex space-x-2 mt-2">
-                                    <select
-                                        value={time.day}
-                                        onChange={(e) => {
-                                            const newTimes = [...availableTimes];
-                                            newTimes[index].day = e.target.value;
-                                            setAvailableTimes(newTimes);
-                                        }}
-                                        className="border p-2 rounded w-1/3"
-                                    >
-                                        <option value="">Chọn thứ</option>
-                                        <option value="2">Thứ 2</option>
-                                        <option value="3">Thứ 3</option>
-                                        <option value="4">Thứ 4</option>
-                                        <option value="5">Thứ 5</option>
-                                        <option value="6">Thứ 6</option>
-                                        <option value="7">Thứ 7</option>
-                                        <option value="CN">Chủ nhật</option>
-                                    </select>
-                                    <input
-                                        type="time"
-                                        value={time.from}
-                                        onChange={(e) => {
-                                            const newTimes = [...availableTimes];
-                                            newTimes[index].from = e.target.value;
-                                            setAvailableTimes(newTimes);
-                                        }}
-                                        className="border p-2 rounded w-1/3"
-                                    />
-                                    <input
-                                        type="time"
-                                        value={time.to}
-                                        onChange={(e) => {
-                                            const newTimes = [...availableTimes];
-                                            newTimes[index].to = e.target.value;
-                                            setAvailableTimes(newTimes);
-                                        }}
-                                        className="border p-2 rounded w-1/3"
-                                    />
-                                </div>
-                            ))}
-                            <button
-                                className="mt-2 px-3 py-1 bg-gray-300 rounded text-sm"
-                                onClick={() => setAvailableTimes([...availableTimes, { day: '', from: '', to: '' }])}
-                            >
-                                + Thêm thời gian rảnh
-                            </button>
+                            <FreeTimeSelection times={filterAvailableTimes} onTimesChange={setFilterAvailableTimes} />
                         </div>
-                        <div className="mt-4">
-                            <h3 className="font-bold">Hiển thị thời gian rảnh:</h3>
-                            <ul>
-                                {availableTimes.map((time, index) => {
-                                    const days: { [key: string]: string } = {
-                                        '2': 'Thứ 2',
-                                        '3': 'Thứ 3',
-                                        '4': 'Thứ 4',
-                                        '5': 'Thứ 5',
-                                        '6': 'Thứ 6',
-                                        '7': 'Thứ 7',
-                                        CN: 'Chủ nhật',
-                                    };
-                                    const dayName = days[time.day as keyof typeof days] || '';
-                                    return (
-                                        <li key={index}>
-                                            {dayName} từ {time.from} - {time.to}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
+
                         <div className="flex justify-between mt-6">
                             <button
                                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded transition-colors"
@@ -919,10 +915,7 @@ const Post: React.FC = () => {
                             </button>
                             <button
                                 className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors"
-                                onClick={() => {
-                                    console.log('Áp dụng filter');
-                                    closePopupFilter();
-                                }}
+                                onClick={handleApplyFilter}
                             >
                                 Áp dụng
                             </button>
