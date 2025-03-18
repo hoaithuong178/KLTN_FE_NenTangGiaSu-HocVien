@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+Allow: /posts-landing
+Allow: /tutors-landing
+Allow: /faqs
+Allow: /contact
+Allow: /terms
+Allow: /about
+
+# Không cho phép crawl các trang yêu cầu đăng nhập
+Disallow: /dashboard
+Disallow: /my-class
+Disallow: /conservation
+Disallow: /transaction
+Disallow: /chat
+Disallow: /profile
+
+# Không cho phép crawl các trang xác thực
+Disallow: /sign-in
+Disallow: /register
+Disallow: /verify-otp
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Sitemap
+Sitemap: https://teachme.vn/sitemap
+
+# Tốc độ crawl
+Crawl-delay: 10 
