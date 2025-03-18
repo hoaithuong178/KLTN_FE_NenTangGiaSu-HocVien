@@ -6,9 +6,21 @@ import ReviewCard from '../components/ReviewCard';
 import TutorCard from '../components/TutorCard';
 import { Button } from '../components/Button';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import { useState } from 'react';
 
 const LandingSection = () => {
     const navigate = useNavigate();
+    const { user } = useAuthStore(); // Kiểm tra trạng thái đăng nhập
+    const [showModal, setShowModal] = useState(false);
+
+    const handleClick = () => {
+        if (!user) {
+            setShowModal(true);
+        } else {
+            navigate('/post'); // Nếu đã đăng nhập, đi đến trang đăng bài
+        }
+    };
     return (
         <div className="flex flex-row mt-16 items-center justify-between h-screen bg-[#1b223b] px-12">
             {/* Left Side - Text & Form */}
@@ -51,11 +63,35 @@ const LandingSection = () => {
                         ></textarea>
                         <div className="flex space-x-4">
                             <button
+                                type="button"
                                 className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
-                                onClick={() => navigate('/sign-in')}
+                                onClick={handleClick}
                             >
                                 Đăng bài
                             </button>
+                            {/* Modal hiển thị khi chưa đăng nhập */}
+                            {showModal && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                    <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md">
+                                        <h2 className="text-xl font-bold text-[#1b223b] mb-4">
+                                            Hãy đăng nhập để trải nghiệm TeachMe một cách trọn vẹn nhé!
+                                        </h2>
+                                        <button
+                                            className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-2 shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                                            onClick={() => navigate('/sign-in')}
+                                        >
+                                            Đăng nhập
+                                        </button>
+                                        <button
+                                            className="mt-3 block text-sm text-gray-500 hover:underline"
+                                            onClick={() => setShowModal(false)}
+                                        >
+                                            Để sau
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <button
                                 className="border-2 border-[#ffc569] text-[#ffc569] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#ffc569] hover:text-[#1b223b]"
                                 onClick={() => navigate('/tutors-landing')}
@@ -68,10 +104,10 @@ const LandingSection = () => {
             </div>
 
             {/* Right Side - Image & Shapes */}
-            <div className="relative w-1/2 flex justify-center">
-                <div className="absolute top-0 left-0 w-32 h-32 bg-[#ffc569] rounded-full opacity-50"></div>
-                <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#e0aa4d] rounded-lg opacity-50 rotate-12"></div>
-                <img src={HeroImage} alt="TeachMe Banner" className="w-full max-w-lg rounded-lg shadow-lg" />
+            <div className="relative w-1/2 flex justify-center z-0">
+                <div className="absolute top-0 left-0 w-32 h-32 bg-[#ffc569] rounded-full opacity-50 z-0"></div>
+                <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#e0aa4d] rounded-lg opacity-50 rotate-12 z-0"></div>
+                <img src={HeroImage} alt="TeachMe Banner" className="w-full max-w-lg rounded-lg shadow-lg z-0" />
             </div>
         </div>
     );
@@ -192,15 +228,47 @@ const ProgressSection = () => {
 
 const StartSection = () => {
     const navigate = useNavigate();
+    const { user } = useAuthStore(); // Kiểm tra trạng thái đăng nhập
+    const [showModal, setShowModal] = useState(false);
+
+    const handleClick = () => {
+        if (!user) {
+            setShowModal(true);
+        } else {
+            navigate('/post'); // Nếu đã đăng nhập, đi đến trang đăng bài
+        }
+    };
     return (
         <div className="bg-[#1b223b] text-white font-sans text-center p-20">
             <h1 className="text-4xl font-bold mb-6">Hàng ngàn học viên lựa chọn tham gia với TeachMe hằng tháng!</h1>
             <button
                 className="bg-[#ffc569] text-[#1b223b] px-5 py-2 rounded-md text-lg cursor-pointer"
-                onClick={() => navigate('/sign-in')}
+                onClick={handleClick}
             >
                 Bắt đầu học!
             </button>
+            {/* Modal hiển thị khi chưa đăng nhập */}
+            {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md">
+                        <h2 className="text-xl font-bold text-[#1b223b] mb-4">
+                            Hãy đăng nhập để trải nghiệm TeachMe một cách trọn vẹn nhé!
+                        </h2>
+                        <button
+                            className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-2 shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                            onClick={() => navigate('/sign-in')}
+                        >
+                            Đăng nhập
+                        </button>
+                        <button
+                            className="mt-3 block text-sm text-gray-500 hover:underline"
+                            onClick={() => setShowModal(false)}
+                        >
+                            Để sau
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -302,6 +370,16 @@ const ReviewSection = () => {
 
 const CommitSection = () => {
     const navigate = useNavigate();
+    const { user } = useAuthStore(); // Kiểm tra trạng thái đăng nhập
+    const [showModal, setShowModal] = useState(false);
+
+    const handleClick = () => {
+        if (!user) {
+            setShowModal(true);
+        } else {
+            navigate('/post'); // Nếu đã đăng nhập, đi đến trang đăng bài
+        }
+    };
     return (
         <div className="space-y-12 px-6 mb-8">
             {/* Dòng 1 */}
@@ -338,10 +416,32 @@ const CommitSection = () => {
 
                     <button
                         className="mt-4 bg-[#ffc569] hover:bg-[#e0aa4d] text-white font-bold py-2 px-6 rounded-lg shadow-md"
-                        onClick={() => navigate('/sign-in')}
+                        onClick={handleClick}
                     >
                         Trở thành gia sư
                     </button>
+                    {/* Modal hiển thị khi chưa đăng nhập */}
+                    {showModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md">
+                                <h2 className="text-xl font-bold text-[#1b223b] mb-4">
+                                    Hãy đăng nhập để trải nghiệm TeachMe một cách trọn vẹn nhé!
+                                </h2>
+                                <button
+                                    className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-2 shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                                    onClick={() => navigate('/sign-in')}
+                                >
+                                    Đăng nhập
+                                </button>
+                                <button
+                                    className="mt-3 block text-sm text-gray-500 hover:underline"
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Để sau
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <img src={tutorImage} alt="Step 2" className="w-36 h-48 rounded-lg shadow-md mx-auto" />
             </div>

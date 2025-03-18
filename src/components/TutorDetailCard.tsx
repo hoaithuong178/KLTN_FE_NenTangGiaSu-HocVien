@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HeartIcon, ChatIcon, StarIcon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
 
 interface TutorDetailCardProps {
     id: number; // Thêm id để xác định gia sư
@@ -51,7 +52,7 @@ export default function TutorDetailCard({
             return newFavorites;
         });
     };
-
+    const navigate = useNavigate();
     return (
         <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 border border-gray-300">
             <div className="flex flex-col items-center">
@@ -78,7 +79,12 @@ export default function TutorDetailCard({
                 </div>
             </div>
             <div className="flex flex-col items-center md:items-end space-y-2">
-                <button className="px-4 py-2 bg-green-100 text-green-600 rounded-md">Gửi yêu cầu dạy</button>
+                <button
+                    className="px-4 py-2 bg-green-100 text-green-600 rounded-md"
+                    onClick={() => navigate('/tutor-profile')}
+                >
+                    Xem chi tiết
+                </button>
                 <div className="flex items-center space-x-1">
                     <span className="text-lg font-semibold">{rating}</span>
                     {[...Array(5)].map((_, index) => (
