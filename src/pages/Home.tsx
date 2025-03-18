@@ -42,7 +42,9 @@ const LandingSection = () => {
             <div className="flex flex-row mt-16 items-center justify-between h-screen bg-[#1b223b] px-12">
                 {/* Left Side - Text & Form */}
                 <div className="flex flex-col max-w-lg text-white">
-                    <h1 className="text-5xl font-bold mb-4 text-[#ffc569]">TeachMe</h1>
+                    <h1 className="text-5xl font-bold mb-4 text-[#ffc569]">
+                        TeachMe - Nền tảng kết nối gia sư hàng đầu Việt Nam
+                    </h1>
                     <p className="text-lg leading-relaxed mb-6">Sánh bước cùng bạn trên con đường học tập</p>
 
                     {/* Tutor Request Form */}
@@ -144,9 +146,10 @@ const TutorSection = () => {
 
     return (
         <section className="bg-[#f9f9f9] py-16 px-6">
-            {/* Tutor Section Heading */}
             <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-[#1b223b]">Tìm kiếm gia sư phù hợp</h2>
+                <h2 className="text-4xl font-bold text-[#1b223b]" id="tutors">
+                    Đội ngũ gia sư chất lượng cao
+                </h2>
                 <p className="text-[#606060] mt-4 max-w-2xl mx-auto">
                     Cho con một nền tảng kiến thức vững chắc trên tinh thần thoải mái, vui vẻ.
                 </p>
@@ -179,28 +182,34 @@ const TutorSection = () => {
         </section>
     );
 };
+
 const SubjectSection = () => {
     return (
-        <div className="flex flex-col items-center justify-center m-5">
-            <div className="grid grid-cols-4 gap-8">
-                <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                    <h2 className="text-xl font-bold mb-2">Gia sư Toán</h2>
-                    <p className="text-gray-600">1222 gia sư</p>
-                </div>
-                <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                    <h2 className="text-xl font-bold mb-2">Gia sư Tiếng anh</h2>
-                    <p className="text-gray-600">1222 gia sư</p>
-                </div>
-                <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                    <h2 className="text-xl font-bold mb-2">Gia sư Hóa học</h2>
-                    <p className="text-gray-600">1222 gia sư</p>
-                </div>
-                <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                    <h2 className="text-xl font-bold mb-2">Gia sư Ngữ văn</h2>
-                    <p className="text-gray-600">1222 gia sư</p>
+        <section className="py-16">
+            <h2 className="text-4xl font-bold text-[#1b223b] text-center mb-12" id="subjects">
+                Môn học đa dạng
+            </h2>
+            <div className="flex flex-col items-center justify-center m-5">
+                <div className="grid grid-cols-4 gap-8">
+                    <div className="bg-white shadow-md rounded-lg p-6 text-center">
+                        <h2 className="text-xl font-bold mb-2">Gia sư Toán</h2>
+                        <p className="text-gray-600">1222 gia sư</p>
+                    </div>
+                    <div className="bg-white shadow-md rounded-lg p-6 text-center">
+                        <h2 className="text-xl font-bold mb-2">Gia sư Tiếng anh</h2>
+                        <p className="text-gray-600">1222 gia sư</p>
+                    </div>
+                    <div className="bg-white shadow-md rounded-lg p-6 text-center">
+                        <h2 className="text-xl font-bold mb-2">Gia sư Hóa học</h2>
+                        <p className="text-gray-600">1222 gia sư</p>
+                    </div>
+                    <div className="bg-white shadow-md rounded-lg p-6 text-center">
+                        <h2 className="text-xl font-bold mb-2">Gia sư Ngữ văn</h2>
+                        <p className="text-gray-600">1222 gia sư</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
 
@@ -357,9 +366,10 @@ const ReviewSection = () => {
 
     return (
         <section className="bg-[#f9f9f9] py-16 px-6">
-            {/* Review Section Heading */}
             <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-[#1b223b]">Đánh giá của học viên về gia sư</h2>
+                <h2 className="text-4xl font-bold text-[#1b223b]" id="reviews">
+                    Đánh giá từ học viên
+                </h2>
                 <p className="text-[#606060] mt-4 max-w-2xl mx-auto">
                     Xem những phản hồi tuyệt vời từ học viên đã học cùng gia sư.
                 </p>
@@ -486,6 +496,7 @@ const CommitSection = () => {
         </div>
     );
 };
+
 const Home = () => {
     return (
         <>
