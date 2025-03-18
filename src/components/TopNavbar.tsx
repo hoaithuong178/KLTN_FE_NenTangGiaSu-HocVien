@@ -36,6 +36,10 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     const handleLogout = () => {
         // Xử lý đăng xuất ở đây
         console.log('Đăng xuất');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('role');
+        navigate('/');
         setShowLogoutConfirm(false);
         setShowUserMenu(false);
         // Có thể thêm logic xóa token, clear state, etc.
@@ -163,6 +167,17 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                         >
                             <Text size="medium" weight="normal">
                                 Thông tin cá nhân
+                            </Text>
+                        </div>
+                        <div
+                            className="p-3 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                                navigate('/my-post');
+                                setShowUserMenu(false);
+                            }}
+                        >
+                            <Text size="medium" weight="normal">
+                                Bài viết của tôi
                             </Text>
                         </div>
                         <div
