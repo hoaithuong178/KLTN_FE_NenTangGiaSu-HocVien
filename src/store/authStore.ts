@@ -2,16 +2,32 @@ import { create } from 'zustand';
 
 type Role = 'student' | 'tutor' | 'admin' | null;
 
+interface User {
+    id: string;
+    name: string;
+    role: Role;
+}
+
 interface AuthState {
-    user: { id: string; name: string; role: Role } | null;
+    user: User | null;
     token: string | null;
-    login: (user: AuthState['user'], token: string) => void;
+    login: (user: User, token: string) => void;
     logout: () => void;
+    setUser: (user: User) => void; // ✅ Thêm setUser để cập nhật user riêng lẻ
+    setToken: (token: string) => void; // ✅ Thêm setToken để cập nhật token riêng lẻ
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: null,
-    login: (user, token) => set({ user, token }),
+    login: (user, token) => {
+        if (!user || !token) {
+            console.error('Lỗi đăng nhập: Thiếu user hoặc token');
+            return;
+        }
+        set({ user, token });
+    },
     logout: () => set({ user: null, token: null }),
+    setUser: (user) => set((state) => ({ ...state, user })), // ✅ Thêm setUser
+    setToken: (token) => set((state) => ({ ...state, token })), // ✅ Thêm setToken
 }));
