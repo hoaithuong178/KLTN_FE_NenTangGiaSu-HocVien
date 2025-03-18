@@ -1,5 +1,8 @@
 import { ReactNode } from 'react';
+import DefaultLayout from '../layouts/DefaultLayout';
 import Chat from '../pages/Chat';
+import ClassDetail from '../pages/ClassDetail';
+import ClassDetailTutor from '../pages/ClassDetailTutor';
 import Contacts from '../pages/Contacts';
 import Dashboard from '../pages/Dashboard';
 import Faqs from '../pages/Faqs';
@@ -11,17 +14,15 @@ import NotFound from '../pages/NotFound';
 import NotifySuccess from '../pages/NotifySuccess';
 import VerifyOTP from '../pages/OTP';
 import Post from '../pages/Post';
+import PostsLanding from '../pages/PostsLanding';
 import Register from '../pages/Register';
 import SignIn from '../pages/SignIn';
-import Tutor from '../pages/Tutor';
-import Transaction from '../pages/Transaction';
-import PostsLanding from '../pages/PostsLanding';
-import Tutors from '../pages/Tutors';
-import TutorProfile from '../pages/TutorProfile';
-import ClassDetail from '../pages/ClassDetail';
-import ClassDetailTutor from '../pages/ClassDetailTutor';
-import DefaultLayout from '../layouts/DefaultLayout';
+import Sitemap from '../pages/Sitemap';
 import StudentProfile from '../pages/StudentProfile';
+import Transaction from '../pages/Transaction';
+import Tutor from '../pages/Tutor';
+import TutorProfile from '../pages/TutorProfile';
+import Tutors from '../pages/Tutors';
 
 export interface IRoute {
     path: string;
@@ -53,7 +54,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutors', component: Tutors },
     { path: '/tutor-profile', component: TutorProfile },
     { path: '/class', component: ClassDetail },
-
+    { path: '/sitemap', component: Sitemap },
     { path: '*', component: NotFound },
 ];
 

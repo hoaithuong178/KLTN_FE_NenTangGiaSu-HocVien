@@ -1,13 +1,14 @@
-import tutorImage from '../assets/Kein.jpg';
+import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import HeroImage from '../assets/HeroSection.svg';
+import tutorImage from '../assets/Kein.jpg';
+import { Button } from '../components/Button';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import ReviewCard from '../components/ReviewCard';
 import TutorCard from '../components/TutorCard';
-import { Button } from '../components/Button';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { useState } from 'react';
 
 const LandingSection = () => {
     const navigate = useNavigate();
@@ -22,94 +23,111 @@ const LandingSection = () => {
         }
     };
     return (
-        <div className="flex flex-row mt-16 items-center justify-between h-screen bg-[#1b223b] px-12">
-            {/* Left Side - Text & Form */}
-            <div className="flex flex-col max-w-lg text-white">
-                <h1 className="text-5xl font-bold mb-4 text-[#ffc569]">TeachMe</h1>
-                <p className="text-lg leading-relaxed mb-6">Sánh bước cùng bạn trên con đường học tập</p>
+        <>
+            <Helmet>
+                <title>TeachMe - Nền tảng kết nối gia sư và học sinh hàng đầu Việt Nam</title>
+                <meta
+                    name="description"
+                    content="TeachMe giúp bạn tìm kiếm gia sư phù hợp hoặc đăng ký làm gia sư. Kết nối dễ dàng, học tập hiệu quả với các gia sư chất lượng cao."
+                />
+                <meta property="og:title" content="TeachMe - Nền tảng kết nối gia sư và học sinh" />
+                <meta
+                    property="og:description"
+                    content="Tìm kiếm gia sư phù hợp hoặc đăng ký làm gia sư trên TeachMe."
+                />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={window.location.href} />
+                <link rel="canonical" href={window.location.href} />
+            </Helmet>
+            <div className="flex flex-row mt-16 items-center justify-between h-screen bg-[#1b223b] px-12">
+                {/* Left Side - Text & Form */}
+                <div className="flex flex-col max-w-lg text-white">
+                    <h1 className="text-5xl font-bold mb-4 text-[#ffc569]">TeachMe</h1>
+                    <p className="text-lg leading-relaxed mb-6">Sánh bước cùng bạn trên con đường học tập</p>
 
-                {/* Tutor Request Form */}
-                <div className="bg-transparent p-6 rounded-lg shadow-lg border border-white">
-                    <h2 className="text-xl font-semibold mb-4">Đăng bài tuyển gia sư ngay!</h2>
-                    <form className="flex flex-col space-y-4">
-                        <input
-                            type="text"
-                            placeholder="Tiêu đề"
-                            className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300"
-                        />
-                        <div className="flex space-x-4">
+                    {/* Tutor Request Form */}
+                    <div className="bg-transparent p-6 rounded-lg shadow-lg border border-white">
+                        <h2 className="text-xl font-semibold mb-4">Đăng bài tuyển gia sư ngay!</h2>
+                        <form className="flex flex-col space-y-4">
                             <input
-                                type="number"
-                                placeholder="Giá mỗi buổi (VNĐ)"
-                                className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 w-1/2"
+                                type="text"
+                                placeholder="Tiêu đề"
+                                className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300"
                             />
-                            <input
-                                type="number"
-                                placeholder="Số buổi"
-                                className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 w-1/2"
-                            />
-                        </div>
-                        <select className="p-3 border border-white rounded bg-transparent text-white">
-                            <option value="online" className="text-black">
-                                Học Online
-                            </option>
-                            <option value="offline" className="text-black">
-                                Học Trực Tiếp
-                            </option>
-                        </select>
-                        <textarea
-                            placeholder="Mô tả đơn giản"
-                            className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 h-24"
-                        ></textarea>
-                        <div className="flex space-x-4">
-                            <button
-                                type="button"
-                                className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
-                                onClick={handleClick}
-                            >
-                                Đăng bài
-                            </button>
-                            {/* Modal hiển thị khi chưa đăng nhập */}
-                            {showModal && (
-                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                                    <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md">
-                                        <h2 className="text-xl font-bold text-[#1b223b] mb-4">
-                                            Hãy đăng nhập để trải nghiệm TeachMe một cách trọn vẹn nhé!
-                                        </h2>
-                                        <button
-                                            className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-2 shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
-                                            onClick={() => navigate('/sign-in')}
-                                        >
-                                            Đăng nhập
-                                        </button>
-                                        <button
-                                            className="mt-3 block text-sm text-gray-500 hover:underline"
-                                            onClick={() => setShowModal(false)}
-                                        >
-                                            Để sau
-                                        </button>
+                            <div className="flex space-x-4">
+                                <input
+                                    type="number"
+                                    placeholder="Giá mỗi buổi (VNĐ)"
+                                    className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 w-1/2"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Số buổi"
+                                    className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 w-1/2"
+                                />
+                            </div>
+                            <select className="p-3 border border-white rounded bg-transparent text-white">
+                                <option value="online" className="text-black">
+                                    Học Online
+                                </option>
+                                <option value="offline" className="text-black">
+                                    Học Trực Tiếp
+                                </option>
+                            </select>
+                            <textarea
+                                placeholder="Mô tả đơn giản"
+                                className="p-3 border border-white rounded bg-transparent text-white placeholder-gray-300 h-24"
+                            ></textarea>
+                            <div className="flex space-x-4">
+                                <button
+                                    type="button"
+                                    className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                                    onClick={handleClick}
+                                >
+                                    Đăng bài
+                                </button>
+                                {/* Modal hiển thị khi chưa đăng nhập */}
+                                {showModal && (
+                                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                        <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md">
+                                            <h2 className="text-xl font-bold text-[#1b223b] mb-4">
+                                                Hãy đăng nhập để trải nghiệm TeachMe một cách trọn vẹn nhé!
+                                            </h2>
+                                            <button
+                                                className="bg-[#ffc569] text-[#1b223b] font-semibold rounded-full px-6 py-2 shadow-md transition-all duration-300 hover:bg-[#e0aa4d]"
+                                                onClick={() => navigate('/sign-in')}
+                                            >
+                                                Đăng nhập
+                                            </button>
+                                            <button
+                                                className="mt-3 block text-sm text-gray-500 hover:underline"
+                                                onClick={() => setShowModal(false)}
+                                            >
+                                                Để sau
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            <button
-                                className="border-2 border-[#ffc569] text-[#ffc569] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#ffc569] hover:text-[#1b223b]"
-                                onClick={() => navigate('/tutors-landing')}
-                            >
-                                Tìm gia sư
-                            </button>
-                        </div>
-                    </form>
+                                <button
+                                    className="border-2 border-[#ffc569] text-[#ffc569] font-semibold rounded-full px-6 py-3 text-lg shadow-md transition-all duration-300 hover:bg-[#ffc569] hover:text-[#1b223b]"
+                                    onClick={() => navigate('/tutors-landing')}
+                                >
+                                    Tìm gia sư
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Right Side - Image & Shapes */}
+                <div className="relative w-1/2 flex justify-center z-0">
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-[#ffc569] rounded-full opacity-50 z-0"></div>
+                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#e0aa4d] rounded-lg opacity-50 rotate-12 z-0"></div>
+                    <img src={HeroImage} alt="TeachMe Banner" className="w-full max-w-lg rounded-lg shadow-lg z-0" />
                 </div>
             </div>
-
-            {/* Right Side - Image & Shapes */}
-            <div className="relative w-1/2 flex justify-center z-0">
-                <div className="absolute top-0 left-0 w-32 h-32 bg-[#ffc569] rounded-full opacity-50 z-0"></div>
-                <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#e0aa4d] rounded-lg opacity-50 rotate-12 z-0"></div>
-                <img src={HeroImage} alt="TeachMe Banner" className="w-full max-w-lg rounded-lg shadow-lg z-0" />
-            </div>
-        </div>
+        </>
     );
 };
 
