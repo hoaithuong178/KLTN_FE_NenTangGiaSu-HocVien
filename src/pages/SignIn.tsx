@@ -1,87 +1,98 @@
-import { useEffect, useState } from 'react';
-import { default as Kein1, default as Kein2, default as Kein3 } from '../assets/Kein.jpg';
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SignInPic1 from '../assets/SignIn1.jpg';
+import SignInPic2 from '../assets/SignIn2.jpg';
+import SignInPic3 from '../assets/SignIn3.jpg';
 import Facebook from '../assets/facebook.svg';
 import Google from '../assets/google.svg';
 import { InputField } from '../components/InputField';
 import { Button } from '../components/Button';
-import { useNavigate } from 'react-router-dom';
 import axiosClient from '../configs/axios.config';
+import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 const SignIn = () => {
-    const images = [Kein1, Kein2, Kein3];
+    const images = [SignInPic1, SignInPic2, SignInPic3];
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [, setIsLoading] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
     const navigate = useNavigate();
-    const handleClickSignIn = async () => {
+
+    const handleClickSignIn = useCallback(async () => {
         const newErrors: { [key: string]: string } = {};
 
-        // Kiểm tra các trường nhập vào với các điều kiện tương ứng
         if (!email) {
             newErrors.email = 'Vui lòng nhập Email!';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             newErrors.email = 'Email không hợp lệ!';
         }
+
         if (!password) {
             newErrors.password = 'Vui lòng nhập Password!';
         } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
             newErrors.password = 'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ cái và số!';
         }
-        // Cập nhật lỗi vào state
-        setErrors(newErrors);
 
-        // Kiểm tra nếu không có lỗi thì tiếp tục
-        if (Object.keys(newErrors).length === 0) {
-            console.log({
-                email,
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) return;
+
+        setIsLoading(true);
+
+        try {
+            // Gửi yêu cầu đăng nhập
+            const loginResponse = await axiosClient.post('/auth/login', { email, password });
+            console.log('Login Response:', loginResponse.data); // Kiểm tra dữ liệu trả về
+
+            // Lấy accessToken thay vì token
+            const { accessToken } = loginResponse.data;
+            if (!accessToken) throw new Error('Không nhận được accessToken từ server!');
+
+            // Lưu token vào Zustand
+            useAuthStore.getState().login({ id: '', name: '', role: null }, accessToken);
+
+            // Gọi API lấy thông tin user
+            const userResponse = await axiosClient.get('/users/me', {
+                headers: { Authorization: `Bearer ${accessToken}` },
             });
 
-            try {
-                setIsLoading(true);
-                const response = await axiosClient.post(
-                    '/auth/login',
-                    {
-                        email,
-                        password,
-                    },
-                    {
-                        params: {
-                            page: 1,
-                        },
-                    },
-                );
-                console.log(response);
+            const user = userResponse.data;
+            console.log('User Response:', user);
 
-                axiosClient.get('', {
-                    params: {
-                        page: 1,
-                    },
-                });
+            if (!user || !user.role) throw new Error('Không lấy được thông tin người dùng!');
 
-                localStorage.setItem('token', response.data.accessToken);
-                localStorage.setItem('refreshToken', response.data.refreshToken);
-                navigate('/post', { state: { type: 'register' } });
-            } catch (error) {
-                console.log('Có lỗi, không thể đăng nhập');
-                console.log(error);
-            } finally {
-                setIsLoading(false);
+            // Cập nhật thông tin user vào Zustand
+            useAuthStore.getState().login(user, accessToken);
+
+            // Điều hướng theo role
+            const roleRoutes: { [key: string]: string } = {
+                ADMIN: '/post',
+                TUTOR: '/post',
+                STUDENT: '/post',
+            };
+
+            navigate(roleRoutes[user.role] || '/');
+        } catch (error: unknown) {
+            console.error('Login failed', error);
+            if (axios.isAxiosError(error)) {
+                setErrors({ general: error.response?.data?.message || 'Đăng nhập thất bại! Vui lòng thử lại.' });
+            } else {
+                setErrors({ general: 'Đăng nhập thất bại! Vui lòng thử lại.' });
             }
-        } else {
-            console.log('Có lỗi, không thể đăng ký');
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [email, password, navigate]);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         }, 3000);
         return () => clearInterval(interval);
-    }, [images.length]);
-
+    });
     return (
         <div className="flex h-screen bg-white">
             {/* Slide Section */}
@@ -95,7 +106,7 @@ const SignIn = () => {
                             key={index}
                             src={image}
                             alt={`Slide ${index + 1}`}
-                            className="w-full h-96 object-cover rounded-2xl flex-shrink-0"
+                            className="w-full h-96 object-contain rounded-2xl flex-shrink-0"
                         />
                     ))}
                 </div>
@@ -122,7 +133,7 @@ const SignIn = () => {
                         title="Email Address"
                         placeholder="Enter your email"
                         errorTitle={errors.email}
-                        titleColor="text-customYellow"
+                        titleColor="#1B223B"
                         onChange={(value) => setEmail(value)}
                         required
                     />
@@ -131,7 +142,7 @@ const SignIn = () => {
                         title="Password"
                         placeholder="Enter your password"
                         errorTitle={errors.password}
-                        titleColor="text-customYellow"
+                        titleColor="#1B223B"
                         onChange={(value) => setPassword(value)}
                         required
                     />
@@ -144,11 +155,14 @@ const SignIn = () => {
 
                     <Button
                         type="button"
-                        title="Register"
+                        title={isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                         foreColor="#1B223B"
                         backgroundColor="#FFC569"
+                        hoverForeColor="#1B223B"
+                        hoverBackgroundColor="#FFB347"
                         className="w-full h-12"
                         onClick={handleClickSignIn}
+                        disabled={isLoading}
                     />
 
                     <div className="text-center text-gray-500 my-4">hoặc</div>

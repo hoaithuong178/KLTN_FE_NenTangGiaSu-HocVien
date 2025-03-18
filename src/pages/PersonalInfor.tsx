@@ -14,8 +14,6 @@ const PersonalInfor: React.FC = () => {
         phone: '0987654321',
         gender: 'Nam',
         violations: '0',
-        hobbies: 'Đọc sách, Lập trình',
-        traits: 'Chăm chỉ, Tỉ mỉ',
         houseNumber: '123',
         street: 'Nguyen Trai',
         district: 'Quận 1',
@@ -28,9 +26,8 @@ const PersonalInfor: React.FC = () => {
     const [, setSelectedProvince] = useState<string>('');
 
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-        // Kiểm tra trạng thái từ localStorage
         const storedState = localStorage.getItem('navbarExpanded');
-        return storedState ? JSON.parse(storedState) : true; // Mặc định là true
+        return storedState ? JSON.parse(storedState) : true;
     });
 
     useEffect(() => {
@@ -63,59 +60,70 @@ const PersonalInfor: React.FC = () => {
     }, [isExpanded]);
 
     return (
-        <div className="absolute top-0 left-0 flex h-screen w-screen">
-            {/* Sử dụng Navbar */}
+        <div className="absolute top-0 left-0 flex w-screen overflow-hidden bg-gray-100">
+            {/* Sidebar & Navbar */}
             <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
-            <TopNavbar />
+            <div className="flex-1 flex flex-col">
+                <TopNavbar />
 
-            {/* Main Content */}
-            <div className={`flex-1 p-6 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
-                <div className="flex items-center space-x-4 my-4">
-                    <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full border" />
-                    <label className="cursor-pointer bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600">
-                        Đổi ảnh
-                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                    </label>
-                </div>
-                {/* Cột thông tin */}
-                <div className="w-2/3 pr-6">
-                    <TitleText level={2} className="mb-4">
-                        Thông tin cá nhân
-                    </TitleText>
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField type="text" title="Họ và tên" value={userData.name} />
-                        <InputField type="text" title="Tuổi" value={userData.age} />
-                        <InputField type="text" title="Email" value={userData.email} />
-                        <InputField type="text" title="Số điện thoại" value={userData.phone} />
-                        <RadioButton title="Giới tính" options={['Nam', 'Nữ', 'Khác']} selected={userData.gender} />
-                        <InputField type="text" title="Số lần vi phạm" value={userData.violations} />
-                        <InputField type="text" title="Sở thích" value={userData.hobbies} />
-                        <InputField type="text" title="Đặc điểm" value={userData.traits} />
-                    </div>
-
-                    <TitleText level={3} className="mt-6 mb-4">
-                        Địa chỉ
-                    </TitleText>
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField type="text" title="Số nhà" value={userData.houseNumber} />
-                        <InputField type="text" title="Đường" value={userData.street} />
-                        <ComboBox title="Tỉnh/Thành phố" options={provinces} onChange={handleProvinceChange} required />
-                        <ComboBox title="Quận/Huyện" options={districts} required />
-                    </div>
-
-                    <Button title="Cập nhật" className="mt-6 bg-blue-600 hover:bg-blue-700 w-full" />
-                </div>
-
-                {/* Cột credit card */}
-                <div className="w-1/3 flex items-center justify-center">
-                    <div className="relative bg-gradient-to-r from-gray-700 to-gray-900 p-6 rounded-lg shadow-xl text-center w-full max-w-xs">
-                        <div className="absolute top-4 left-4 text-sm text-white">TeachMe Wallet</div>
-                        <div className="mt-10">
-                            <p className="text-lg text-white">Số dư trong ví</p>
-                            <p className="text-3xl font-bold text-[#ffc569] mt-3">{userData.balance}</p>
+                {/* Main Content */}
+                <div className={`flex-1 overflow-auto p-6 mt-8 flex gap-8 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
+                    {/* Bọc toàn bộ thông tin cá nhân trong div trắng */}
+                    <div className="bg-white p-6 rounded-lg shadow-md w-2/3 flex flex-col">
+                        <div className="flex items-center space-x-6 mb-6">
+                            <img
+                                src={avatar}
+                                alt="Avatar"
+                                className="w-24 h-24 rounded-full border-2 border-gray-300 shadow-md"
+                            />
+                            <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">
+                                Đổi ảnh
+                                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                            </label>
                         </div>
-                        <div className="absolute bottom-2 left-4 text-sm text-white">Nguyen Van A</div>
-                        <div className="absolute bottom-2 right-4 text-sm text-white">**** 5678</div>
+
+                        <TitleText level={2} className="text-gray-800 font-semibold mb-4">
+                            Thông tin cá nhân
+                        </TitleText>
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField type="text" title="Họ và tên" value={userData.name} />
+                            <InputField type="text" title="Tuổi" value={userData.age} />
+                            <InputField type="text" title="Email" value={userData.email} />
+                            <InputField type="text" title="Số điện thoại" value={userData.phone} />
+                            <RadioButton title="Giới tính" options={['Nam', 'Nữ', 'Khác']} selected={userData.gender} />
+                            <InputField type="text" title="Số lần vi phạm" value={userData.violations} />
+                        </div>
+
+                        <TitleText level={3} className="text-gray-800 font-semibold mt-6 mb-4">
+                            Địa chỉ
+                        </TitleText>
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputField type="text" title="Số nhà" value={userData.houseNumber} />
+                            <InputField type="text" title="Đường" value={userData.street} />
+                            <ComboBox
+                                title="Tỉnh/Thành phố"
+                                options={provinces}
+                                value={userData.city}
+                                onChange={handleProvinceChange}
+                                required
+                            />
+                            <ComboBox title="Quận/Huyện" options={districts} value={userData.district} required />
+                        </div>
+
+                        <Button title="Cập nhật" className="mt-6 bg-blue-600 hover:bg-blue-700 w-full" />
+                    </div>
+
+                    {/* Cột ví - vẫn riêng biệt, không bị bọc vào div trắng */}
+                    <div className="w-1/3 flex items-start">
+                        <div className="relative bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-lg shadow-xl text-center w-full max-w-sm">
+                            <div className="absolute top-4 left-4 text-sm text-white">TeachMe Wallet</div>
+                            <div className="mt-10">
+                                <p className="text-lg text-white">Số dư trong ví</p>
+                                <p className="text-3xl font-bold text-[#ffc569] mt-3">{userData.balance}</p>
+                            </div>
+                            <div className="absolute bottom-2 left-4 text-sm text-white">Nguyen Van A</div>
+                            <div className="absolute bottom-2 right-4 text-sm text-white">**** 5678</div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,10 +1,19 @@
+import { Link } from 'react-router-dom';
+import Logo from '../assets/FullLogo.png';
 const Footer = () => {
+    const links = [
+        { to: '/', label: 'Trang chủ' },
+        { to: '/posts-landing', label: 'Bài đăng' },
+        { to: '/tutors-landing', label: 'Gia sư' },
+        { to: '/faqs', label: 'FAQs' },
+        { to: '/contact', label: 'Liên hệ' },
+    ];
     return (
         <footer className="bg-[#1b223b] text-white px-8 py-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Column 1 */}
                 <div>
-                    <img src="/path-to-your-logo.png" alt="Logo" className="h-12 object-contain mb-4" />
+                    <img src={Logo} alt="Logo" className="h-12 object-contain mb-4" />
                     <div className="flex space-x-4 mb-4">
                         <a href="#" className="hover:text-[#ffc569]">
                             <i className="fab fa-facebook-f"></i>
@@ -26,31 +35,13 @@ const Footer = () => {
                 <div>
                     <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
                     <ul className="space-y-2">
-                        <li>
-                            <a href="#" className="hover:text-[#ffc569]">
-                                Trang chủ
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" className="hover:text-[#ffc569]">
-                                Bài đăng
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" className="hover:text-[#ffc569]">
-                                Gia sư
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" className="hover:text-[#ffc569]">
-                                FAQs
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" className="hover:text-[#ffc569]">
-                                Liên hệ
-                            </a>
-                        </li>
+                        {links.map(({ to, label }) => (
+                            <li key={to}>
+                                <Link to={to} className="hover:text-[#ffc569] transition-colors duration-300">
+                                    {label}
+                                </Link>
+                            </li>
+                        ))}
                     </ul>
                 </div>
 

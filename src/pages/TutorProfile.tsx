@@ -1,3 +1,4 @@
+import SEO from '../components/SEO';
 import TutorProfileComponent, { TutorProfileComponentProps } from '../components/TutorProfileComponent';
 
 const sampleTutor: TutorProfileComponentProps = {
@@ -6,6 +7,7 @@ const sampleTutor: TutorProfileComponentProps = {
     name: 'Nguyễn Văn A',
     pricePerSession: 200000,
     email: 'nguyenvana@gmail.com',
+    phone: '0333 333 333',
     violations: 0,
     isFavorite: false,
     subjects: ['Toán', 'Lý', 'Hóa'],
@@ -49,7 +51,18 @@ const sampleTutor: TutorProfileComponentProps = {
 };
 
 const TutorProfile = () => {
-    return <TutorProfileComponent {...sampleTutor} />;
+    return (
+        <>
+            <SEO
+                title={`${sampleTutor.name} - Gia sư ${sampleTutor.subjects.join(', ')}`}
+                description={`${sampleTutor.name} - Gia sư ${sampleTutor.subjects.join(', ')} với ${
+                    sampleTutor.experience
+                } năm kinh nghiệm. Đánh giá ${sampleTutor.rating}/5 từ ${sampleTutor.reviews.length} học sinh.`}
+                ogImage={sampleTutor.avatar}
+            />
+            <TutorProfileComponent {...sampleTutor} />
+        </>
+    );
 };
 
 export default TutorProfile;

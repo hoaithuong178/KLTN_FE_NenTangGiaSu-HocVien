@@ -359,22 +359,20 @@ export const UploadIcon = ({ className }: { className?: string }) => (
 );
 
 export const StarIcon = ({ className }: { className?: string }) => (
-
     <svg
-        className={className}
         xmlns="http://www.w3.org/2000/svg"
+        fill="none"
         width={24}
         height={24}
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth="1.5"
+        stroke-width="1.5"
         stroke="currentColor"
+        className={className}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-
-            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+            d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
         />
     </svg>
 );
@@ -397,7 +395,6 @@ export const DownloadIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 export const XIcon = ({ className }: { className?: string }) => (
-
     <svg
         className={className}
         xmlns="http://www.w3.org/2000/svg"
@@ -408,7 +405,6 @@ export const XIcon = ({ className }: { className?: string }) => (
         strokeWidth="1.5"
         stroke="currentColor"
     >
-
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -416,6 +412,89 @@ export const XIcon = ({ className }: { className?: string }) => (
         />
 
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+export const MailIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18M3 5l9 7 9-7M3 19h18V5M3 19l9-7 9 7" />
+    </svg>
+);
 
+export const PhoneIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 8v8m18-8v8m-9 4c-1.5 0-2.5-.5-3.5-1.5S6 17.5 6 16m6 5c1.5 0 2.5-.5 3.5-1.5S18 17.5 18 16m-6-9c-1.5 0-2.5.5-3.5 1.5S6 10.5 6 12m6-5c1.5 0 2.5.5 3.5 1.5S18 10.5 18 12"
+        />
+    </svg>
+);
+
+export const AddressIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 2c3.866 0 7 3.134 7 7 0 4.243-5 10-7 12-2-2-7-7.757-7-12 0-3.866 3.134-7 7-7zm0 4a3 3 0 100 6 3 3 0 000-6z"
+        />
+    </svg>
+);
+export const FlagIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 21V5h16l-4 4-4-4H4" />
+    </svg>
+);
+export const ArrowUpDownIcon = ({ className }: { className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        width={24}
+        height={24}
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        className={className}
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+        />
     </svg>
 );
