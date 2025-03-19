@@ -2,7 +2,6 @@
 import { Slider } from 'antd';
 import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import Avatar from '../assets/avatar.jpg';
 import FreeTimeSelection from '../components/FreeTimeSelection';
 import { CoppyLinkIcon, FilterIcon, HeartIcon } from '../components/icons';
@@ -12,6 +11,8 @@ import { Notification } from '../components/Notification';
 import { TitleText } from '../components/Text';
 import TopNavbar from '../components/TopNavbar';
 import axiosClient from '../configs/axios.config';
+import { Helmet } from 'react-helmet-async';
+import { PostSkeleton } from '../components/TutorSkeleton';
 
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
@@ -357,6 +358,7 @@ const Post: React.FC = () => {
         }
     };
     const [selectedGrade, setSelectedGrade] = useState('');
+
     return (
         <>
             <Helmet>
@@ -600,9 +602,13 @@ const Post: React.FC = () => {
                     )}
                     <div className="mt-40 max-h-[calc(100vh-200px)] overflow-y-auto">
                         {loading ? (
-                            <p>Đang tải bài đăng...</p> // Hiển thị thông báo khi đang tải dữ liệu
+                            <>
+                                <PostSkeleton />
+                                <PostSkeleton />
+                                <PostSkeleton />
+                            </>
                         ) : posts.length === 0 ? (
-                            <p>Không có bài đăng nào.</p> // Hiển thị thông báo khi không có dữ liệu
+                            <p>Không có bài đăng nào.</p>
                         ) : (
                             posts.map((post, index) => (
                                 <div
@@ -625,7 +631,11 @@ const Post: React.FC = () => {
                                     </div>
                                     {/* User Info & Title Section */}
                                     <div className="flex items-center space-x-4 mb-2">
-                                        <img src={Avatar} alt={post.user.name} className="w-10 h-10 rounded-full" />
+                                        <img
+                                            src={post.user.avatar}
+                                            alt={post.user.name}
+                                            className="w-10 h-10 rounded-full"
+                                        />
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
                                                 <p className="font-semibold text-lg">{post.user.name}</p>
