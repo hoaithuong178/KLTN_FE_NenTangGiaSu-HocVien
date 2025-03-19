@@ -12,7 +12,7 @@ type ButtonProps = {
     size?: 'small' | 'medium' | 'large'; // Kích thước chữ
     weight?: 'normal' | 'bold'; // Độ đậm
     className?: string; // ClassName để tùy chỉnh width và height
-    onClick?: () => void; // Hàm callback khi nút được nhấn
+    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void; // Hàm callback khi nút được nhấn
     disabled?: boolean; // Trạng thái nút bị vô hiệu hóa
     type?: 'button' | 'submit' | 'reset'; // Loại nút
 };

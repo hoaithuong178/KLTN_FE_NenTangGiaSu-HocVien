@@ -14,7 +14,6 @@ import { useAuthStore } from '../store/authStore';
 const SignIn = () => {
     const images = [SignInPic1, SignInPic2, SignInPic3];
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -43,30 +42,20 @@ const SignIn = () => {
         setIsLoading(true);
 
         try {
-            // Gửi yêu cầu đăng nhập
             const loginResponse = await axiosClient.post('/auth/login', { email, password });
-            console.log('Login Response:', loginResponse.data);
-
             const { accessToken } = loginResponse.data;
             if (!accessToken) throw new Error('Không nhận được accessToken từ server!');
 
-            // Gọi API lấy thông tin user
             const userResponse = await axiosClient.get('/users/me', {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
 
             const user = userResponse.data;
-            console.log('User Response:', user);
-
             if (!user || !user.role) throw new Error('Không lấy được thông tin người dùng!');
 
-            // Cập nhật thông tin user vào Zustand
             useAuthStore.getState().login(user, accessToken);
-
-            // Lưu token vào localStorage để duy trì đăng nhập
             localStorage.setItem('token', accessToken);
 
-            // Điều hướng theo role
             const roleRoutes: { [key: string]: string } = {
                 ADMIN: '/post',
                 TUTOR: '/post',
@@ -75,7 +64,6 @@ const SignIn = () => {
 
             navigate(roleRoutes[user.role] || '/');
         } catch (error: unknown) {
-            console.error('Login failed', error);
             if (axios.isAxiosError(error)) {
                 setErrors({ general: error.response?.data?.message || 'Đăng nhập thất bại! Vui lòng thử lại.' });
             } else {
@@ -91,96 +79,123 @@ const SignIn = () => {
             setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         }, 3000);
         return () => clearInterval(interval);
-    });
+    }, [images.length]);
+
     return (
-        <div className="flex h-screen bg-white">
+        <div className="flex min-h-screen bg-gray-50">
             {/* Slide Section */}
-            <div className="w-1/2 flex justify-center items-center overflow-hidden relative">
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1B223B] to-[#FFC569] p-8">
                 <div
-                    className="flex transition-transform duration-1000 ease-in-out"
+                    className="flex w-full transition-transform duration-1000 ease-in-out"
                     style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
                 >
                     {images.map((image, index) => (
-                        <img
-                            key={index}
-                            src={image}
-                            alt={`Slide ${index + 1}`}
-                            className="w-full h-96 object-contain rounded-2xl flex-shrink-0"
-                        />
+                        <div key={index} className="w-full flex-shrink-0 flex items-center justify-center">
+                            <img
+                                src={image}
+                                alt={`Slide ${index + 1}`}
+                                className="w-3/4 h-[500px] object-cover rounded-xl shadow-lg"
+                            />
+                        </div>
                     ))}
                 </div>
-
-                {/* Dots Indicator */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {/* Gradient Overlay & Dots */}
+                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
                     {images.map((_, index) => (
-                        <div
+                        <button
                             key={index}
-                            className={`w-3 h-3 rounded-full ${
-                                index === currentImageIndex ? 'bg-[#ffc569]' : 'bg-gray-400'
-                            } transition-all duration-300`}
-                        ></div>
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                index === currentImageIndex ? 'bg-[#FFC569] scale-125' : 'bg-white opacity-70'
+                            }`}
+                            onClick={() => setCurrentImageIndex(index)}
+                        />
                     ))}
                 </div>
             </div>
 
             {/* Login Form Section */}
-            <div className="w-1/2 flex flex-col justify-center items-center px-10">
-                <h2 className="text-3xl font-bold mb-8 text-[#1b223b]">Đăng nhập</h2>
-                <form className="w-full max-w-sm">
-                    <InputField
-                        type="text"
-                        title="Email Address"
-                        placeholder="Enter your email"
-                        errorTitle={errors.email}
-                        titleColor="#1B223B"
-                        onChange={(value) => setEmail(value)}
-                        required
-                    />
-                    <InputField
-                        type="password"
-                        title="Password"
-                        placeholder="Enter your password"
-                        errorTitle={errors.password}
-                        titleColor="#1B223B"
-                        onChange={(value) => setPassword(value)}
-                        required
-                    />
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
+                <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+                    <h2 className="text-3xl font-bold text-[#1B223B] mb-6 text-center">Đăng Nhập</h2>
 
-                    <div className="text-right mt-4">
-                        <a href="/forgot-password" className="text-sm text-[#1b223b] font-medium hover:underline">
-                            Quên mật khẩu?
+                    {/* General Error Message */}
+                    {errors.general && (
+                        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center">
+                            {errors.general}
+                        </div>
+                    )}
+
+                    <form className="space-y-6">
+                        <InputField
+                            type="text"
+                            title="Email"
+                            placeholder="Nhập email của bạn"
+                            errorTitle={errors.email}
+                            titleColor="#1B223B"
+                            onChange={(value) => setEmail(value)}
+                            required
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC569] focus:border-transparent transition-all"
+                        />
+                        <InputField
+                            type="password"
+                            title="Mật khẩu"
+                            placeholder="Nhập mật khẩu của bạn"
+                            errorTitle={errors.password}
+                            titleColor="#1B223B"
+                            onChange={(value) => setPassword(value)}
+                            required
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC569] focus:border-transparent transition-all"
+                        />
+
+                        <div className="flex justify-end">
+                            <a
+                                href="/forgot-password"
+                                className="text-sm text-[#1B223B] hover:text-[#FFC569] transition-colors"
+                            >
+                                Quên mật khẩu?
+                            </a>
+                        </div>
+
+                        <Button
+                            type="button"
+                            title={isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+                            foreColor="#1B223B"
+                            backgroundColor="#FFC569"
+                            hoverForeColor="#1B223B"
+                            hoverBackgroundColor="#FFB347"
+                            className="w-full h-12 rounded-lg font-semibold text-lg shadow-md transition-all"
+                            onClick={handleClickSignIn}
+                            disabled={isLoading}
+                        />
+
+                        <div className="flex items-center justify-center space-x-2">
+                            <div className="h-px w-16 bg-gray-300"></div>
+                            <span className="text-gray-500 text-sm">hoặc</span>
+                            <div className="h-px w-16 bg-gray-300"></div>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="w-full flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                            <img src={Google} alt="Google logo" className="w-5 h-5 mr-2" />
+                            <span className="text-[#1B223B] font-medium">Đăng nhập với Google</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="w-full flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                            <img src={Facebook} alt="Facebook logo" className="w-5 h-5 mr-2" />
+                            <span className="text-[#1B223B] font-medium">Đăng nhập với Facebook</span>
+                        </button>
+                    </form>
+
+                    <p className="text-center text-sm text-gray-600 mt-6">
+                        Chưa có tài khoản?{' '}
+                        <a href="/register" className="text-[#FFC569] font-semibold hover:underline transition-colors">
+                            Đăng ký ngay
                         </a>
-                    </div>
-
-                    <Button
-                        type="button"
-                        title={isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-                        foreColor="#1B223B"
-                        backgroundColor="#FFC569"
-                        hoverForeColor="#1B223B"
-                        hoverBackgroundColor="#FFB347"
-                        className="w-full h-12"
-                        onClick={handleClickSignIn}
-                        disabled={isLoading}
-                    />
-
-                    <div className="text-center text-gray-500 my-4">hoặc</div>
-
-                    <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center">
-                        <img src={Google} alt="Google logo" className="w-6 h-6 mr-2" />
-                        Đăng nhập với Google
-                    </button>
-                    <button className="w-full border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center justify-center mt-2">
-                        <img src={Facebook} alt="Facebook logo" className="w-6 h-6 mr-2" />
-                        Đăng nhập với Facebook
-                    </button>
-                </form>
-
-                <div className="text-sm text-gray-600 mt-4">
-                    Chưa có tài khoản?{' '}
-                    <a href="/register" className="text-[#1b223b] font-medium hover:underline">
-                        Đăng ký ngay
-                    </a>
+                    </p>
                 </div>
             </div>
         </div>

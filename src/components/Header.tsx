@@ -38,7 +38,7 @@ const Header = () => {
                     Gia sư
                 </Link>
                 <Link
-                    to="/faqs"
+                    to="/faqs-landing"
                     className={`${
                         location.pathname === '/faqs' ? 'text-[#ffc569]' : 'hover:text-[#ffc569]'
                     } transition-all duration-300 underline-offset-4 hover:underline`}
