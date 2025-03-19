@@ -1,72 +1,71 @@
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import Navbar from '../components/Navbar';
 import TopNavbar from '../components/TopNavbar';
-import { FilterIcon } from '../components/icons';
+import { FilterIcon, ResetIcon } from '../components/icons';
 import TutorDetailCard from '../components/TutorDetailCard';
+import TutorSkeleton from '../components/TutorSkeleton';
+import { TutorProfileComponentProps } from '../components/TutorProfileComponent';
 
+// Use TutorProfileComponentProps for consistency
 const Tutor: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         const storedState = localStorage.getItem('navbarExpanded');
         return storedState ? JSON.parse(storedState) : true;
     });
 
-    const tutors = [
-        {
-            id: 1,
-            avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-            name: 'Võ Thị Minh Anh',
-            pricePerSession: 160000,
-            totalClasses: 12,
-            bio: 'Giáo viên Toán với 5 năm kinh nghiệm, giúp học sinh đạt kết quả cao.',
-            subjects: ['Toán học', 'Tiếng Anh', 'Tâm lý học'],
-            rating: 4,
-            reviews: 4,
-        },
-        {
-            id: 2,
-            avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-            name: 'Nguyễn Văn Hùng',
-            pricePerSession: 180000,
-            totalClasses: 10,
-            bio: 'Chuyên gia Tiếng Anh luyện thi IELTS và TOEIC.',
-            subjects: ['Tiếng Anh', 'Ngữ văn', 'Lịch sử'],
-            rating: 5,
-            reviews: 10,
-        },
-        {
-            id: 3,
-            avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
-            name: 'Trần Thị Hạnh',
-            pricePerSession: 150000,
-            totalClasses: 8,
-            bio: 'Giáo viên Vật lý chuyên luyện thi đại học.',
-            subjects: ['Vật lý', 'Toán học', 'Hóa học'],
-            rating: 4,
-            reviews: 6,
-        },
-        {
-            id: 4,
-            avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
-            name: 'Lê Thị Thanh Hà',
-            pricePerSession: 170000,
-            totalClasses: 6,
-            bio: 'Giáo viên Hóa học chuyên luyện thi đại học.',
-            subjects: ['Hóa học', 'Toán học', 'Vật lý'],
-            rating: 4.5,
-            reviews: 8,
-        },
-        {
-            id: 5,
-            avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
-            name: 'Phan Quang Ninh',
-            pricePerSession: 190000,
-            totalClasses: 10,
-            bio: 'Giáo viên Toán chuyên luyện thi đại học.',
-            subjects: ['Toán học', 'Tiếng Anh', 'Vật lý'],
-            rating: 4.7,
-            reviews: 9,
-        },
-    ];
+    const [tutors, setTutors] = useState<TutorProfileComponentProps[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchTutors = async () => {
+        try {
+            setLoading(true);
+            const API_URL = import.meta.env.VITE_APP_API_BASE_URL;
+            if (!API_URL) throw new Error('API_BASE_URL not set in .env');
+
+            const response = await axios.get(`${API_URL}/tutors/search?page=1&limit=10`);
+            const tutorsData = response.data?.data;
+
+            if (!Array.isArray(tutorsData)) throw new Error('Invalid tutor list from API');
+
+            const mappedTutors: TutorProfileComponentProps[] = tutorsData.map((tutor) => ({
+                id: tutor.id ? parseInt(tutor.id) : 0,
+                avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
+                name: tutor.name || 'Unknown',
+                pricePerSession: tutor.tutorProfile?.hourlyPrice ?? 0,
+                email: tutor.email || '',
+                phone: tutor.phone || '',
+                isFavorite: false,
+                violations: 0,
+                subjects: tutor.tutorProfile?.specializations ?? [],
+                gender: tutor.userProfile?.gender || 'UNKNOWN',
+                educationLevel: tutor.tutorProfile?.level || 'Unknown',
+                experience: tutor.tutorProfile?.experiences ?? 0,
+                birthYear: tutor.userProfile?.dob ? new Date(tutor.userProfile.dob).getFullYear() : 2000,
+                totalClasses: tutor.tutorProfile?.taughtStudentsCount ?? 0,
+                location: tutor.tutorProfile?.tutorLocations?.[0] ?? 'Unknown',
+                schedule: tutor.schedule || {},
+                rating: tutor.tutorProfile?.rating ?? 0,
+                reviews: tutor.reviews || [],
+                description: tutor.tutorProfile?.description || 'Không có mô tả',
+            }));
+
+            setTimeout(() => {
+                setTutors(mappedTutors);
+                setLoading(false);
+            }, 1000);
+        } catch (err) {
+            setTimeout(() => {
+                setError(err instanceof Error ? err.message : 'Không thể tải danh sách tutor');
+                setLoading(false);
+            }, 1000);
+        }
+    };
+
+    useEffect(() => {
+        fetchTutors();
+    }, []);
 
     const [showPopup, setShowPopup] = useState(false);
     const [searchText, setSearchText] = useState('');
@@ -75,28 +74,19 @@ const Tutor: React.FC = () => {
         priceTo: number | null;
         selectedSubject: string;
         selectedRating: number | null;
-        classFrom: number | null;
-        classTo: number | null;
+        countFrom: number | null;
+        countTo: number | null;
         isFavorited: boolean;
     }>({
         priceFrom: null,
         priceTo: null,
         selectedSubject: '',
         selectedRating: null,
-        classFrom: null,
-        classTo: null,
+        countFrom: null,
+        countTo: null,
         isFavorited: false,
     });
-
     const subjects = ['Toán học', 'Tiếng Anh', 'Vật lý', 'Hóa học', 'Ngữ văn', 'Lịch sử'];
-    const [favoritePosts] = useState<number[]>([]);
-
-    const togglePopupFilter = () => setShowPopup((prev) => !prev);
-
-    // Lọc danh sách tutors trước khi hiển thị
-    const applyFilter = () => {
-        setShowPopup(false);
-    };
 
     const filteredTutors = tutors.filter((tutor) => {
         return (
@@ -105,27 +95,55 @@ const Tutor: React.FC = () => {
             (!filters.priceTo || tutor.pricePerSession <= filters.priceTo) &&
             (!filters.selectedSubject || tutor.subjects.includes(filters.selectedSubject)) &&
             (!filters.selectedRating || tutor.rating >= filters.selectedRating) &&
-            (!filters.classFrom || tutor.totalClasses >= filters.classFrom) &&
-            (!filters.classTo || tutor.totalClasses <= filters.classTo) &&
-            (!filters.isFavorited || favoritePosts.includes(tutor.id))
+            (!filters.countFrom || tutor.totalClasses >= filters.countFrom) &&
+            (!filters.countTo || tutor.totalClasses <= filters.countTo) &&
+            (!filters.isFavorited || tutor.isFavorite)
         );
     });
 
-    const toggleNavbar = () => {
-        setIsExpanded((prev) => !prev);
+    const resetFilters = () => {
+        setSearchText('');
+        setFilters({
+            priceFrom: null,
+            priceTo: null,
+            selectedSubject: '',
+            selectedRating: null,
+            countFrom: null,
+            countTo: null,
+            isFavorited: false,
+        });
     };
-
+    const togglePopupFilter = () => setShowPopup((prev) => !prev);
+    // Lọc danh sách tutors trước khi hiển thị
+    const applyFilter = () => {
+        setShowPopup(false);
+    };
     useEffect(() => {
         localStorage.setItem('navbarExpanded', JSON.stringify(isExpanded));
     }, [isExpanded]);
 
+    if (error) {
+        return (
+            <div className="text-red-500 text-center mt-10">
+                {error}
+                <button onClick={fetchTutors} className="ml-4 text-blue-500 underline">
+                    Thử lại
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="absolute top-0 left-0 flex h-screen w-screen bg-gray-100">
-            <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
+            <Navbar isExpanded={isExpanded} toggleNavbar={() => setIsExpanded((prev) => !prev)} />
             <TopNavbar />
-
             <div className={`flex-1 flex flex-col ${isExpanded ? 'ml-56' : 'ml-16'}`}>
-                <div className="fixed top-12 flex space-x-4 pb-4 z-20 left-60 right-5 bg-gray-100 p-4">
+                {/* Thanh tìm kiếm */}
+                <div
+                    className={`fixed top-14 flex space-x-4 pb-4 z-20 ${
+                        isExpanded ? 'left-60 right-5' : 'left-20 right-5'
+                    }`}
+                >
                     <input
                         type="text"
                         placeholder="Nhập nội dung cần tìm kiếm"
@@ -133,12 +151,18 @@ const Tutor: React.FC = () => {
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                     />
+                    <div
+                        className="px-3 py-2  text-gray-500 mt-1 hover:text-blue-500 transition cursor-pointer"
+                        onClick={resetFilters}
+                    >
+                        <ResetIcon />
+                    </div>
                     <FilterIcon
                         className="h-9 w-9 text-gray-500 mt-1 cursor-pointer hover:text-blue-500"
                         onClick={togglePopupFilter}
                     />
                 </div>
-
+                {/* Popup filter */}
                 {showPopup && (
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -204,13 +228,13 @@ const Tutor: React.FC = () => {
                                         type="number"
                                         placeholder="Lớn hơn"
                                         className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, classFrom: Number(e.target.value) })}
+                                        onChange={(e) => setFilters({ ...filters, countFrom: Number(e.target.value) })}
                                     />
                                     <input
                                         type="number"
                                         placeholder="Nhỏ hơn"
                                         className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, classTo: Number(e.target.value) })}
+                                        onChange={(e) => setFilters({ ...filters, countTo: Number(e.target.value) })}
                                     />
                                 </div>
                             </div>
@@ -236,14 +260,15 @@ const Tutor: React.FC = () => {
                     </div>
                 )}
 
+                {/* Hiển thị danh sách tutor */}
                 <div className="mt-40 max-h-[calc(100vh-200px)] overflow-y-auto p-6">
-                    {filteredTutors.map((tutor) => (
-                        <TutorDetailCard
-                            key={tutor.id}
-                            {...tutor}
-                            // className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
-                        />
-                    ))}
+                    {loading ? (
+                        <TutorSkeleton />
+                    ) : filteredTutors.length > 0 ? (
+                        filteredTutors.map((tutor) => <TutorDetailCard key={tutor.id} {...tutor} />)
+                    ) : (
+                        <div className="text-center text-gray-500">Không có tutor nào được tìm thấy.</div>
+                    )}
                 </div>
             </div>
         </div>
