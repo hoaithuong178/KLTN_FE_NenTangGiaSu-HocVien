@@ -1,56 +1,65 @@
+// TutorProfile.tsx
+import { useEffect, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
+import axios from 'axios';
 import TutorProfileComponent, { TutorProfileComponentProps } from '../components/TutorProfileComponent';
 
-const sampleTutor: TutorProfileComponentProps = {
-    id: 1,
-    avatar: 'https://i.pravatar.cc/150?img=3',
-    name: 'Nguyễn Văn A',
-    pricePerSession: 200000,
-    email: 'nguyenvana@gmail.com',
-    phone: '0333 333 333',
-    violations: 0,
-    isFavorite: false,
-    subjects: ['Toán', 'Lý', 'Hóa'],
-    gender: 'Nam',
-    educationLevel: 'Đại học',
-    experience: 5,
-    birthYear: 1995,
-    totalClasses: 120,
-    location: 'Hà Nội',
-    schedule: {
-        'Thứ 2': {
-            morning: [
-                ['07:00', '09:00'],
-                ['10:00', '11:00'],
-            ],
-            afternoon: [['14:00', '16:00']],
-        },
-        'Thứ 3': { evening: [['19:00', '21:00']] },
-        'Thứ 5': { morning: [['08:00', '10:00']] },
-        'Thứ 6': { afternoon: [['13:00', '15:00']], evening: [['18:00', '20:00']] },
-        'Thứ 7': { morning: [['09:00', '11:00']] },
-        CN: { afternoon: [['14:00', '16:00']], evening: [['19:00', '21:00']] },
-    },
-    rating: 4.5,
-    reviews: [
-        {
-            avatar: 'https://i.pravatar.cc/100?img=5',
-            name: 'Trần Minh B',
-            date: '2025-02-20',
-            content: 'Gia sư rất nhiệt tình, phương pháp giảng dạy dễ hiểu.',
-            rating: 5,
-        },
-        {
-            avatar: 'https://i.pravatar.cc/100?img=8',
-            name: 'Lê Thị C',
-            date: '2025-02-18',
-            content: 'Dạy hay nhưng hơi nghiêm khắc 😅',
-            rating: 4,
-        },
-    ],
-};
-
 const TutorProfile = () => {
-    return <TutorProfileComponent {...sampleTutor} />;
+    const { id } = useParams<{ id: string }>(); // Lấy ID từ URL
+    const location = useLocation();
+    const [tutor, setTutor] = useState<TutorProfileComponentProps | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTutorDetail = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_APP_API_BASE_URL;
+                const response = await axios.get(`${API_URL}/tutors/${id}`);
+                const tutorData = response.data.data;
+
+                const mappedTutor: TutorProfileComponentProps = {
+                    id: tutorData.id || 0,
+                    avatar: tutorData.userProfile?.avatar || 'https://default-avatar.com',
+                    name: tutorData.name || 'Unknown',
+                    pricePerSession: tutorData.tutorProfile?.hourlyPrice || 0,
+                    email: tutorData.email || '',
+                    phone: tutorData.phone || '',
+                    isFavorite: false,
+                    violations: tutorData.violations || 0,
+                    subjects: tutorData.tutorProfile?.specializations || [],
+                    gender: tutorData.userProfile?.gender || 'UNKNOWN',
+                    educationLevel: tutorData.tutorProfile?.educationLevel || 'Unknown',
+                    experience: tutorData.tutorProfile?.experiences || 0,
+                    birthYear: tutorData.userProfile?.dob ? new Date(tutorData.userProfile.dob).getFullYear() : 2000,
+                    totalClasses: tutorData.tutorProfile?.taughtStudentsCount || 0,
+                    location: tutorData.tutorProfile?.tutorLocations?.[0] || 'Unknown',
+                    schedule: tutorData.schedule || {},
+                    rating: tutorData.tutorProfile?.rating || 0,
+                    reviews: tutorData.reviews || [],
+                    description: tutorData.tutorProfile?.decription || '',
+                };
+
+                setTutor(mappedTutor);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching tutor:', error);
+                setLoading(false);
+            }
+        };
+
+        // Nếu có dữ liệu từ state của Link, dùng nó làm dữ liệu ban đầu
+        if (location.state) {
+            setTutor(location.state as TutorProfileComponentProps);
+            setLoading(false);
+        } else {
+            fetchTutorDetail();
+        }
+    }, [id, location.state]);
+
+    if (loading) return <div>Loading...</div>;
+    if (!tutor) return <div>Không tìm thấy gia sư</div>;
+
+    return <TutorProfileComponent {...tutor} />;
 };
 
 export default TutorProfile;

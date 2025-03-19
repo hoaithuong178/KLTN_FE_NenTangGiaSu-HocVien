@@ -36,7 +36,6 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutors', component: Tutor },
     { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
-    { path: '/dashboard', component: Dashboard },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
     { path: '/forgot-password', component: ForgotPassword },
@@ -51,9 +50,8 @@ const publicRoutes: Array<IRoute> = [
     { path: '/information', component: StudentProfile },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors', component: Tutors },
-    { path: '/tutor-profile', component: TutorProfile },
+    { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
-
     { path: '*', component: NotFound },
 ];
 

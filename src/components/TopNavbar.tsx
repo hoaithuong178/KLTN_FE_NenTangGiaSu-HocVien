@@ -4,7 +4,7 @@ import { Text, TitleText } from '../components/Text';
 import Avatar from '../assets/avatar.jpg';
 import useStore from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuthStore } from '../store/authStore';
 interface TopNavbarProps {
     backgroundColor?: string;
     textColor?: string;
@@ -23,6 +23,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     const bellIconRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { user, logout } = useAuthStore();
 
     // Lấy state và actions từ store
     const { language, notifications, setLanguage, markNotificationAsRead, markAllAsRead } = useStore();
@@ -34,16 +35,22 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     };
 
     const handleLogout = () => {
-        // Xử lý đăng xuất ở đây
-        console.log('Đăng xuất');
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('role');
+        logout();
+        localStorage.clear();
         navigate('/');
-        setShowLogoutConfirm(false);
-        setShowUserMenu(false);
-        // Có thể thêm logic xóa token, clear state, etc.
     };
+
+    // const handleLogout = () => {
+    //     // Xử lý đăng xuất ở đây
+    //     console.log('Đăng xuất');
+    //     localStorage.removeItem('token');
+    //     localStorage.removeItem('refreshToken');
+    //     localStorage.removeItem('role');
+    //     navigate('/');
+    //     setShowLogoutConfirm(false);
+    //     setShowUserMenu(false);
+    //     // Có thể thêm logic xóa token, clear state, etc.
+    // };
 
     const truncateText = (text: string, maxLength: number) => {
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -152,7 +159,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                     className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                 >
-                    <img src={Avatar} alt="User Avatar" className="w-full h-full object-cover" />
+                    <img src={user?.avatar || Avatar} alt="User Avatar" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Popup menu người dùng */}

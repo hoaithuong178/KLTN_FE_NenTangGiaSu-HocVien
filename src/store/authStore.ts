@@ -5,6 +5,13 @@ type Role = 'student' | 'tutor' | 'admin' | null;
 interface User {
     id: string;
     name: string;
+    email: string;
+    avatar: string;
+    address?: string;
+    gender?: string;
+    birthYear?: number;
+    educationLevel?: string;
+    totalClasses?: number;
     role: Role;
 }
 

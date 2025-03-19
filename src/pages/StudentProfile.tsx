@@ -1,32 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-    AddressIcon,
-    ArrowLeftIcon,
-    ArrowUpDownIcon,
-    CoppyLinkIcon,
-    HeartIcon,
-    MailIcon,
-    PhoneIcon,
-} from '../components/icons';
+import { AddressIcon, ArrowLeftIcon, CoppyLinkIcon, HeartIcon, MailIcon, PhoneIcon } from '../components/icons';
 import { Notification } from '../components/Notification';
 import { TitleText } from '../components/Text';
 import { Checkbox, ComboBox } from '../components/InputField';
+import { useAuthStore } from '../store/authStore';
 
 const StudentProfile = () => {
-    const sampleStudent = {
-        id: 1,
-        avatar: 'https://i.pravatar.cc/150?img=3',
-        name: 'Nguyễn Văn A',
-        email: 'nguyenvana@gmail.com',
-        phone: '0333 333 333',
-        gender: 'Nam',
-        educationLevel: 'Đại học',
-        birthYear: 1995,
-        totalClasses: 12,
-        address: 'Quận Gò Vấp, TP. Hồ Chí Minh',
-        credit: 1000000,
+    type User = {
+        avatar: string;
+        name: string;
+        email: string;
+        phone?: string;
+        address?: string;
+        gender?: string;
+        birthYear?: number;
+        educationLevel?: string;
+        totalClasses?: number;
     };
+
+    const { user } = useAuthStore() as { user: User | null };
     const [minPrice, setMinPrice] = useState(100000);
     const [maxPrice, setMaxPrice] = useState(500000);
     const [availableTimes, setAvailableTimes] = useState([
@@ -77,38 +70,6 @@ const StudentProfile = () => {
             price: '90k/buổi',
             requirements: 'Gia sư nam, có kinh nghiệm dạy',
             availableTime: 'Tối các ngày trong tuần',
-        },
-    ];
-    const transactions = [
-        {
-            id: 1,
-            type: 'receive',
-            amount: 650.0,
-            name: 'Olive Adanna',
-            method: 'Bank Transfer',
-            account: '**** 8460',
-            date: 'Jan 11, 2025',
-            time: '05:15 AM',
-        },
-        {
-            id: 2,
-            type: 'receive',
-            amount: 1150.0,
-            name: 'Chris Taylor',
-            method: 'Paypal',
-            account: '@christay_',
-            date: 'Jan 11, 2025',
-            time: '01:35 PM',
-        },
-        {
-            id: 3,
-            type: 'send',
-            amount: 50.0,
-            name: 'Osas Smith',
-            method: 'Credit Card',
-            account: '**** 6961',
-            date: 'Jan 09, 2025',
-            time: '01:24 PM',
         },
     ];
     const bgColors = ['#EBF5FF', '#E6F0FD', '#F0F7FF']; // Các tông màu xanh nhạt
@@ -243,9 +204,12 @@ const StudentProfile = () => {
     const getAge = (birthYear: number): number => {
         return new Date().getFullYear() - birthYear;
     };
+    if (!user) {
+        return <div>Không tìm thấy thông tin người dùng.</div>;
+    }
     return (
         <div className="w-full">
-            {/* Header full width */}
+            {/* Header */}
             <header className="w-full bg-white shadow-md">
                 <div className="container mx-auto px-4 py-4 flex items-center space-x-2">
                     <Link
@@ -260,26 +224,27 @@ const StudentProfile = () => {
 
             <div className="max-w-7xl mx-auto p-6">
                 <div className="grid grid-cols-4 gap-6">
-                    {/* Cột thông tin học viên */}
                     <div className="col-span-3 bg-white p-6 rounded-lg shadow-md">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                             <div className="flex items-center mb-4 md:mb-0">
-                                <img src={sampleStudent.avatar} className="w-24 h-24 rounded-full mr-4" />
+                                <img src={user.avatar} className="w-24 h-24 rounded-full mr-4" alt="Avatar" />
                                 <div>
-                                    <h1 className="text-2xl font-bold">{sampleStudent.name}</h1>
+                                    <h1 className="text-2xl font-bold">{user.name}</h1>
                                     <div className="grid grid-cols-2 gap-2 mt-2">
                                         <div className="flex items-center gap-2">
                                             <MailIcon className="w-5 h-5 text-gray-600" />
-                                            <p className="text-gray-600">{sampleStudent.email}</p>
+                                            <p className="text-gray-600">{user.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <PhoneIcon className="w-5 h-5 text-gray-600" />
-                                            <p className="text-gray-600">{sampleStudent.phone}</p>
+                                            <p className="text-gray-600">{user.phone}</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <AddressIcon className="w-5 h-5 text-gray-600" />
-                                            <p className="text-gray-600">{sampleStudent.address}</p>
-                                        </div>
+                                        {user.address && (
+                                            <div className="flex items-center gap-2">
+                                                <AddressIcon className="w-5 h-5 text-gray-600" />
+                                                <p className="text-gray-600">{user.address}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -298,26 +263,46 @@ const StudentProfile = () => {
                                 <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
                                 <p className="text-gray-800 col-span-3">Lorem ipsum dolor sit amet...</p>
 
-                                <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
-                                <p className="text-gray-800 col-span-3">{sampleStudent.gender}</p>
+                                {user.gender && (
+                                    <>
+                                        <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
+                                        <p className="text-gray-800 col-span-3">{user.gender}</p>
+                                    </>
+                                )}
 
-                                <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
-                                <p className="text-gray-800 col-span-3">
-                                    {sampleStudent.birthYear} ({getAge(sampleStudent.birthYear)} tuổi)
-                                </p>
+                                {user.birthYear && (
+                                    <>
+                                        <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
+                                        <p className="text-gray-800 col-span-3">
+                                            {user.birthYear} ({getAge(user.birthYear)} tuổi)
+                                        </p>
+                                    </>
+                                )}
 
-                                <p className="text-gray-600 font-semibold col-span-1">Trình độ</p>
-                                <p className="col-span-3">
-                                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg inline-block">
-                                        {sampleStudent.educationLevel}
-                                    </span>
-                                </p>
+                                {user.educationLevel && (
+                                    <>
+                                        <p className="text-gray-600 font-semibold col-span-1">Trình độ</p>
+                                        <p className="col-span-3">
+                                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg inline-block">
+                                                {user.educationLevel}
+                                            </span>
+                                        </p>
+                                    </>
+                                )}
 
-                                <p className="text-gray-600 font-semibold col-span-1">Số lớp đã học</p>
-                                <p className="text-gray-800 col-span-3">{sampleStudent.totalClasses} lớp</p>
+                                {user.totalClasses !== undefined && (
+                                    <>
+                                        <p className="text-gray-600 font-semibold col-span-1">Số lớp đã học</p>
+                                        <p className="text-gray-800 col-span-3">{user.totalClasses} lớp</p>
+                                    </>
+                                )}
 
-                                <p className="text-gray-600 font-semibold col-span-1">Địa chỉ</p>
-                                <p className="text-gray-800 col-span-3">{sampleStudent.address}</p>
+                                {user.address && (
+                                    <>
+                                        <p className="text-gray-600 font-semibold col-span-1">Địa chỉ</p>
+                                        <p className="text-gray-800 col-span-3">{user.address}</p>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className="space-y-4 mb-4 p-4 bg-white rounded-lg shadow-md">
@@ -731,66 +716,16 @@ const StudentProfile = () => {
                         )}
                     </div>
 
-                    {/* Cột ví riêng biệt */}
+                    {/* Cột ví */}
                     <div className="col-span-1 flex flex-col items-start">
-                        {/* Ví TeachMe */}
                         <div className="relative bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-lg shadow-xl text-center w-full mb-4">
                             <div className="absolute top-4 left-4 text-sm text-white">TeachMe Wallet</div>
                             <div className="mt-10">
                                 <p className="text-lg text-white">Số dư trong ví</p>
                                 <p className="text-3xl font-bold text-[#ffc569] mt-3">$5,320.00</p>
                             </div>
-                            <div className="absolute bottom-2 left-4 text-sm text-white">Nguyen Van A</div>
+                            <div className="absolute bottom-2 left-4 text-sm text-white">{user.name}</div>
                             <div className="absolute bottom-2 right-4 text-sm text-white">**** 5678</div>
-                        </div>
-                        {/* Lịch sử giao dịch */}
-                        <div className="bg-white p-4 rounded-lg shadow-md w-full">
-                            <h2 className="text-lg font-semibold mb-4">Lịch sử giao dịch</h2>
-                            <div className="space-y-4 overflow-auto max-h-[calc(100vh-400px)]">
-                                {transactions.map((tx) => (
-                                    <div
-                                        key={tx.id}
-                                        className="flex items-center justify-between p-4 rounded-lg shadow-sm border"
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            {tx.type === 'receive' ? (
-                                                <ArrowUpDownIcon className="w-8 h-8 text-green-500" />
-                                            ) : (
-                                                <ArrowUpDownIcon className="w-8 h-8 text-red-500" />
-                                            )}
-                                            <div>
-                                                <p className="text-gray-700 font-medium">
-                                                    {tx.type === 'receive' ? (
-                                                        <>
-                                                            Bạn đã nhận{' '}
-                                                            <span className="font-semibold text-green-600">
-                                                                {tx.amount.toLocaleString()}$
-                                                            </span>{' '}
-                                                            từ
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            Bạn đã chuyển{' '}
-                                                            <span className="font-semibold text-red-600">
-                                                                {tx.amount.toLocaleString()}$
-                                                            </span>{' '}
-                                                            cho
-                                                        </>
-                                                    )}
-                                                    <span className="font-semibold text-black"> {tx.name}</span>
-                                                </p>
-
-                                                <p className="text-sm text-gray-500">
-                                                    {tx.method} - {tx.account}
-                                                </p>
-                                                <p className="text-sm text-gray-500">
-                                                    {tx.date} - {tx.time}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
                     </div>
                 </div>
