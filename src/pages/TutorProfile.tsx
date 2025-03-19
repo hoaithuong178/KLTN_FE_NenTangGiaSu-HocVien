@@ -59,18 +59,16 @@ const TutorProfile = () => {
 
     if (loading) return <div>Loading...</div>;
     if (!tutor) return <div>Không tìm thấy gia sư</div>;
-
-    return <TutorProfileComponent {...tutor} />;
     return (
         <>
             <SEO
-                title={`${sampleTutor.name} - Gia sư ${sampleTutor.subjects.join(', ')}`}
-                description={`${sampleTutor.name} - Gia sư ${sampleTutor.subjects.join(', ')} với ${
-                    sampleTutor.experience
-                } năm kinh nghiệm. Đánh giá ${sampleTutor.rating}/5 từ ${sampleTutor.reviews.length} học sinh.`}
-                ogImage={sampleTutor.avatar}
+                title={`${tutor.name} - Gia sư ${tutor.subjects.join(', ')}`}
+                description={`${tutor.name} - Gia sư ${tutor.subjects.join(', ')} với ${
+                    tutor.experience
+                } năm kinh nghiệm. Đánh giá ${tutor.rating}/5 từ ${tutor.reviews.length} học sinh.`}
+                ogImage={tutor.avatar}
             />
-            <TutorProfileComponent {...sampleTutor} />
+            <TutorProfileComponent {...tutor} />
         </>
     );
 };
