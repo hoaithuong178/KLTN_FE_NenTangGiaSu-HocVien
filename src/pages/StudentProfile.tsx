@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AddressIcon, ArrowLeftIcon, CoppyLinkIcon, HeartIcon, MailIcon, PhoneIcon } from '../components/icons';
 import { Notification } from '../components/Notification';
-import SEO from '../components/SEO';
 import { TitleText } from '../components/Text';
 import { Checkbox, ComboBox } from '../components/InputField';
 import { useAuthStore } from '../store/authStore';
+import SEO from '../components/SEO';
 
 const StudentProfile = () => {
     type User = {

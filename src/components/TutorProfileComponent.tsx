@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AddressIcon, ArrowLeftIcon, ChatIcon, FlagIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from './icons';
+import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from './icons';
 import { Button } from './Button';
 
 export type ScheduleDetail = {
@@ -22,7 +22,7 @@ export type TutorProfileComponentProps = {
     email: string;
     phone: string;
     isFavorite: boolean;
-    violations: number;
+    learningTypes: string[];
     subjects: string[];
     gender: string;
     educationLevel: string;
@@ -42,64 +42,20 @@ export type TutorProfileComponentProps = {
     }[];
 };
 
-// type ApiData = {
-//     id: string;
-//     userProfile?: {
-//         avatar?: string;
-//         gender?: string;
-//         dob?: string;
-//     };
-//     name?: string;
-//     tutorProfile?: {
-//         hourlyPrice?: number;
-//         specializations?: string[];
-//         experiences?: number;
-//         taughtStudentsCount?: number;
-//         tutorLocations?: string[];
-//         rating?: number;
-//         description?: string;
-//     };
-//     email?: string;
-//     phone?: string;
-//     schedule?: Schedule;
-//     reviews?: TutorProfileComponentProps['reviews'];
-// };
-
-// function transformTutorData(apiData: ApiData): TutorProfileComponentProps {
-//     return {
-//         id: apiData.id ? parseInt(apiData.id) : 0,
-//         avatar: apiData.userProfile?.avatar || 'https://via.placeholder.com/150',
-//         name: apiData.name || 'Unknown',
-//         pricePerSession: apiData.tutorProfile?.hourlyPrice ?? 0,
-//         email: apiData.email || 'N/A',
-//         phone: apiData.phone || 'N/A',
-//         description: apiData.tutorProfile?.description || 'Chưa có mô tả về bản thân',
-//         isFavorite: false,
-//         violations: 0,
-//         subjects: apiData.tutorProfile?.specializations ?? [],
-//         gender: apiData.userProfile?.gender || 'UNKNOWN',
-//         educationLevel: 'Unknown',
-//         experience: apiData.tutorProfile?.experiences ?? 0,
-//         birthYear: apiData.userProfile?.dob ? new Date(apiData.userProfile.dob).getFullYear() : 2000,
-//         totalClasses: apiData.tutorProfile?.taughtStudentsCount ?? 0,
-//         location: apiData.tutorProfile?.tutorLocations?.[0] ?? 'Unknown',
-//         schedule: apiData.schedule ?? {},
-//         rating: apiData.tutorProfile?.rating ?? 0,
-//         reviews: apiData.reviews ?? [],
-//     };
-// }
-
 const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
+    console.log('Props received in TutorProfileComponent:', props);
+
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [isFavorite, setIsFavorite] = useState(props.isFavorite);
     const [requestForm, setRequestForm] = useState({
         title: '',
         content: '',
-        subject: props.subjects.length > 0 ? props.subjects[0] : '',
-        location: props.location,
+        subject: props.subjects?.length > 0 ? props.subjects[0] : '',
+        learningTypes: props.learningTypes?.length > 0 ? props.learningTypes[0] : '',
+        location: props.location || 'Unknown',
         duration: 60,
         mode: 'online' as 'online' | 'offline',
-        pricePerSession: props.pricePerSession,
+        pricePerSession: props.pricePerSession || 0,
     });
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -113,6 +69,20 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
         show: false,
         type: 'success',
     });
+
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setShowRequestModal(false);
+        };
+        if (showRequestModal) {
+            document.body.style.overflow = 'hidden'; // Ngăn cuộn trang
+            window.addEventListener('keydown', handleEsc);
+        }
+        return () => {
+            document.body.style.overflow = 'auto'; // Khôi phục cuộn
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [showRequestModal]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -136,8 +106,10 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                     selectedTimes,
                 }),
             });
-            if (!response.ok) throw new Error('Request failed');
-            await response.json();
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Gửi yêu cầu thất bại');
+            }
             setNotification({ message: 'Gửi yêu cầu thành công!', show: true, type: 'success' });
             setShowRequestModal(false);
         } catch (error) {
@@ -150,13 +122,21 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
     };
 
     const toggleTimeSelection = (timeRange: string) => {
-        setSelectedTimes((prev) =>
-            prev.includes(timeRange)
-                ? prev.filter((t) => t !== timeRange)
-                : prev.length < sessionCount
-                ? [...prev, timeRange]
-                : prev,
-        );
+        setSelectedTimes((prev) => {
+            if (prev.includes(timeRange)) {
+                return prev.filter((t) => t !== timeRange);
+            }
+            if (prev.length >= sessionCount) {
+                setNotification({
+                    message: `Bạn chỉ có thể chọn tối đa ${sessionCount} khung giờ`,
+                    show: true,
+                    type: 'error',
+                });
+                setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
+                return prev;
+            }
+            return [...prev, timeRange];
+        });
     };
 
     const handleFavorite = () => {
@@ -203,20 +183,30 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                             </p>
                             <div className="grid grid-cols-2 gap-2 mt-2">
                                 <div className="flex items-center gap-2">
-                                    <MailIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">{props.email}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <PhoneIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">{props.phone}</p>
+                                    {props.learningTypes?.length > 0 ? (
+                                        props.learningTypes.map((type, index) => (
+                                            <span
+                                                key={`learning-type-${index}`}
+                                                className="inline-block bg-blue-500 text-white text-sm px-2 py-1 rounded-full"
+                                            >
+                                                {type}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-gray-500">Không có hình thức học</span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <AddressIcon className="w-5 h-5 text-gray-600" />
                                     <p className="text-gray-600">{props.location}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <FlagIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">Số lần vi phạm: {props.violations}</p>
+                                    <MailIcon className="w-5 h-5 text-gray-600" />
+                                    <p className="text-gray-600">{props.email}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <PhoneIcon className="w-5 h-5 text-gray-600" />
+                                    <p className="text-gray-600">{props.phone}</p>
                                 </div>
                             </div>
                         </div>
@@ -344,14 +334,17 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                                                 <h3 className="text-lg font-semibold">Chọn khung giờ:</h3>
                                                 <div className="flex gap-2 flex-wrap mt-2">
                                                     {Object.entries(props.schedule[selectedDay] || {}).map(
-                                                        ([period, times]) => (
-                                                            <div key={period} className="flex flex-col gap-1">
+                                                        ([period, times], periodIndex) => (
+                                                            <div
+                                                                key={`period-${selectedDay}-${periodIndex}`}
+                                                                className="flex flex-col gap-1"
+                                                            >
                                                                 <h4 className="font-medium">{period}</h4>
-                                                                {times?.map(([start, end]) => {
+                                                                {times?.map(([start, end], timeIndex) => {
                                                                     const timeRange = `${start} - ${end}`;
                                                                     return (
                                                                         <Button
-                                                                            key={timeRange}
+                                                                            key={`time-${selectedDay}-${periodIndex}-${timeIndex}`} // Key duy nhất
                                                                             title={timeRange}
                                                                             className={
                                                                                 selectedTimes.includes(timeRange)
@@ -423,12 +416,14 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                                 </Link>
                             </div>
                             <div className="flex items-center space-x-1">
-                                <span className="text-lg font-semibold">{props.rating}</span>
+                                <span className="text-lg font-semibold">{props.rating || 0}</span>
                                 {[...Array(5)].map((_, index) => (
                                     <StarIcon
-                                        key={index}
+                                        key={`star-${index}`} // Sử dụng key duy nhất
                                         className={
-                                            index < props.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'
+                                            index < (props.rating || 0) // Đảm bảo rating không phải NaN
+                                                ? 'text-yellow-500 fill-current'
+                                                : 'text-gray-300'
                                         }
                                     />
                                 ))}
@@ -440,11 +435,17 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
 
                 {notification.show && (
                     <div
-                        className={`fixed bottom-5 right-5 p-3 text-white rounded-md ${
+                        className={`fixed bottom-5 right-5 p-3 text-white rounded-md flex items-center justify-between ${
                             notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
                         }`}
                     >
-                        {notification.message}
+                        <span>{notification.message}</span>
+                        <button
+                            onClick={() => setNotification((prev) => ({ ...prev, show: false }))}
+                            className="ml-2 text-white font-bold"
+                        >
+                            ×
+                        </button>
                     </div>
                 )}
 
@@ -475,8 +476,11 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                         <p className="text-gray-600 font-semibold col-span-1">Môn</p>
                         <div className="flex flex-wrap gap-2 col-span-3">
                             {props.subjects?.length > 0 ? (
-                                props.subjects.map((subject) => (
-                                    <span key={subject} className="bg-pink-200 text-pink-700 px-3 py-1 rounded-lg">
+                                props.subjects.map((subject, index) => (
+                                    <span
+                                        key={`subject-${index}`}
+                                        className="bg-pink-200 text-pink-700 px-3 py-1 rounded-lg"
+                                    >
                                         {subject}
                                     </span>
                                 ))
@@ -530,13 +534,16 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                                     <p className="text-sm text-gray-500">{review.date}</p>
                                     <p className="text-gray-700">{review.content}</p>
                                     <div className="flex text-yellow-500">
-                                        {Array.from({ length: 5 }).map((_, i) =>
-                                            i < review.rating ? (
-                                                <StarIcon key={i} className="w-5 h-5 fill-yellow-500" />
-                                            ) : (
-                                                <StarIcon key={i} className="w-5 h-5" />
-                                            ),
-                                        )}
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <StarIcon
+                                                key={`review-star-${review.date}-${i}`} // Key duy nhất dựa trên date và index
+                                                className={
+                                                    i < (review.rating || 0) // Đảm bảo rating không phải NaN
+                                                        ? 'text-yellow-500 fill-yellow-500'
+                                                        : 'text-gray-300'
+                                                }
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             </div>

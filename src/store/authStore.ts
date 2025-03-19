@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 type Role = 'student' | 'tutor' | 'admin' | null;
 
@@ -20,21 +21,29 @@ interface AuthState {
     token: string | null;
     login: (user: User, token: string) => void;
     logout: () => void;
-    setUser: (user: User) => void; // ✅ Thêm setUser để cập nhật user riêng lẻ
-    setToken: (token: string) => void; // ✅ Thêm setToken để cập nhật token riêng lẻ
+    setUser: (user: User) => void;
+    setToken: (token: string) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    token: null,
-    login: (user, token) => {
-        if (!user || !token) {
-            console.error('Lỗi đăng nhập: Thiếu user hoặc token');
-            return;
-        }
-        set({ user, token });
-    },
-    logout: () => set({ user: null, token: null }),
-    setUser: (user) => set((state) => ({ ...state, user })), // ✅ Thêm setUser
-    setToken: (token) => set((state) => ({ ...state, token })), // ✅ Thêm setToken
-}));
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            token: null,
+            login: (user, token) => {
+                if (!user || !token) {
+                    console.error('Lỗi đăng nhập: Thiếu user hoặc token');
+                    return;
+                }
+                set({ user, token });
+            },
+            logout: () => set({ user: null, token: null }),
+            setUser: (user) => set((state) => ({ ...state, user })),
+            setToken: (token) => set((state) => ({ ...state, token })),
+        }),
+        {
+            name: 'auth-storage', // Tên key trong localStorage
+            storage: createJSONStorage(() => localStorage), // Sử dụng localStorage
+        },
+    ),
+);
