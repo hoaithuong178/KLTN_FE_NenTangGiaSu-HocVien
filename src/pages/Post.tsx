@@ -35,7 +35,7 @@ const Post: React.FC = () => {
         setShowPopup(!showPopup);
     };
 
-    const { user } = useAuthStore.getState();
+    const { user } = useAuthStore();
     const isStudent = user?.role === 'STUDENT';
     const isTutor = user?.role === 'TUTOR';
     type APIPost = Omit<Post, 'mode'> & { mode: string };
@@ -402,7 +402,7 @@ const Post: React.FC = () => {
                     </div>
                     {isStudent && (
                         <div
-                            className={`fixed top-28 flex items-center space-x-4 mb-6 z-20 ${
+                            className={`top-36 flex items-center space-x-4 mb-6 z-20 ${
                                 isExpanded ? 'left-60 right-5' : 'left-20 right-5'
                             }`}
                         >
