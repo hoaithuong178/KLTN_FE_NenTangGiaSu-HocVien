@@ -5,6 +5,7 @@ import { Notification } from '../components/Notification';
 import { TitleText } from '../components/Text';
 import { Checkbox, ComboBox } from '../components/InputField';
 import { useAuthStore } from '../store/authStore';
+import SEO from '../components/SEO';
 
 const StudentProfile = () => {
     type User = {
