@@ -24,6 +24,7 @@ const Tutors = lazy(() => import('../pages/Tutors'));
 const TutorProfile = lazy(() => import('../pages/TutorProfile'));
 const Sitemap = lazy(() => import('../pages/Sitemap'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const FaqsLanding = lazy(() => import('../pages/FaqsLanding'));
 
 export interface IRoute {
     path: string;
@@ -47,11 +48,12 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
+    { path: '/faqs-landing', component: FaqsLanding },
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '/information', component: StudentProfile },
     { path: '/posts-landing', component: PostsLanding },
-    { path: '/tutors', component: Tutors },
+    { path: '/tutors-landing', component: Tutors },
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '/sitemap', component: Sitemap },

@@ -7,7 +7,6 @@ import TutorDetailCard from '../components/TutorDetailCard';
 import TutorSkeleton from '../components/TutorSkeleton';
 import { TutorProfileComponentProps } from '../components/TutorProfileComponent';
 
-// Use TutorProfileComponentProps for consistency
 const Tutor: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         const storedState = localStorage.getItem('navbarExpanded');
@@ -37,7 +36,7 @@ const Tutor: React.FC = () => {
                 email: tutor.email || '',
                 phone: tutor.phone || '',
                 isFavorite: false,
-                violations: 0,
+                learningTypes: tutor.tutorProfile?.learningTypes || 'Unknown',
                 subjects: tutor.tutorProfile?.specializations ?? [],
                 gender: tutor.userProfile?.gender || 'UNKNOWN',
                 educationLevel: tutor.tutorProfile?.level || 'Unknown',
@@ -86,7 +85,20 @@ const Tutor: React.FC = () => {
         countTo: null,
         isFavorited: false,
     });
-    const subjects = ['Toán học', 'Tiếng Anh', 'Vật lý', 'Hóa học', 'Ngữ văn', 'Lịch sử'];
+    const [subjects, setSubjects] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (showPopup) {
+            axios
+                .get(`${import.meta.env.VITE_APP_API_BASE_URL}/subjects`)
+                .then((response) => {
+                    if (response.data?.statusCode === 200) {
+                        setSubjects(response.data.data.map((item: { name: string }) => item.name));
+                    }
+                })
+                .catch((error) => console.error('Lỗi khi lấy danh sách môn học:', error));
+        }
+    }, [showPopup]);
 
     const filteredTutors = tutors.filter((tutor) => {
         return (
@@ -114,145 +126,159 @@ const Tutor: React.FC = () => {
         });
     };
     const togglePopupFilter = () => setShowPopup((prev) => !prev);
-    // Lọc danh sách tutors trước khi hiển thị
-    const applyFilter = () => {
-        setShowPopup(false);
-    };
+    const applyFilter = () => setShowPopup(false);
+
     useEffect(() => {
         localStorage.setItem('navbarExpanded', JSON.stringify(isExpanded));
     }, [isExpanded]);
 
     if (error) {
         return (
-            <div className="text-red-500 text-center mt-10">
-                {error}
-                <button onClick={fetchTutors} className="ml-4 text-blue-500 underline">
-                    Thử lại
-                </button>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <p className="text-red-500 text-lg font-semibold">{error}</p>
+                    <button
+                        onClick={fetchTutors}
+                        className="mt-4 text-[#1B73E8] hover:text-[#FFC569] underline font-medium transition-colors"
+                    >
+                        Thử lại
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="absolute top-0 left-0 flex h-screen w-screen bg-gray-100">
+        <div className="min-h-screen flex bg-gray-50">
+            {/* Navbar */}
             <Navbar isExpanded={isExpanded} toggleNavbar={() => setIsExpanded((prev) => !prev)} />
-            <TopNavbar />
-            <div className={`flex-1 flex flex-col ${isExpanded ? 'ml-56' : 'ml-16'}`}>
-                {/* Thanh tìm kiếm */}
-                <div
-                    className={`fixed top-14 flex space-x-4 pb-4 z-20 ${
-                        isExpanded ? 'left-60 right-5' : 'left-20 right-5'
-                    }`}
-                >
+            <div className="absolute top-0 z-30">
+                <TopNavbar />
+            </div>
+            {/* Nội dung chính */}
+            <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
+                {/* Thanh tìm kiếm và bộ lọc */}
+                <div className="sticky top-[60px] z-20 bg-white shadow-md px-6 py-4 flex items-center gap-4">
                     <input
                         type="text"
-                        placeholder="Nhập nội dung cần tìm kiếm"
-                        className="p-3 rounded-md border border-gray-300 flex-1 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Tìm kiếm gia sư..."
+                        className="flex-1 p-2 rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none transition-all text-gray-700"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                     />
-                    <div
-                        className="px-3 py-2  text-gray-500 mt-1 hover:text-blue-500 transition cursor-pointer"
+                    <button
+                        className="p-2 text-gray-500 hover:text-[#1B73E8] transition-colors"
                         onClick={resetFilters}
+                        aria-label="Reset bộ lọc"
                     >
-                        <ResetIcon />
-                    </div>
-                    <FilterIcon
-                        className="h-9 w-9 text-gray-500 mt-1 cursor-pointer hover:text-blue-500"
+                        <ResetIcon className="w-6 h-6" />
+                    </button>
+                    <button
+                        className="p-2 text-gray-500 hover:text-[#1B73E8] transition-colors"
                         onClick={togglePopupFilter}
-                    />
+                        aria-label="Mở bộ lọc"
+                    >
+                        <FilterIcon className="w-6 h-6" />
+                    </button>
                 </div>
-                {/* Popup filter */}
+
+                {/* Popup bộ lọc */}
                 {showPopup && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                            <div className="flex justify-between items-center border-b pb-3">
-                                <h2 className="text-lg font-semibold">Bộ lọc</h2>
-                                {/* <XIcon
-                                    className="w-6 h-6 cursor-pointer text-gray-500 hover:text-gray-800"
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h2 className="text-xl font-semibold text-[#1B73E8] mb-4">Bộ lọc gia sư</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-1">Giá tiền (VNĐ)</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Từ"
+                                            className="w-1/2 p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                            onChange={(e) =>
+                                                setFilters({ ...filters, priceFrom: Number(e.target.value) })
+                                            }
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Đến"
+                                            className="w-1/2 p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                            onChange={(e) =>
+                                                setFilters({ ...filters, priceTo: Number(e.target.value) })
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-1">Môn học</label>
+                                    <select
+                                        className="w-full p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                        onChange={(e) => setFilters({ ...filters, selectedSubject: e.target.value })}
+                                    >
+                                        <option value="">Chọn môn học</option>
+                                        {subjects.map((subject) => (
+                                            <option key={subject} value={subject}>
+                                                {subject}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-1">Đánh giá</label>
+                                    <select
+                                        className="w-full p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                        onChange={(e) =>
+                                            setFilters({ ...filters, selectedRating: Number(e.target.value) })
+                                        }
+                                    >
+                                        <option value="">Chọn mức đánh giá</option>
+                                        <option value="5">⭐ 5 sao</option>
+                                        <option value="4">⭐ 4 sao trở lên</option>
+                                        <option value="3">⭐ 3 sao trở lên</option>
+                                        <option value="2">⭐ Dưới 2 sao</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-1">Số lớp</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Từ"
+                                            className="w-1/2 p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                            onChange={(e) =>
+                                                setFilters({ ...filters, countFrom: Number(e.target.value) })
+                                            }
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Đến"
+                                            className="w-1/2 p-2 border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1B73E8] focus:outline-none"
+                                            onChange={(e) =>
+                                                setFilters({ ...filters, countTo: Number(e.target.value) })
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 text-[#1B73E8] focus:ring-[#1B73E8] rounded"
+                                        onChange={(e) => setFilters({ ...filters, isFavorited: e.target.checked })}
+                                    />
+                                    <label className="text-gray-700">Chỉ hiển thị gia sư yêu thích</label>
+                                </div>
+                            </div>
+                            <div className="mt-6 flex justify-end gap-2">
+                                <button
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                                     onClick={togglePopupFilter}
-                                /> */}
-                            </div>
-
-                            <div className="mt-4">
-                                <label>Giá tiền (VNĐ)</label>
-                                <div className="flex space-x-2">
-                                    <input
-                                        type="number"
-                                        placeholder="Từ"
-                                        className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, priceFrom: Number(e.target.value) })}
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Đến"
-                                        className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, priceTo: Number(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-4">
-                                <label>Môn học</label>
-                                <select
-                                    className="w-full p-2 border rounded-md"
-                                    onChange={(e) => setFilters({ ...filters, selectedSubject: e.target.value })}
                                 >
-                                    <option value="">Chọn môn học</option>
-                                    {subjects.map((subject) => (
-                                        <option key={subject} value={subject}>
-                                            {subject}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="mt-4">
-                                <label>Đánh giá</label>
-                                <select
-                                    className="w-full p-2 border rounded-md"
-                                    onChange={(e) => setFilters({ ...filters, selectedRating: Number(e.target.value) })}
-                                >
-                                    <option value="">Chọn mức đánh giá</option>
-                                    <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
-                                    <option value="4">⭐⭐⭐⭐ (4 sao trở lên)</option>
-                                    <option value="3">⭐⭐⭐ (3 sao trở lên)</option>
-                                    <option value="2">⭐ (dưới 2 sao)</option>
-                                </select>
-                            </div>
-
-                            <div className="mt-4">
-                                <label>Số lớp</label>
-                                <div className="flex space-x-2">
-                                    <input
-                                        type="number"
-                                        placeholder="Lớn hơn"
-                                        className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, countFrom: Number(e.target.value) })}
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Nhỏ hơn"
-                                        className="w-1/2 p-2 border rounded-md"
-                                        onChange={(e) => setFilters({ ...filters, countTo: Number(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="h-4 w-4 text-blue-600"
-                                    onChange={(e) => setFilters({ ...filters, isFavorited: e.target.checked })}
-                                />
-                                <label className="ml-2">Chỉ hiển thị gia sư yêu thích</label>
-                            </div>
-
-                            <div className="mt-6 flex justify-between">
-                                <button className="px-4 py-2 bg-gray-300 rounded-md" onClick={togglePopupFilter}>
                                     Hủy
                                 </button>
-                                <button className="px-4 py-2 bg-blue-600 text-white rounded-md" onClick={applyFilter}>
+                                <button
+                                    className="px-4 py-2 bg-[#1B73E8] text-white rounded-lg hover:bg-[#1557B0] transition-colors"
+                                    onClick={applyFilter}
+                                >
                                     Áp dụng
                                 </button>
                             </div>
@@ -260,14 +286,34 @@ const Tutor: React.FC = () => {
                     </div>
                 )}
 
-                {/* Hiển thị danh sách tutor */}
-                <div className="mt-40 max-h-[calc(100vh-200px)] overflow-y-auto p-6">
+                {/* Danh sách gia sư */}
+                <div
+                    className="flex-1 overflow-y-auto p-6 mt-12 h-[calc(100vh-140px)]"
+                    style={{
+                        maskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 1) 40px)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 1) 40px)',
+                    }}
+                >
                     {loading ? (
-                        <TutorSkeleton />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[...Array(4)].map((_, index) => (
+                                <TutorSkeleton key={index} />
+                            ))}
+                        </div>
                     ) : filteredTutors.length > 0 ? (
-                        filteredTutors.map((tutor) => <TutorDetailCard key={tutor.id} {...tutor} />)
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {filteredTutors.map((tutor) => (
+                                <TutorDetailCard
+                                    key={tutor.id}
+                                    {...tutor}
+                                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                                />
+                            ))}
+                        </div>
                     ) : (
-                        <div className="text-center text-gray-500">Không có tutor nào được tìm thấy.</div>
+                        <div className="flex items-center justify-center h-full text-gray-500 text-lg">
+                            Không tìm thấy gia sư nào phù hợp.
+                        </div>
                     )}
                 </div>
             </div>
