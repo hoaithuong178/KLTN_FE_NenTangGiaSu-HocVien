@@ -6,6 +6,8 @@ import ClassCard from '../components/ClassCard';
 import WeeklySchedule from '../components/WeeklySchedule';
 import { SearchIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import { message } from 'antd';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening';
 
@@ -106,6 +108,19 @@ const MyClass: React.FC = () => {
         setIsExpanded((prev) => !prev);
     };
 
+    const handleClassClick = () => {
+        const { user } = useAuthStore.getState();
+
+        if (user?.role === 'STUDENT') {
+            navigate(`/class-detail`);
+        } else if (user?.role === 'TUTOR') {
+            navigate(`/class-detail-tutor`);
+        } else {
+            console.error('Invalid user role');
+            message.error('Không có quyền truy cập');
+        }
+    };
+
     return (
         <div className="absolute top-0 left-0 flex h-screen w-screen ">
             <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
@@ -154,7 +169,7 @@ const MyClass: React.FC = () => {
                                     {mockClasses.map((classInfo) => (
                                         <div
                                             key={classInfo.id}
-                                            onClick={() => navigate(`/class-detail`)}
+                                            onClick={() => handleClassClick()}
                                             className="cursor-pointer"
                                         >
                                             <ClassCard classInfo={classInfo} />

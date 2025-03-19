@@ -1,8 +1,10 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Logo from '../assets/FullLogo.png';
+import { useAuthStore } from '../store/authStore';
 const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuthStore();
 
     return (
         <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center bg-[#1b223b] px-8 py-4 text-white shadow-md">
@@ -56,12 +58,16 @@ const Header = () => {
             </nav>
 
             {/* Login Button */}
-            <button
-                className="bg-[#ffc569] text-[#1b223b] font-semibold px-4 py-2 rounded-lg border border-transparent hover:bg-[#e0aa4d] hover:shadow-lg transition-all duration-300"
-                onClick={() => navigate('/sign-in')}
-            >
-                Đăng nhập
-            </button>
+            {user ? (
+                <img src={user.avatar} alt="Avatar" className="h-10 w-auto object-contain" />
+            ) : (
+                <button
+                    className="bg-[#ffc569] text-[#1b223b] font-semibold px-4 py-2 rounded-lg border border-transparent hover:bg-[#e0aa4d] hover:shadow-lg transition-all duration-300"
+                    onClick={() => navigate('/sign-in')}
+                >
+                    Đăng nhập
+                </button>
+            )}
         </header>
     );
 };

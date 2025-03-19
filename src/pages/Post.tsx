@@ -13,6 +13,7 @@ import TopNavbar from '../components/TopNavbar';
 import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
+import { useAuthStore } from '../store/authStore';
 
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
@@ -34,6 +35,9 @@ const Post: React.FC = () => {
         setShowPopup(!showPopup);
     };
 
+    const { user } = useAuthStore.getState();
+    const isStudent = user?.role === 'STUDENT';
+    const isTutor = user?.role === 'TUTOR';
     type APIPost = Omit<Post, 'mode'> & { mode: string };
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true); // Thêm state để theo dõi trạng thái tải dữ liệu
@@ -376,9 +380,13 @@ const Post: React.FC = () => {
             <div className="absolute top-0 left-0 flex h-screen w-screen bg-white z-10">
                 <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
                 <TopNavbar />
-                <div className={`flex-1 p-6 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
+                <div
+                    className={`flex-1 p-6 transition-all duration-300 ${
+                        isExpanded ? 'ml-56' : 'ml-16'
+                    } overflow-y-auto mt-[56px]`}
+                >
                     <div
-                        className={`fixed top-14 flex space-x-4 pb-4 z-20 ${
+                        className={` top-14 flex space-x-4 pb-4 z-20 ${
                             isExpanded ? 'left-60 right-5' : 'left-20 right-5'
                         }`}
                     >
@@ -392,21 +400,23 @@ const Post: React.FC = () => {
                         />
                         <FilterIcon className="h-9 w-9 text-gray-500 mt-1 cursor-pointer" onClick={togglePopupFilter} />
                     </div>
-                    <div
-                        className={`fixed top-28 flex items-center space-x-4 mb-6 z-20 ${
-                            isExpanded ? 'left-60 right-5' : 'left-20 right-5'
-                        }`}
-                    >
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <img src={Avatar} alt="Avatar" className="w-full h-full object-cover" />
-                        </div>
-                        <button
-                            onClick={togglePopup}
-                            className="text-left p-3 bg-blue-100 text-blue-900 rounded-lg flex-1 hover:bg-blue-200 transition-colors"
+                    {isStudent && (
+                        <div
+                            className={`fixed top-28 flex items-center space-x-4 mb-6 z-20 ${
+                                isExpanded ? 'left-60 right-5' : 'left-20 right-5'
+                            }`}
                         >
-                            Bạn có nhu cầu tìm gia sư ư?
-                        </button>
-                    </div>
+                            <div className="w-10 h-10 rounded-full overflow-hidden">
+                                <img src={Avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            </div>
+                            <button
+                                onClick={togglePopup}
+                                className="text-left p-3 bg-blue-100 text-blue-900 rounded-lg flex-1 hover:bg-blue-200 transition-colors"
+                            >
+                                Bạn có nhu cầu tìm gia sư ư?
+                            </button>
+                        </div>
+                    )}
                     {showPopup && (
                         <div
                             className="fixed inset-0 overflow-y-auto bg-gray-700 bg-opacity-50 flex justify-center items-start z-50"
@@ -600,7 +610,8 @@ const Post: React.FC = () => {
                             Đã copy link bài đăng
                         </div>
                     )}
-                    <div className="mt-40 max-h-[calc(100vh-200px)] overflow-y-auto">
+
+                    <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                         {loading ? (
                             <>
                                 <PostSkeleton />
@@ -696,20 +707,22 @@ const Post: React.FC = () => {
                                         </p>
                                     </div>
                                     {/* Action Buttons */}
-                                    <div className="flex justify-end space-x-4 mt-4">
-                                        <button
-                                            onClick={() => openNegotiationPopup(post)}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                                        >
-                                            Thương lượng giá
-                                        </button>
-                                        <button
-                                            onClick={() => openConfirmPopup(post)}
-                                            className="px-4 py-2 bg-blue-900 text-white rounded-md font-bold hover:bg-blue-800 transition-colors"
-                                        >
-                                            Nhận lớp
-                                        </button>
-                                    </div>
+                                    {isTutor && (
+                                        <div className="flex justify-end space-x-4 mt-4">
+                                            <button
+                                                onClick={() => openNegotiationPopup(post)}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                            >
+                                                Thương lượng giá
+                                            </button>
+                                            <button
+                                                onClick={() => openConfirmPopup(post)}
+                                                className="px-4 py-2 bg-blue-900 text-white rounded-md font-bold hover:bg-blue-800 transition-colors"
+                                            >
+                                                Nhận lớp
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))
                         )}
