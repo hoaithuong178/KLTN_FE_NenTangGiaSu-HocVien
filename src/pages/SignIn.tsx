@@ -50,6 +50,9 @@ const SignIn = () => {
             const { accessToken } = loginResponse.data;
             if (!accessToken) throw new Error('Không nhận được accessToken từ server!');
 
+            // Lưu token vào localStorage để duy trì đăng nhập
+            localStorage.setItem('token', accessToken);
+
             // Gọi API lấy thông tin user
             const userResponse = await axiosClient.get('/users/me', {
                 headers: { Authorization: `Bearer ${accessToken}` },
@@ -62,9 +65,6 @@ const SignIn = () => {
 
             // Cập nhật thông tin user vào Zustand
             useAuthStore.getState().login(user, accessToken);
-
-            // Lưu token vào localStorage để duy trì đăng nhập
-            localStorage.setItem('token', accessToken);
 
             // Điều hướng theo role
             const roleRoutes: { [key: string]: string } = {

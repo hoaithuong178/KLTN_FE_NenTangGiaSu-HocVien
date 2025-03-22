@@ -24,6 +24,7 @@ const Tutors = lazy(() => import('../pages/Tutors'));
 const TutorProfile = lazy(() => import('../pages/TutorProfile'));
 const Sitemap = lazy(() => import('../pages/Sitemap'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const Blockchain = lazy(() => import('../pages/Blockchain'));
 
 export interface IRoute {
     path: string;
@@ -55,6 +56,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '/sitemap', component: Sitemap },
+    { path: '/blockchain', component: Blockchain },
     { path: '*', component: NotFound },
 ];
 
