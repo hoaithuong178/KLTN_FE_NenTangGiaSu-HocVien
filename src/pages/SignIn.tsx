@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignInPic1 from '../assets/SignIn1.jpg';
 import SignInPic2 from '../assets/SignIn2.jpg';
 import SignInPic3 from '../assets/SignIn3.jpg';
 import Facebook from '../assets/facebook.svg';
-import Google from '../assets/google.svg';
-import { InputField } from '../components/InputField';
 import { Button } from '../components/Button';
+import GoogleAuthButton from '../components/GoogleAuthButton';
+import { InputField } from '../components/InputField';
 import axiosClient from '../configs/axios.config';
-import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const SignIn = () => {
@@ -51,7 +51,7 @@ const SignIn = () => {
             });
 
             const user = userResponse.data;
-            if (!user || !user.role) throw new Error('Không lấy được thông tin người dùng!');
+            if (!user?.role) throw new Error('Không lấy được thông tin người dùng!');
 
             useAuthStore.getState().login(user, accessToken);
             localStorage.setItem('token', accessToken);
@@ -174,13 +174,7 @@ const SignIn = () => {
                             <div className="h-px w-16 bg-gray-300"></div>
                         </div>
 
-                        <button
-                            type="button"
-                            className="w-full flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                            <img src={Google} alt="Google logo" className="w-5 h-5 mr-2" />
-                            <span className="text-[#1B223B] font-medium">Đăng nhập với Google</span>
-                        </button>
+                        <GoogleAuthButton />
                         <button
                             type="button"
                             className="w-full flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
