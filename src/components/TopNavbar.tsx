@@ -159,9 +159,33 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
     // Hàm xử lý khi click vào thông báo
     const handleNotificationClick = async (noti: Notification) => {
-        await markAsRead(noti.id);
-        setSelectedNotification(noti);
-        setShowNotificationDetail(true);
+        try {
+            await markAsRead(noti.id);
+
+            // Lấy role từ auth store
+            const { user } = useAuthStore.getState();
+
+            // Kiểm tra role và chuyển hướng tương ứng
+            if (user?.role === 'STUDENT') {
+                navigate('/class-detail');
+            } else if (user?.role === 'TUTOR') {
+                navigate('/class-detail-tutor');
+            } else {
+                console.error('Invalid user role');
+                setNotification({
+                    message: 'Không có quyền truy cập',
+                    show: true,
+                    type: 'error',
+                });
+            }
+        } catch (error) {
+            console.error('Error handling notification click:', error);
+            setNotification({
+                message: 'Có lỗi xảy ra',
+                show: true,
+                type: 'error',
+            });
+        }
     };
 
     // Hàm xử lý đồng ý/từ chối

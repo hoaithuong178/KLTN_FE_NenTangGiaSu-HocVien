@@ -114,6 +114,21 @@ const ClassDetail: React.FC = () => {
     const [submissionContent, setSubmissionContent] = useState('');
     const [submissionFiles, setSubmissionFiles] = useState<UploadFile[]>([]);
 
+    const [materials] = useState<{ title: string; files: string }[]>([
+        {
+            title: 'Tài liệu ôn tập Chương 1',
+            files: 'Lý thuyết chương 1.rar',
+        },
+        {
+            title: 'Bài giảng Hàm số và Đồ thị',
+            files: 'Slide bài giảng.pptx',
+        },
+        {
+            title: 'Đề cương ôn tập giữa kỳ',
+            files: 'Đề cương chi tiết.pdf',
+        },
+    ]);
+
     // Modal xem bài tập và nộp bài
     const ViewAssignmentModal = () => (
         <Modal
@@ -249,9 +264,9 @@ const ClassDetail: React.FC = () => {
         setIsViewAssignmentModal(false);
     };
 
-    const handleDownload = (file: string) => {
-        // Xử lý tải file
-        console.log('Downloading:', file);
+    const handleDownload = (fileName: string) => {
+        // TODO: Implement file download
+        console.log('Downloading:', fileName);
     };
 
     return (
@@ -312,6 +327,34 @@ const ClassDetail: React.FC = () => {
                                         </a>
                                     </div>
                                 </div>
+                            </div>
+                            {/* Materials Section */}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-6">Tài liệu học tập</h2>
+
+                                {materials.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {materials.map((material, index) => (
+                                            <div key={index} className="border-b pb-4">
+                                                <h3 className="font-medium text-gray-900">{material.title}</h3>
+                                                <div className="mt-2">
+                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                        <span className="text-sm text-gray-600">{material.files}</span>
+                                                        <Button
+                                                            type="link"
+                                                            icon={<DownloadIcon className="w-4 h-4" />}
+                                                            onClick={() => handleDownload(material.files)}
+                                                        >
+                                                            Tải về
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">Chưa có tài liệu học tập nào</div>
+                                )}
                             </div>
                             {/* Timeline */}
                             <div className="bg-white rounded-lg shadow p-6">
