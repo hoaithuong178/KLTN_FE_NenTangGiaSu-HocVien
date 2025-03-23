@@ -1,5 +1,4 @@
 import FacebookLogin, { ProfileSuccessResponse } from '@greatsumini/react-facebook-login';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Facebook from '../assets/facebook.svg';
 import axiosClient from '../configs/axios.config';
@@ -8,15 +7,11 @@ import { useAuthStore } from '../store/authStore';
 const FACEBOOK_APP_ID = import.meta.env.VITE_APP_FACEBOOK_APP_ID;
 
 const FacebookAuthButton = () => {
-    const [facebookAccessToken, setFacebookAccessToken] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const handleProfileSuccess = async (response: ProfileSuccessResponse) => {
         try {
-            const data = await axiosClient.post('/auth/facebook', {
-                token: facebookAccessToken,
-                response,
-            });
+            const data = await axiosClient.post('/auth/facebook', response);
 
             const { accessToken } = data.data;
 
@@ -47,9 +42,6 @@ const FacebookAuthButton = () => {
     return (
         <FacebookLogin
             appId={FACEBOOK_APP_ID}
-            onSuccess={(response) => {
-                setFacebookAccessToken(response.accessToken);
-            }}
             onFail={(error) => {
                 console.log('Login Failed!', error);
             }}
