@@ -44,6 +44,7 @@ const Tutor: React.FC = () => {
                 birthYear: tutor.userProfile?.dob ? new Date(tutor.userProfile.dob).getFullYear() : 2000,
                 totalClasses: tutor.tutorProfile?.taughtStudentsCount ?? 0,
                 location: tutor.tutorProfile?.tutorLocations?.[0] ?? 'Unknown',
+                tutorLocations: tutor.tutorProfile?.tutorLocations ?? [],
                 schedule: tutor.schedule || {},
                 rating: tutor.tutorProfile?.rating ?? 0,
                 reviews: tutor.reviews || [],

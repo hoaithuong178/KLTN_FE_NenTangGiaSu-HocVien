@@ -29,7 +29,8 @@ export type TutorProfileComponentProps = {
     experience: number;
     birthYear: number;
     totalClasses: number;
-    location: string;
+    tutorLocations: string[];
+    location?: string;
     schedule: Schedule;
     description: string;
     rating: number;
@@ -44,6 +45,7 @@ export type TutorProfileComponentProps = {
 
 const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
     console.log('Props received in TutorProfileComponent:', props);
+    console.log('Tutor locations in component:', props.tutorLocations);
 
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [isFavorite, setIsFavorite] = useState(props.isFavorite);
@@ -52,7 +54,7 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
         content: '',
         subject: props.subjects?.length > 0 ? props.subjects[0] : '',
         learningTypes: props.learningTypes?.length > 0 ? props.learningTypes[0] : '',
-        location: props.location || 'Unknown',
+        location: props.tutorLocations?.length > 0 ? props.tutorLocations[0] : '',
         duration: 60,
         mode: 'online' as 'online' | 'offline',
         pricePerSession: props.pricePerSession || 0,
@@ -151,6 +153,19 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
 
     const getAge = (birthYear: number): number => new Date().getFullYear() - birthYear;
 
+    // Hàm che giấu email
+    const maskEmail = (email: string) => {
+        const [username, domain] = email.split('@');
+        const maskedUsername = username.slice(0, 3) + '***';
+        return `${maskedUsername}@${domain}`;
+    };
+
+    // Hàm che giấu số điện thoại
+    const maskPhone = (phone: string) => {
+        if (!phone) return '';
+        return phone.slice(0, -3) + '***';
+    };
+
     return (
         <div className="w-full">
             <header className="w-full bg-white shadow-md">
@@ -167,7 +182,6 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
             </header>
 
             <div className="max-w-5xl mx-auto p-6">
-                {/* Rest of your JSX remains largely the same, with these improvements: */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                     <div className="flex items-center mb-4 md:mb-0">
                         <img
@@ -198,15 +212,15 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <AddressIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">{props.location}</p>
+                                    <p className="text-gray-600">{props.tutorLocations.join(', ')}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <MailIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">{props.email}</p>
+                                    <p className="text-gray-600">{maskEmail(props.email)}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <PhoneIcon className="w-5 h-5 text-gray-600" />
-                                    <p className="text-gray-600">{props.phone}</p>
+                                    <p className="text-gray-600">{maskPhone(props.phone)}</p>
                                 </div>
                             </div>
                         </div>
@@ -470,7 +484,19 @@ const TutorProfileComponent: React.FC<TutorProfileComponentProps> = (props) => {
                         <p className="text-gray-600 font-semibold col-span-1">Số học sinh đã dạy</p>
                         <p className="text-gray-800 col-span-3">{props.totalClasses} học sinh</p>
                         <p className="text-gray-600 font-semibold col-span-1">Nơi dạy</p>
-                        <p className="text-gray-800 col-span-3">{props.location}</p>
+                        <div className="col-span-3">
+                            {props.tutorLocations?.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {props.tutorLocations.map((location: string, index: number) => (
+                                        <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg">
+                                            {location}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-800">Chưa cập nhật</p>
+                            )}
+                        </div>
                     </div>
                     <div className="grid grid-cols-4 gap-4 items-start">
                         <p className="text-gray-600 font-semibold col-span-1">Môn</p>
