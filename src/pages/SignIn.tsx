@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import SignInPic1 from '../assets/SignIn1.jpg';
 import SignInPic2 from '../assets/SignIn2.jpg';
 import SignInPic3 from '../assets/SignIn3.jpg';
-import Facebook from '../assets/facebook.svg';
 import { Button } from '../components/Button';
+import FacebookAuthButton from '../components/FacebookAuthButton';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import { InputField } from '../components/InputField';
 import axiosClient from '../configs/axios.config';
@@ -175,13 +175,7 @@ const SignIn = () => {
                         </div>
 
                         <GoogleAuthButton />
-                        <button
-                            type="button"
-                            className="w-full flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                            <img src={Facebook} alt="Facebook logo" className="w-5 h-5 mr-2" />
-                            <span className="text-[#1B223B] font-medium">Đăng nhập với Facebook</span>
-                        </button>
+                        <FacebookAuthButton />
                     </form>
 
                     <p className="text-center text-sm text-gray-600 mt-6">
