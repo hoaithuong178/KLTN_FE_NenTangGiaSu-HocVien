@@ -1,5 +1,6 @@
 import { lazy, ReactNode } from 'react';
 import DefaultLayout from '../layouts/DefaultLayout';
+import PrivacyPolicy from '../pages/PrivacyPolicy';
 
 const Home = lazy(() => import('../pages/Home'));
 const SignIn = lazy(() => import('../pages/SignIn'));
@@ -57,6 +58,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '/sitemap', component: Sitemap },
+    { path: '/privacy-policy', component: PrivacyPolicy },
     { path: '*', component: NotFound },
 ];
 
