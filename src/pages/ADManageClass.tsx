@@ -3,7 +3,7 @@ import { Table, Form, Input, Button, Tag, Modal, Select } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import { Notification } from '../components/Notification';
 import TopNavbar from '../components/TopNavbar';
-import NavbarAdmin from '../components/navbarAdmin';
+import NavbarAdmin from '../components/NavbarAdmin';
 
 interface Class {
     id: number;

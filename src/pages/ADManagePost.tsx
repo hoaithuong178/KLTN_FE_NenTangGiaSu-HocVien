@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Modal, Input, Button } from 'antd';
 // import { useAuthStore } from '../store/authStore';
-import NavbarAdmin from '../components/navbarAdmin';
+import NavbarAdmin from '../components/NavbarAdmin';
 import { Notification } from '../components/Notification';
 import TopNavbar from '../components/TopNavbar';
 
