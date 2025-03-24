@@ -15,12 +15,12 @@ import { Text } from '../components/Text';
 import FullLogo from '../assets/FullLogo.png';
 import SmallLogo from '../assets/SmallLogo.png';
 
-interface NavbarProps {
+interface NavbarAdminProps {
     isExpanded: boolean;
     toggleNavbar: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
+const NavbarAdmin: React.FC<NavbarAdminProps> = ({ isExpanded, toggleNavbar }) => {
     const location = useLocation(); // Lấy thông tin đường dẫn hiện tại
 
     // Hàm để kiểm tra xem mục menu nào đang được chọn
@@ -169,4 +169,4 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
     );
 };
 
-export default Navbar;
+export default NavbarAdmin;
