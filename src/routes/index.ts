@@ -25,6 +25,9 @@ const TutorProfile = lazy(() => import('../pages/TutorProfile'));
 const Sitemap = lazy(() => import('../pages/Sitemap'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const FaqsLanding = lazy(() => import('../pages/FaqsLanding'));
+const ADManagePost = lazy(() => import('../pages/ADManagePost'));
+const ADManageUser = lazy(() => import('../pages/ADManageUser'));
+const ADManageClass = lazy(() => import('../pages/ADManageClass'));
 
 export interface IRoute {
     path: string;
@@ -57,6 +60,9 @@ const publicRoutes: Array<IRoute> = [
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '/sitemap', component: Sitemap },
+    { path: '/admin-post', component: ADManagePost },
+    { path: '/admin-user', component: ADManageUser },
+    { path: '/admin-class', component: ADManageClass },
     { path: '*', component: NotFound },
 ];
 
