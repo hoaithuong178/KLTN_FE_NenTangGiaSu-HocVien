@@ -15,8 +15,10 @@ const TutorProfile = () => {
             try {
                 const API_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:3000';
                 const response = await axios.get(`${API_URL}/tutors/${id}`);
-                const tutorData = response.data; // Không có "data" trong API mới
+                const tutorData = response.data;
+                console.log('Raw API response:', response.data);
                 console.log('Tutor data from API:', tutorData);
+                console.log('Tutor locations from API:', tutorData.tutorProfile?.tutorLocations);
 
                 const mappedTutor: TutorProfileComponentProps = {
                     id: tutorData.id
@@ -26,13 +28,13 @@ const TutorProfile = () => {
                                   .filter((char: string) => !isNaN(parseInt(char)))
                                   .join('') || '0',
                           )
-                        : 0, // Chuyển chuỗi ID thành số
+                        : 0,
                     avatar: tutorData.userProfile?.avatar || 'https://via.placeholder.com/150',
                     name: tutorData.name || 'Unknown',
                     pricePerSession: tutorData.tutorProfile?.hourlyPrice || 0,
                     email: tutorData.email || 'N/A',
                     phone: tutorData.phone || 'N/A',
-                    isFavorite: false, // Giá trị mặc định
+                    isFavorite: false,
                     learningTypes: tutorData.tutorProfile?.learningTypes || [],
                     subjects: tutorData.tutorProfile?.specializations || [],
                     gender: tutorData.userProfile?.gender || 'Unknown',
@@ -40,13 +42,15 @@ const TutorProfile = () => {
                     experience: tutorData.tutorProfile?.experiences || 0,
                     birthYear: tutorData.userProfile?.dob ? new Date(tutorData.userProfile.dob).getFullYear() : 2000,
                     totalClasses: tutorData.tutorProfile?.taughtStudentsCount || 0,
-                    location: tutorData.tutorProfile?.tutorLocations?.[0] || 'Unknown',
-                    schedule: {}, // Giá trị mặc định vì API không trả về
+                    tutorLocations:
+                        tutorData.tutorProfile?.tutorLocations || (tutorData.location ? [tutorData.location] : []),
+                    schedule: {},
                     rating: tutorData.tutorProfile?.rating || 0,
-                    reviews: [], // Giá trị mặc định vì API không trả về
+                    reviews: [],
                     description: tutorData.tutorProfile?.description || '',
                 };
 
+                console.log('Mapped tutor data:', mappedTutor);
                 setTutor(mappedTutor);
                 setLoading(false);
             } catch (error) {
@@ -57,6 +61,8 @@ const TutorProfile = () => {
 
         if (location.state) {
             const stateTutor = location.state as TutorProfileComponentProps;
+            console.log('Original state tutor:', stateTutor);
+
             const correctedTutor: TutorProfileComponentProps = {
                 id: stateTutor.id
                     ? typeof stateTutor.id === 'string'
@@ -83,7 +89,7 @@ const TutorProfile = () => {
                 experience: stateTutor.experience || 0,
                 birthYear: stateTutor.birthYear || 2000,
                 totalClasses: stateTutor.totalClasses || 0,
-                location: stateTutor.location || 'Unknown',
+                tutorLocations: stateTutor.tutorLocations || [],
                 schedule: stateTutor.schedule || {},
                 rating: stateTutor.rating || 0,
                 reviews: stateTutor.reviews || [],

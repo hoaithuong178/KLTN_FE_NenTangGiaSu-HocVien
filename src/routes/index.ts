@@ -1,5 +1,7 @@
 import { lazy, ReactNode } from 'react';
 import DefaultLayout from '../layouts/DefaultLayout';
+import PrivacyPolicy from '../pages/PrivacyPolicy';
+import UserDataDeletion from '../pages/UserDataDeletion';
 
 const Home = lazy(() => import('../pages/Home'));
 const SignIn = lazy(() => import('../pages/SignIn'));
@@ -19,6 +21,7 @@ const Faqs = lazy(() => import('../pages/Faqs'));
 const ClassDetail = lazy(() => import('../pages/ClassDetail'));
 const ClassDetailTutor = lazy(() => import('../pages/ClassDetailTutor'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
+const EditProfile = lazy(() => import('../pages/EditProfile'));
 const PostsLanding = lazy(() => import('../pages/PostsLanding'));
 const Tutors = lazy(() => import('../pages/Tutors'));
 const TutorProfile = lazy(() => import('../pages/TutorProfile'));
@@ -55,6 +58,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '/information', component: StudentProfile },
+    { path: '/edit-profile', component: EditProfile },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors-landing', component: Tutors },
     { path: '/tutor-profile/:id', component: TutorProfile },
@@ -63,6 +67,8 @@ const publicRoutes: Array<IRoute> = [
     { path: '/admin-post', component: ADManagePost },
     { path: '/admin-user', component: ADManageUser },
     { path: '/admin-class', component: ADManageClass },
+    { path: '/privacy-policy', component: PrivacyPolicy },
+    { path: '/user-data-deletion', component: UserDataDeletion },
     { path: '*', component: NotFound },
 ];
 
