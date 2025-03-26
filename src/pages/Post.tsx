@@ -1,5 +1,5 @@
 // Post.tsx
-import { Slider } from 'antd';
+import { Slider, Form } from 'antd';
 import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
 import Avatar from '../assets/avatar.jpg';
@@ -14,6 +14,38 @@ import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
+
+interface CreatePostDTO {
+    user: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
+    id: string;
+    title: string;
+    content: string;
+    subject: {
+        id: string;
+        name: string;
+    };
+    grade: string;
+    postTime: string;
+    mode: boolean;
+    locations: string[];
+    sessionPerWeek: number;
+    duration: number;
+    requirements: string[];
+    schedule: string[];
+    feePerSession: number;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface Subject {
+    id: string;
+    name: string;
+}
 
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
@@ -41,6 +73,11 @@ const Post: React.FC = () => {
     type APIPost = Omit<Post, 'mode'> & { mode: string };
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true); // Thêm state để theo dõi trạng thái tải dữ liệu
+    const [form] = Form.useForm();
+
+    const [postTitle, setPostTitle] = useState('');
+    const [content, setContent] = useState('');
+
     useEffect(() => {
         const fetchPosts = async () => {
             try {
@@ -105,8 +142,7 @@ const Post: React.FC = () => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [negotiatedPrice, setNegotiatedPrice] = useState('');
     const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Sửa để ban đầu là null
-    const [, setPostTitle] = useState('');
-    const [subject, setSubject] = useState('');
+    const [subject, setSubject] = useState<string>('');
     const [grade, setGrade] = useState('');
     const [studyMode, setStudyMode] = useState('');
     const [location, setLocation] = useState('Địa chỉ của học viên');
@@ -170,14 +206,13 @@ const Post: React.FC = () => {
         title: string;
         createdAt: string;
     };
-    const [subjects, setSubjects] = useState<string[]>([]);
-    // const [customSubject, setCustomSubject] = useState('');
+    const [subjects, setSubjects] = useState<Subject[]>([]);
 
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
                 const response = await axiosClient.get('/subjects');
-                setSubjects(response.data.map((subject: { name: string }) => subject.name));
+                setSubjects(response.data);
             } catch (error) {
                 console.error('Error fetching subjects:', error);
             }
@@ -363,6 +398,29 @@ const Post: React.FC = () => {
     };
     const [selectedGrade, setSelectedGrade] = useState('');
 
+    const handleSubmitPost = async (values: CreatePostDTO) => {
+        try {
+            const response = await axiosClient.post('/posts', values);
+
+            if (response.status === 201) {
+                setNotification({
+                    message: 'Đăng bài thành công, vui lòng chờ admin phê duyệt',
+                    show: true,
+                    type: 'success',
+                });
+                setShowPopup(false);
+                form.resetFields();
+            }
+        } catch (error) {
+            setNotification({
+                message: 'Có lỗi xảy ra khi đăng bài',
+                show: true,
+                type: 'error',
+            });
+            console.error('Error posting:', error);
+        }
+    };
+
     return (
         <>
             <Helmet>
@@ -429,40 +487,91 @@ const Post: React.FC = () => {
                                 <TitleText level={2} size="large" weight="bold">
                                     Tạo bài đăng
                                 </TitleText>
-                                <form>
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const formData: CreatePostDTO = {
+                                            user: {
+                                                id: String(user?.id) || '',
+                                                name: user?.name || '',
+                                                avatar: user?.avatar || '',
+                                            },
+                                            id: crypto.randomUUID(),
+                                            title: postTitle,
+                                            content,
+                                            subject: {
+                                                id: subject,
+                                                name: subjects.find((s) => s.id === subject)?.name || '',
+                                            },
+                                            grade,
+                                            postTime: new Date().toISOString(),
+                                            mode: studyMode === 'Online',
+                                            locations: Array.isArray(user?.location)
+                                                ? user.location
+                                                : [user?.location || ''],
+                                            sessionPerWeek: Number(sessionsPerWeek),
+                                            duration: Number(duration),
+                                            requirements: requirements.split('\n').filter((r) => r),
+                                            schedule: postAvailableTimes.map((t) => `${t.day} ${t.from} - ${t.to}`),
+                                            feePerSession: maxPrice,
+                                            status: 'PENDING',
+                                            createdAt: new Date().toISOString(),
+                                            updatedAt: new Date().toISOString(),
+                                        };
+                                        handleSubmitPost(formData);
+                                    }}
+                                >
                                     <InputField
                                         type="text"
                                         title="Tiêu đề bài đăng"
                                         placeholder="Nhập tiêu đề bài đăng"
                                         required={true}
+                                        value={postTitle}
                                         onChange={(value) => setPostTitle(value)}
                                     />
-                                    <ComboBox
-                                        title="Môn học"
-                                        options={['Toán', 'Lý', 'Hóa', 'Anh', 'Văn', 'Sinh', 'Sử', 'Địa']}
+                                    <InputField
+                                        type="textarea"
+                                        title="Nội dung"
+                                        placeholder="Nhập nội dung bài đăng"
                                         required={true}
-                                        value={subject}
-                                        onChange={(value) => setSubject(value)}
+                                        value={content}
+                                        onChange={(value) => setContent(value)}
                                     />
+                                    <div className="mt-4">
+                                        <label className="block text-gray-700 font-bold mb-2">Môn học</label>
+                                        <input
+                                            list="subjects"
+                                            value={subject}
+                                            onChange={(e) => setSubject(e.target.value)}
+                                            onFocus={(e) => e.target.select()}
+                                            placeholder="Chọn hoặc nhập môn học"
+                                            className="border p-2 rounded w-full"
+                                            required
+                                        />
+                                        <datalist id="subjects">
+                                            {subjects.map((subject, index) => (
+                                                <option key={index} value={subject.name} />
+                                            ))}
+                                        </datalist>
+                                    </div>
                                     <ComboBox
                                         title="Khối học"
                                         options={[
-                                            '1',
-                                            '2',
-                                            '3',
-                                            '4',
-                                            '5',
-                                            '6',
-                                            '7',
-                                            '8',
-                                            '9',
-                                            '10',
-                                            '11',
-                                            '12',
-                                            'Đại học',
-                                            'Sau đại học',
-                                            'Kỹ năng mềm',
-                                            'Khác',
+                                            'GRADE_1',
+                                            'GRADE_2',
+                                            'GRADE_3',
+                                            'GRADE_4',
+                                            'GRADE_5',
+                                            'GRADE_6',
+                                            'GRADE_7',
+                                            'GRADE_8',
+                                            'GRADE_9',
+                                            'GRADE_10',
+                                            'GRADE_11',
+                                            'GRADE_12',
+                                            'UNIVERSITY',
+                                            'AFTER_UNIVERSITY',
+                                            'OTHER',
                                         ]}
                                         required={true}
                                         value={grade}
@@ -481,7 +590,11 @@ const Post: React.FC = () => {
                                         title="Địa điểm"
                                         placeholder="Địa chỉ của học viên"
                                         required={true}
-                                        value={location}
+                                        value={
+                                            Array.isArray(user?.location)
+                                                ? user.location.join(', ')
+                                                : user?.location || ''
+                                        }
                                         onChange={(value) => setLocation(value)}
                                     />
                                     <ComboBox
@@ -579,15 +692,8 @@ const Post: React.FC = () => {
                                             Đóng
                                         </button>
                                         <button
-                                            type="button"
+                                            type="submit"
                                             className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
-                                            onClick={() => {
-                                                console.log({
-                                                    // ... other data ...
-                                                    availableTimes: postAvailableTimes,
-                                                });
-                                                togglePopup();
-                                            }}
                                         >
                                             Đăng bài
                                         </button>
@@ -826,7 +932,7 @@ const Post: React.FC = () => {
                                 />
                                 <datalist id="subjects">
                                     {subjects.map((subject, index) => (
-                                        <option key={index} value={subject} />
+                                        <option key={index} value={subject.name} />
                                     ))}
                                 </datalist>
                             </div>

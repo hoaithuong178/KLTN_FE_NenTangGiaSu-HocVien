@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Text } from './Text';
 
-type InputFieldProps = {
-    type: 'text' | 'date' | 'password'; // Input type
-    title: string; // Input title
-    placeholder?: string; // Placeholder (optional)
+interface InputFieldProps {
+    type: 'text' | 'date' | 'password' | 'textarea'; // Thêm "textarea"
+    title: string;
+    placeholder?: string;
     regex?: RegExp; // Validation regex (optional)
     errorTitle?: string; // Error message (optional)
-    onChange?: (value: string) => void; // Callback on value change
+    onChange?: (value: string) => void;
     titleColor?: string; // Title color (optional)
-    required?: boolean; // Field is required (optional)
+    required?: boolean;
     className?: string; // Allow className to be passed for custom styles
-    value?: string; // Thêm prop value
-};
+    value?: string;
+}
 
 export const InputField: React.FC<InputFieldProps> = ({
     type,
@@ -96,9 +96,9 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
 
     useEffect(() => {
         if (value !== selectedValue) {
-            setSelectedValue(value); // Cập nhật giá trị khi prop value thay đổi
+            setSelectedValue(value);
         }
-    }, [value]);
+    }, [value, selectedValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newValue = e.target.value;
@@ -155,9 +155,9 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
 
     useEffect(() => {
         if (value !== selectedOption) {
-            setSelectedOption(value); // Cập nhật giá trị khi prop value thay đổi
+            setSelectedOption(value);
         }
-    }, [value]);
+    }, [value, selectedOption]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
@@ -213,9 +213,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
     useEffect(() => {
         if (JSON.stringify(value) !== JSON.stringify(selectedOptions)) {
-            setSelectedOptions(value || []); // Cập nhật giá trị khi prop value thay đổi
+            setSelectedOptions(value || []);
         }
-    }, [value]);
+    }, [value, selectedOptions]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value: optionValue } = e.target;

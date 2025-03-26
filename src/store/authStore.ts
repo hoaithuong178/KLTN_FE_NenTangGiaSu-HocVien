@@ -4,16 +4,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 
 interface User {
-    id: string;
-    name: string;
+    id: number;
     email: string;
-    avatar: string;
-    address?: string;
-    gender?: string;
-    birthYear?: number;
-    educationLevel?: string;
-    totalClasses?: number;
+    name: string;
     role: Role;
+    avatar?: string;
+    location?: string[];
 }
 
 interface AuthState {
