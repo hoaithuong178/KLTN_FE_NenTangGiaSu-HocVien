@@ -57,9 +57,9 @@ const SignIn = () => {
             localStorage.setItem('token', accessToken);
 
             const roleRoutes: { [key: string]: string } = {
-                ADMIN: '/post',
+                ADMIN: '/admin-user',
                 TUTOR: '/post',
-                STUDENT: '/post',
+                STUDENT: '/tutors',
             };
 
             navigate(roleRoutes[user.role] || '/');
