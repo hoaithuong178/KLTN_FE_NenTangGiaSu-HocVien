@@ -212,7 +212,7 @@ const StudentProfile = () => {
                 <header className="w-full bg-white shadow-md">
                     <div className="container mx-auto px-4 py-4 flex items-center space-x-2">
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigate('/post')}
                             className="flex items-center text-gray-700 hover:text-[#ffc569] transition-all duration-300"
                         >
                             <ArrowLeftIcon className="w-6 h-6" />

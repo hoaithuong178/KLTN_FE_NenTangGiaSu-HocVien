@@ -15,33 +15,6 @@ import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
 
-interface CreatePostDTO {
-    user: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    id: string;
-    title: string;
-    content: string;
-    subject: {
-        id: string;
-        name: string;
-    };
-    grade: string;
-    postTime: string;
-    mode: boolean;
-    locations: string[];
-    sessionPerWeek: number;
-    duration: number;
-    requirements: string[];
-    schedule: string[];
-    feePerSession: number;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    createdAt: string;
-    updatedAt: string;
-}
-
 interface Subject {
     id: string;
     name: string;
@@ -83,15 +56,25 @@ const Post: React.FC = () => {
             try {
                 setLoading(true);
                 const response = await axiosClient.get('/posts');
-                console.log('Posts data:', response.data);
-                // Chuyển đổi dữ liệu API để khớp với kiểu Post
+
+                console.log('Response data:', response.data); // Log để debug
+
                 const formattedPosts = response.data.map((post: APIPost) => ({
                     ...post,
                     mode: post.mode === 'true' ? true : false,
                 }));
+
+                console.log('Formatted posts:', formattedPosts); // Log để debug
+
                 setPosts(formattedPosts);
             } catch (error) {
                 console.error('Error fetching posts:', error);
+                setNotification({
+                    message: 'Có lỗi xảy ra khi tải bài viết',
+                    show: true,
+                    type: 'error',
+                });
+                setPosts([]); // Set empty array on error
             } finally {
                 setLoading(false);
             }
@@ -145,7 +128,7 @@ const Post: React.FC = () => {
     const [subject, setSubject] = useState<string>('');
     const [grade, setGrade] = useState('');
     const [studyMode, setStudyMode] = useState('');
-    const [location, setLocation] = useState('Địa chỉ của học viên');
+    const [, setLocation] = useState('Địa chỉ của học viên');
     const [sessionsPerWeek, setSessionsPerWeek] = useState('');
     const [duration, setDuration] = useState('');
     const [requirements, setRequirements] = useState('');
@@ -181,18 +164,16 @@ const Post: React.FC = () => {
         }, 3000);
     };
 
-    type Schedule = {
-        startTime: string; // Thời gian bắt đầu (ISO string)
-        endTime: string; // Thời gian kết thúc (ISO string)
-    };
     type Post = {
         id: number;
         user: {
+            id: string;
             avatar: string;
             name: string;
         };
         content: string;
         subject: {
+            id: string;
             name: string;
         };
         grade: string;
@@ -202,7 +183,7 @@ const Post: React.FC = () => {
         duration: string[];
         feePerSession: string;
         requirements: string[];
-        schedule: Schedule[];
+        schedule: string[];
         title: string;
         createdAt: string;
     };
@@ -212,6 +193,7 @@ const Post: React.FC = () => {
         const fetchSubjects = async () => {
             try {
                 const response = await axiosClient.get('/subjects');
+                console.log('Fetched subjects:', response.data); // Log để debug
                 setSubjects(response.data);
             } catch (error) {
                 console.error('Error fetching subjects:', error);
@@ -265,7 +247,7 @@ const Post: React.FC = () => {
     }: {
         text?: string;
         locations?: string[];
-        schedule?: Schedule[];
+        schedule?: string[];
     }) => {
         if (locations) {
             return (
@@ -398,9 +380,65 @@ const Post: React.FC = () => {
     };
     const [selectedGrade, setSelectedGrade] = useState('');
 
-    const handleSubmitPost = async (values: CreatePostDTO) => {
+    const handleSubmitPost = async () => {
         try {
-            const response = await axiosClient.post('/posts', values);
+            let selectedSubject;
+
+            // Tìm subject trong danh sách có sẵn
+            const existingSubject = subjects.find((s) => s.name === subject);
+
+            if (!existingSubject) {
+                // Nếu không tìm thấy, tạo subject mới
+                try {
+                    const response = await axiosClient.post('/subjects', {
+                        name: subject,
+                    });
+                    selectedSubject = response.data;
+                } catch (error) {
+                    console.error('Error creating new subject:', error);
+                    setNotification({
+                        message: 'Có lỗi xảy ra khi tạo môn học mới',
+                        show: true,
+                        type: 'error',
+                    });
+                    return;
+                }
+            } else {
+                selectedSubject = existingSubject;
+            }
+
+            const formattedData = {
+                user: {
+                    id: String(user?.id) || '',
+                    name: user?.name || '',
+                    avatar: user?.avatar || '',
+                },
+                id: crypto.randomUUID(),
+                title: postTitle,
+                content,
+                subject: {
+                    id: selectedSubject.id,
+                    name: selectedSubject.name,
+                },
+                grade,
+                postTime: new Date().toISOString(),
+                mode: studyMode === 'Online',
+                locations: Array.isArray(user?.location) ? user.location : [user?.location || ''],
+                sessionPerWeek: Number(sessionsPerWeek.replace(/\D/g, '')),
+                duration: Number(duration.replace(/\D/g, '')),
+                requirements: requirements.split('\n').filter((r) => r),
+                schedule: postAvailableTimes
+                    .filter((t) => t.day && t.from && t.to)
+                    .map((t) => `${t.day} từ ${t.from} - ${t.to}`),
+                feePerSession: maxPrice,
+                status: 'PENDING',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            console.log('Sending data:', formattedData);
+
+            const response = await axiosClient.post('/posts', formattedData);
 
             if (response.status === 201) {
                 setNotification({
@@ -408,16 +446,149 @@ const Post: React.FC = () => {
                     show: true,
                     type: 'success',
                 });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
                 setShowPopup(false);
                 form.resetFields();
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                console.log('Request data:', error.response?.data);
+                console.log('Error message:', error.response?.data.message); // Thêm log chi tiết message
+            }
             setNotification({
                 message: 'Có lỗi xảy ra khi đăng bài',
                 show: true,
                 type: 'error',
             });
+            setTimeout(() => {
+                setNotification((prev) => ({ ...prev, show: false }));
+            }, 3000);
             console.error('Error posting:', error);
+        }
+    };
+
+    // Thêm state để lưu thời gian được chọn
+    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+
+    // Component để hiển thị và chọn thời gian
+    const ScheduleSelector = ({
+        schedule,
+        selectedTimes,
+        onChange,
+    }: {
+        schedule: string[];
+        selectedTimes: string[];
+        onChange: (times: string[]) => void;
+    }) => {
+        const handleTimeChange = (time: string) => {
+            if (selectedTimes.includes(time)) {
+                onChange(selectedTimes.filter((t) => t !== time));
+            } else {
+                onChange([...selectedTimes, time]);
+            }
+        };
+
+        return (
+            <div className="mt-4">
+                <p className="font-medium mb-2">Chọn thời gian dạy:</p>
+                <div className="space-y-2">
+                    {schedule.map((time, index) => (
+                        <label key={index} className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                checked={selectedTimes.includes(time)}
+                                onChange={() => handleTimeChange(time)}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span>{time}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    // Cập nhật hàm handleTeachRequest để sử dụng thời gian đã chọn
+    const handleTeachRequest = async (post: Post) => {
+        try {
+            const formattedSchedule = selectedTimes.map((scheduleStr) => {
+                // Giả sử scheduleStr có dạng "Thứ 3 từ 16:00 - 20:00"
+                const [day, time] = scheduleStr.split(' từ ');
+                const [startTime, endTime] = time.split(' - ');
+
+                // Convert day sang tiếng Anh
+                const dayMap: { [key: string]: string } = {
+                    'Thứ 2': 'Monday',
+                    'Thứ 3': 'Tuesday',
+                    'Thứ 4': 'Wednesday',
+                    'Thứ 5': 'Thursday',
+                    'Thứ 6': 'Friday',
+                    'Thứ 7': 'Saturday',
+                    'Chủ nhật': 'Sunday',
+                };
+
+                // Tạo date object cho startTime và endTime
+                const today = new Date();
+                const [startHour, startMinute] = startTime.split(':');
+                const [endHour, endMinute] = endTime.split(':');
+
+                const startDate = new Date(today);
+                startDate.setHours(parseInt(startHour), parseInt(startMinute), 0);
+
+                const endDate = new Date(today);
+                endDate.setHours(parseInt(endHour), parseInt(endMinute), 0);
+
+                return {
+                    day: dayMap[day] || day,
+                    startTime: startDate.toISOString(),
+                    endTime: endDate.toISOString(),
+                };
+            });
+
+            const requestData = {
+                type: 'RECEIVE_CLASS',
+                toId: post.user.id,
+                grade: post.grade,
+                locations: post.locations,
+                sessionPerWeek: Number(post.sessionPerWeek),
+                duration: Number(post.duration),
+                subjectId: post.subject.id,
+                schedule: formattedSchedule,
+                mode: post.mode,
+                feePerSession: Number(post.feePerSession),
+            };
+
+            console.log('Sending teach request:', requestData);
+
+            const response = await axiosClient.post('/requests', requestData);
+
+            if (response.status === 201) {
+                setNotification({
+                    message: 'Đã gửi yêu cầu nhận lớp thành công',
+                    show: true,
+                    type: 'success',
+                });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+                closeConfirmPopup();
+                setSelectedTimes([]); // Reset selected times
+            }
+        } catch (error) {
+            console.error('Error sending teach request:', error);
+            if (error instanceof AxiosError) {
+                console.log('Error details:', error.response?.data);
+            }
+            setNotification({
+                message: 'Có lỗi xảy ra khi gửi yêu cầu',
+                show: true,
+                type: 'error',
+            });
+            setTimeout(() => {
+                setNotification((prev) => ({ ...prev, show: false }));
+            }, 3000);
         }
     };
 
@@ -490,35 +661,7 @@ const Post: React.FC = () => {
                                 <form
                                     onSubmit={(e) => {
                                         e.preventDefault();
-                                        const formData: CreatePostDTO = {
-                                            user: {
-                                                id: String(user?.id) || '',
-                                                name: user?.name || '',
-                                                avatar: user?.avatar || '',
-                                            },
-                                            id: crypto.randomUUID(),
-                                            title: postTitle,
-                                            content,
-                                            subject: {
-                                                id: subject,
-                                                name: subjects.find((s) => s.id === subject)?.name || '',
-                                            },
-                                            grade,
-                                            postTime: new Date().toISOString(),
-                                            mode: studyMode === 'Online',
-                                            locations: Array.isArray(user?.location)
-                                                ? user.location
-                                                : [user?.location || ''],
-                                            sessionPerWeek: Number(sessionsPerWeek),
-                                            duration: Number(duration),
-                                            requirements: requirements.split('\n').filter((r) => r),
-                                            schedule: postAvailableTimes.map((t) => `${t.day} ${t.from} - ${t.to}`),
-                                            feePerSession: maxPrice,
-                                            status: 'PENDING',
-                                            createdAt: new Date().toISOString(),
-                                            updatedAt: new Date().toISOString(),
-                                        };
-                                        handleSubmitPost(formData);
+                                        handleSubmitPost();
                                     }}
                                 >
                                     <InputField
@@ -725,7 +868,17 @@ const Post: React.FC = () => {
                                 <PostSkeleton />
                             </>
                         ) : posts.length === 0 ? (
-                            <p>Không có bài đăng nào.</p>
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">
+                                    Không có bài viết nào hoặc đã xảy ra lỗi khi tải dữ liệu.
+                                </p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="mt-4 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+                                >
+                                    Tải lại trang
+                                </button>
+                            </div>
                         ) : (
                             posts.map((post, index) => (
                                 <div
@@ -793,6 +946,9 @@ const Post: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="col-span-1">
+                                            <p className="text-sm text-gray-600 mt-2">
+                                                Thời lượng: {post.duration} phút
+                                            </p>
                                             <p className="text-sm text-gray-600">
                                                 Thời gian rảnh:
                                                 <MultiLineText
@@ -882,10 +1038,23 @@ const Post: React.FC = () => {
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <h2 className="text-xl font-semibold mb-4">Xác nhận nhận lớp</h2>
-                                    <p className="text-lg text-gray-600">
-                                        Bạn muốn gửi yêu cầu nhận lớp đến người dùng {selectedPost.user.name}?
+                                    <p className="text-lg text-gray-600 mb-4">
+                                        Bạn muốn gửi yêu cầu nhận lớp đến {selectedPost.user.name}?
                                     </p>
-                                    <div className="flex justify-between mt-4">
+
+                                    <ScheduleSelector
+                                        schedule={selectedPost.schedule}
+                                        selectedTimes={selectedTimes}
+                                        onChange={setSelectedTimes}
+                                    />
+
+                                    {selectedTimes.length === 0 && (
+                                        <p className="text-red-500 text-sm mt-2">
+                                            Vui lòng chọn ít nhất một khung thời gian
+                                        </p>
+                                    )}
+
+                                    <div className="flex justify-between mt-6">
                                         <button
                                             onClick={closeConfirmPopup}
                                             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
@@ -893,11 +1062,13 @@ const Post: React.FC = () => {
                                             Hủy
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                console.log('Gửi yêu cầu nhận lớp');
-                                                closeConfirmPopup();
-                                            }}
-                                            className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
+                                            onClick={() => handleTeachRequest(selectedPost)}
+                                            disabled={selectedTimes.length === 0}
+                                            className={`px-4 py-2 rounded-md text-white transition-colors ${
+                                                selectedTimes.length === 0
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-blue-900 hover:bg-blue-800'
+                                            }`}
                                         >
                                             Gửi yêu cầu
                                         </button>
