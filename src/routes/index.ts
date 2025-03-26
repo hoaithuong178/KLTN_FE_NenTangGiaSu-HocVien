@@ -3,7 +3,7 @@ import DefaultLayout from '../layouts/DefaultLayout';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
 import UserDataDeletion from '../pages/UserDataDeletion';
 
-const Home = lazy(() => import('../pages/Home'));
+//const Home = lazy(() => import('../pages/Home'));
 const SignIn = lazy(() => import('../pages/SignIn'));
 const Post = lazy(() => import('../pages/Post'));
 const Tutor = lazy(() => import('../pages/Tutor'));
@@ -31,6 +31,7 @@ const FaqsLanding = lazy(() => import('../pages/FaqsLanding'));
 const ADManagePost = lazy(() => import('../pages/ADManagePost'));
 const ADManageUser = lazy(() => import('../pages/ADManageUser'));
 const ADManageClass = lazy(() => import('../pages/ADManageClass'));
+const HomeLanding = lazy(() => import('../pages/HomeLanding'));
 
 export interface IRoute {
     path: string;
@@ -39,7 +40,7 @@ export interface IRoute {
 }
 
 const publicRoutes: Array<IRoute> = [
-    { path: '/', component: Home, layout: DefaultLayout },
+    { path: '/', component: HomeLanding, layout: DefaultLayout },
     { path: '/sign-in', component: SignIn, layout: DefaultLayout },
     { path: '/post', component: Post },
     { path: '/tutors', component: Tutor },
@@ -57,10 +58,11 @@ const publicRoutes: Array<IRoute> = [
     { path: '/faqs-landing', component: FaqsLanding },
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
-    { path: '/information', component: StudentProfile },
+    { path: '/student-profile', component: StudentProfile },
     { path: '/edit-profile', component: EditProfile },
     { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors-landing', component: Tutors },
+    { path: '/tutor-profile', component: TutorProfile },
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },
     { path: '/sitemap', component: Sitemap },

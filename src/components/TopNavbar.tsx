@@ -235,9 +235,25 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         }
     }, [notification.show]);
 
+    const handleProfileClick = () => {
+        if (!user) {
+            navigate('/sign-in');
+            return;
+        }
+
+        if (user.role === 'STUDENT') {
+            navigate('/student-profile');
+        } else if (user.role === 'TUTOR') {
+            navigate(`/tutor-profile`);
+        } else if (user.role === 'ADMIN') {
+            navigate('/admin-post');
+        }
+        setShowUserMenu(false);
+    };
+
     return (
         <div
-            className={`fixed top-0 right-0 flex items-center space-x-4 ${backgroundColor} ${textColor} p-2 justify-end z-50`}
+            className={`fixed top-0 right-0 flex items-center space-x-4 ${backgroundColor} ${textColor} p-2 justify-end z-30`}
         >
             {/* BellIcon với Popup thông báo */}
             <div className="relative">
@@ -364,13 +380,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                 {/* Popup menu người dùng */}
                 {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50">
-                        <div
-                            className="p-3 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => {
-                                navigate('/information');
-                                setShowUserMenu(false);
-                            }}
-                        >
+                        <div className="p-3 hover:bg-gray-100 cursor-pointer" onClick={handleProfileClick}>
                             <Text size="medium" weight="normal">
                                 Thông tin cá nhân
                             </Text>

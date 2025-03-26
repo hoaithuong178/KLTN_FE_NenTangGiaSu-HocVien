@@ -53,16 +53,27 @@ const SignIn = () => {
             const user = userResponse.data;
             if (!user?.role) throw new Error('Không lấy được thông tin người dùng!');
 
+            // Nếu là tutor, lấy thêm thông tin chi tiết
+            if (user.role === 'TUTOR') {
+                const tutorResponse = await axiosClient.get(`/tutors/${user.id}`, {
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                });
+                user.tutorProfile = tutorResponse.data;
+            }
+
             useAuthStore.getState().login(user, accessToken);
             localStorage.setItem('token', accessToken);
 
-            const roleRoutes: { [key: string]: string } = {
-                ADMIN: '/post',
-                TUTOR: '/post',
-                STUDENT: '/post',
-            };
-
-            navigate(roleRoutes[user.role] || '/');
+            // Chuyển hướng dựa trên role
+            if (user.role === 'STUDENT') {
+                navigate('/post');
+            } else if (user.role === 'TUTOR') {
+                navigate('/post');
+            } else if (user.role === 'ADMIN') {
+                navigate('/admin-post');
+            } else {
+                navigate('/');
+            }
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 setErrors({ general: error.response?.data?.message || 'Đăng nhập thất bại! Vui lòng thử lại.' });

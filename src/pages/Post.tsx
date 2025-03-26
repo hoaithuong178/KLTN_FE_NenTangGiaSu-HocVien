@@ -14,16 +14,19 @@ import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
+import { useLocation } from 'react-router-dom';
 
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
     const [filterAvailableTimes, setFilterAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
+    const locationState = useLocation();
+    const showCreatePostModal = locationState.state?.showCreatePostModal || false;
 
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         const storedState = localStorage.getItem('navbarExpanded');
         return storedState ? JSON.parse(storedState) : true;
     });
-    const [showPopup, setShowPopup] = useState(false);
+    const [showPopup, setShowPopup] = useState(showCreatePostModal);
     const [minPrice, setMinPrice] = useState(20000);
     const [maxPrice, setMaxPrice] = useState(50000);
     // const [availableTimes] = useState([{ day: '', from: '', to: '' }]);

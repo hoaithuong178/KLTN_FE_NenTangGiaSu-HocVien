@@ -230,7 +230,6 @@ const EditProfile = () => {
         if (!formData) return;
 
         try {
-            // Chuyển đổi dữ liệu từ form sang định dạng API
             const apiData = {
                 ...formData,
                 name: formData.fullName,
