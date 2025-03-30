@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SignInPic1 from '../assets/SignIn1.jpg';
 import SignInPic2 from '../assets/SignIn2.jpg';
 import SignInPic3 from '../assets/SignIn3.jpg';
@@ -57,7 +57,7 @@ const SignIn = () => {
             localStorage.setItem('token', accessToken);
 
             const roleRoutes: { [key: string]: string } = {
-                ADMIN: '/admin-user',
+                ADMIN: '/admin-post',
                 TUTOR: '/post',
                 STUDENT: '/tutors',
             };
@@ -82,9 +82,9 @@ const SignIn = () => {
     }, [images.length]);
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-[#FFFFFF]">
             {/* Slide Section */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1B223B] to-[#FFC569] p-8">
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1B223B] to-[#2A3356] p-8">
                 <div
                     className="flex w-full transition-transform duration-1000 ease-in-out"
                     style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
@@ -105,7 +105,7 @@ const SignIn = () => {
                         <button
                             key={index}
                             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                index === currentImageIndex ? 'bg-[#FFC569] scale-125' : 'bg-white opacity-70'
+                                index === currentImageIndex ? 'bg-[#2A3356] scale-125' : 'bg-white opacity-70'
                             }`}
                             onClick={() => setCurrentImageIndex(index)}
                         />
@@ -134,7 +134,7 @@ const SignIn = () => {
                             titleColor="#1B223B"
                             onChange={(value) => setEmail(value)}
                             required
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC569] focus:border-transparent transition-all"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B223B] focus:border-transparent transition-all"
                         />
                         <InputField
                             type="password"
@@ -144,25 +144,25 @@ const SignIn = () => {
                             titleColor="#1B223B"
                             onChange={(value) => setPassword(value)}
                             required
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC569] focus:border-transparent transition-all"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B223B] focus:border-transparent transition-all"
                         />
 
                         <div className="flex justify-end">
-                            <a
-                                href="/forgot-password"
-                                className="text-sm text-[#1B223B] hover:text-[#FFC569] transition-colors"
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-[#1B223B] hover:text-[#2A3356] transition-colors"
                             >
                                 Quên mật khẩu?
-                            </a>
+                            </Link>
                         </div>
 
                         <Button
                             type="button"
                             title={isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
-                            foreColor="#1B223B"
-                            backgroundColor="#FFC569"
-                            hoverForeColor="#1B223B"
-                            hoverBackgroundColor="#FFB347"
+                            foreColor="white"
+                            backgroundColor="#1B223B"
+                            hoverForeColor="white"
+                            hoverBackgroundColor="#2A3356"
                             className="w-full h-12 rounded-lg font-semibold text-lg shadow-md transition-all"
                             onClick={handleClickSignIn}
                             disabled={isLoading}
@@ -180,9 +180,12 @@ const SignIn = () => {
 
                     <p className="text-center text-sm text-gray-600 mt-6">
                         Chưa có tài khoản?{' '}
-                        <a href="/register" className="text-[#FFC569] font-semibold hover:underline transition-colors">
+                        <Link
+                            to="/register"
+                            className="text-[#1B223B] font-semibold hover:text-[#2A3356] transition-colors"
+                        >
                             Đăng ký ngay
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>
