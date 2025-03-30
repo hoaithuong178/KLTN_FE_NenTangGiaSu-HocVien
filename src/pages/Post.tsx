@@ -14,6 +14,7 @@ import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
+import ChatBox from '../components/ChatBox';
 
 interface Subject {
     id: string;
@@ -57,24 +58,30 @@ const Post: React.FC = () => {
                 setLoading(true);
                 const response = await axiosClient.get('/posts');
 
-                console.log('Response data:', response.data); // Log để debug
+                if (response.data) {
+                    console.log('Response data:', response.data);
 
-                const formattedPosts = response.data.map((post: APIPost) => ({
-                    ...post,
-                    mode: post.mode === 'true' ? true : false,
-                }));
+                    const formattedPosts = response.data.map((post: APIPost) => ({
+                        ...post,
+                        mode: String(post.mode).toLowerCase() === 'true',
+                    }));
 
-                console.log('Formatted posts:', formattedPosts); // Log để debug
-
-                setPosts(formattedPosts);
+                    setPosts(formattedPosts);
+                }
             } catch (error) {
                 console.error('Error fetching posts:', error);
-                setNotification({
-                    message: 'Có lỗi xảy ra khi tải bài viết',
-                    show: true,
-                    type: 'error',
-                });
-                setPosts([]); // Set empty array on error
+                if (error instanceof AxiosError) {
+                    const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi tải bài viết';
+                    setNotification({
+                        message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
+                        show: true,
+                        type: 'error',
+                    });
+                    setTimeout(() => {
+                        setNotification((prev) => ({ ...prev, show: false }));
+                    }, 3000);
+                    setPosts([]); // Set empty array on error
+                }
             } finally {
                 setLoading(false);
             }
@@ -296,7 +303,7 @@ const Post: React.FC = () => {
                     const response = await axiosClient.get('/posts');
                     const formattedPosts = response.data.map((post: APIPost) => ({
                         ...post,
-                        mode: post.mode === 'true' ? true : false,
+                        mode: String(post.mode).toLowerCase() === 'true',
                     }));
                     setPosts(formattedPosts);
                 } else {
@@ -322,7 +329,7 @@ const Post: React.FC = () => {
                     } else {
                         const formattedPosts = response.data.map((post: APIPost) => ({
                             ...post,
-                            mode: post.mode === 'true' ? true : false,
+                            mode: String(post.mode).toLowerCase() === 'true',
                         }));
                         setPosts(formattedPosts);
                     }
@@ -365,7 +372,7 @@ const Post: React.FC = () => {
             console.log('Filter response:', response.data); // Log để debug
             const formattedPosts = response.data.map((post: APIPost) => ({
                 ...post,
-                mode: post.mode === 'true' ? true : false,
+                mode: String(post.mode).toLowerCase() === 'true',
             }));
             setPosts(formattedPosts);
             closePopupFilter();
@@ -609,6 +616,7 @@ const Post: React.FC = () => {
             <div className="absolute top-0 left-0 flex h-screen w-screen bg-white z-10">
                 <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
                 <TopNavbar />
+                <ChatBox />
                 <div
                     className={`flex-1 p-6 transition-all duration-300 ${
                         isExpanded ? 'ml-56' : 'ml-16'

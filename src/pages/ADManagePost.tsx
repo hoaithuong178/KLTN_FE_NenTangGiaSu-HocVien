@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Modal, Input, Button } from 'antd';
-// import { useAuthStore } from '../store/authStore';
 import NavbarAdmin from '../components/NavbarAdmin';
-import { Notification } from '../components/Notification';
 import TopNavbar from '../components/TopNavbar';
 
 import axiosClient from '../configs/axios.config';
+import { AxiosError } from 'axios';
+import { Notification } from '../components/Notification';
 
 interface Post {
     user: User;
@@ -80,16 +80,22 @@ const ADManagePost: React.FC = () => {
         try {
             setLoading(true);
             const response = await axiosClient.get(`/posts/status/${status}`);
-            console.log(`Posts with status ${status}:`, response.data);
-            setPosts(response.data);
+
+            if (response.data) {
+                console.log(`Posts with status ${status}:`, response.data);
+                setPosts(response.data);
+            }
         } catch (error) {
             console.error('Error fetching posts:', error);
-            setNotification({
-                message: 'Có lỗi xảy ra khi tải bài viết',
-                show: true,
-                type: 'error',
-            });
-            setPosts([]);
+            if (error instanceof AxiosError) {
+                const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi tải bài viết';
+                setNotification({
+                    message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
+                    show: true,
+                    type: 'error',
+                });
+            }
+            setPosts([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
@@ -107,26 +113,31 @@ const ADManagePost: React.FC = () => {
 
     // Initial fetch for pending posts
     useEffect(() => {
-        fetchPostsByStatus('PENDING');
+        fetchPostsByStatus('pending');
     }, []);
 
     const handleApprove = async (post: Post) => {
         try {
-            await axiosClient.put(`/posts/${post.id}/approve`);
+            const response = await axiosClient.put(`/posts/${post.id}/approve`);
 
-            setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: 'APPROVED' } : p)));
-            setNotification({
-                message: 'Đã duyệt bài đăng',
-                show: true,
-                type: 'success',
-            });
+            if (response.status === 200) {
+                setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: 'APPROVED' } : p)));
+                setNotification({
+                    message: 'Đã duyệt bài đăng',
+                    show: true,
+                    type: 'success',
+                });
+            }
         } catch (error) {
             console.error('Error approving post:', error);
-            setNotification({
-                message: 'Có lỗi xảy ra khi duyệt bài đăng',
-                show: true,
-                type: 'error',
-            });
+            if (error instanceof AxiosError) {
+                const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi duyệt bài đăng';
+                setNotification({
+                    message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
+                    show: true,
+                    type: 'error',
+                });
+            }
         }
     };
 
@@ -166,13 +177,17 @@ const ADManagePost: React.FC = () => {
                 {filteredPosts.map((post) => (
                     <div key={post.id} className="bg-white p-6 rounded-lg shadow">
                         <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="text-xl font-semibold">{post.title}</h3>
-                                <p className="text-gray-600">{post.content}</p>
+                            <div className="flex-grow">
+                                <h3 className="text-xl font-semibold text-[#1B223B]">{post.title}</h3>
+                                <p className="text-gray-600 mt-2">{post.content}</p>
                             </div>
-                            {status === 'PENDING' && (
+                            {status === 'pending' && (
                                 <div className="flex space-x-2">
-                                    <Button type="primary" onClick={() => handleApprove(post)} className="bg-blue-900">
+                                    <Button
+                                        type="primary"
+                                        onClick={() => handleApprove(post)}
+                                        className="bg-[#1B223B] text-white hover:bg-[#2A3356]"
+                                    >
                                         Duyệt
                                     </Button>
                                     <Button danger onClick={() => handleReject(post)}>
@@ -187,10 +202,20 @@ const ADManagePost: React.FC = () => {
                                     <span className="font-semibold">Môn học:</span> {post.subject.name}
                                 </p>
                                 <p>
-                                    <span className="font-semibold">Học phí:</span> {post.feePerSession}đ/buổi
+                                    <span className="font-semibold">Khối lớp:</span> {post.grade}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Học phí:</span>{' '}
+                                    {post.feePerSession.toLocaleString('vi-VN')}đ/buổi
                                 </p>
                                 <p>
                                     <span className="font-semibold">Địa điểm:</span> {post.locations.join(', ')}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Số buổi/tuần:</span> {post.sessionPerWeek} buổi
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Thời lượng/buổi:</span> {post.duration} giờ
                                 </p>
                             </div>
                             <div>
@@ -201,12 +226,35 @@ const ADManagePost: React.FC = () => {
                                     <span className="font-semibold">Ngày đăng:</span>{' '}
                                     {new Date(post.createdAt).toLocaleDateString('vi-VN')}
                                 </p>
+                                <p>
+                                    <span className="font-semibold">Hình thức:</span> {post.mode ? 'Online' : 'Offline'}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Lịch học:</span>
+                                </p>
+                                <ul className="list-disc list-inside pl-4">
+                                    {post.schedule.map((time, index) => (
+                                        <li key={index}>{time}</li>
+                                    ))}
+                                </ul>
+                                <p>
+                                    <span className="font-semibold">Yêu cầu:</span>
+                                </p>
+                                <ul className="list-disc list-inside pl-4">
+                                    {post.requirements.map((req, index) => (
+                                        <li key={index}>{req}</li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
-                        {post.status === 'REJECTED' && post.rejects && (
+                        {post.status === 'rejected' && post.rejects && post.rejects.length > 0 && (
                             <div className="mt-4 p-3 bg-red-50 text-red-700 rounded">
                                 <p className="font-semibold">Lý do từ chối:</p>
-                                <p>{post.rejects.map((reject) => reject.reason).join(', ')}</p>
+                                <ul className="list-disc list-inside pl-4">
+                                    {post.rejects.map((reject) => (
+                                        <li key={reject.id}>{reject.reason}</li>
+                                    ))}
+                                </ul>
                             </div>
                         )}
                     </div>
@@ -226,13 +274,13 @@ const ADManagePost: React.FC = () => {
                 <h1 className="text-2xl font-bold mb-6">Quản lý bài đăng</h1>
                 <Tabs defaultActiveKey="pending" onChange={handleTabChange}>
                     <Tabs.TabPane tab="Chờ duyệt" key="pending">
-                        {loading ? <LoadingSkeleton /> : renderPostList('PENDING')}
+                        {loading ? <LoadingSkeleton /> : renderPostList('pending')}
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="Đã duyệt" key="approved">
-                        {loading ? <LoadingSkeleton /> : renderPostList('APPROVED')}
+                        {loading ? <LoadingSkeleton /> : renderPostList('approved')}
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="Đã từ chối" key="rejected">
-                        {loading ? <LoadingSkeleton /> : renderPostList('REJECTED')}
+                        {loading ? <LoadingSkeleton /> : renderPostList('rejected')}
                     </Tabs.TabPane>
                 </Tabs>
                 <Modal
@@ -254,8 +302,12 @@ const ADManagePost: React.FC = () => {
                         rows={4}
                     />
                 </Modal>
-                {/* Notification component */}
-                <Notification message={notification.message} show={notification.show} type={notification.type} />
+                <Notification
+                    message={notification.message}
+                    show={notification.show}
+                    type={notification.type}
+                    onClose={() => setNotification({ ...notification, show: false })}
+                />
             </div>
         </div>
     );
