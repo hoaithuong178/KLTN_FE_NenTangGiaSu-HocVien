@@ -5,7 +5,8 @@ import TopNavbar from '../components/TopNavbar';
 import { FilterIcon, ResetIcon } from '../components/icons';
 import TutorDetailCard from '../components/TutorDetailCard';
 import TutorSkeleton from '../components/TutorSkeleton';
-import { TutorProfileComponentProps } from '../components/TutorProfileComponent';
+import { TutorProfileComponentTutor } from './TutorProfile';
+import { Button } from '../components/Button';
 
 const Tutor: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
@@ -13,9 +14,32 @@ const Tutor: React.FC = () => {
         return storedState ? JSON.parse(storedState) : true;
     });
 
-    const [tutors, setTutors] = useState<TutorProfileComponentProps[]>([]);
+    const [tutors, setTutors] = useState<TutorProfileComponentTutor[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [selectedTutor, setSelectedTutor] = useState<TutorProfileComponentTutor | null>(null);
+    const [requestForm, setRequestForm] = useState({
+        title: '',
+        content: '',
+        specializations: '', // Thay subject bằng specializations
+        location: '',
+        duration: 60,
+        mode: 'online' as 'online' | 'offline',
+        hourlyPrice: 0, // Thay pricePerSession bằng hourlyPrice
+    });
+    const [selectedDay, setSelectedDay] = useState<string | null>(null);
+    const [selectedTimes] = useState<string[]>([]);
+    const [sessionCount, setSessionCount] = useState<number>(1);
+    const [notification, setNotification] = useState<{
+        message: string;
+        show: boolean;
+        type: 'success' | 'error';
+    }>({
+        message: '',
+        show: false,
+        type: 'success',
+    });
 
     const fetchTutors = async () => {
         try {
@@ -28,26 +52,34 @@ const Tutor: React.FC = () => {
 
             if (!Array.isArray(tutorsData)) throw new Error('Invalid tutor list from API');
 
-            const mappedTutors: TutorProfileComponentProps[] = tutorsData.map((tutor) => ({
-                id: tutor.id ? parseInt(tutor.id) : 0,
-                avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
-                name: tutor.name || 'Unknown',
-                pricePerSession: tutor.tutorProfile?.hourlyPrice ?? 0,
-                email: tutor.email || '',
-                phone: tutor.phone || '',
-                isFavorite: false,
-                learningTypes: tutor.tutorProfile?.learningTypes || 'Unknown',
-                subjects: tutor.tutorProfile?.specializations ?? [],
-                gender: tutor.userProfile?.gender || 'UNKNOWN',
-                educationLevel: tutor.tutorProfile?.level || 'Unknown',
-                experience: tutor.tutorProfile?.experiences ?? 0,
-                birthYear: tutor.userProfile?.dob ? new Date(tutor.userProfile.dob).getFullYear() : 2000,
-                totalClasses: tutor.tutorProfile?.taughtStudentsCount ?? 0,
-                location: tutor.tutorProfile?.tutorLocations?.[0] ?? 'Unknown',
-                schedule: tutor.schedule || {},
-                rating: tutor.tutorProfile?.rating ?? 0,
-                reviews: tutor.reviews || [],
-                description: tutor.tutorProfile?.description || 'Không có mô tả',
+            const mappedTutors = tutorsData.map((tutor: TutorProfileComponentTutor) => ({
+                ...tutor,
+                currentUserId: tutor.currentUserId,
+                status: tutor.status || 'ACTIVE',
+                violate: tutor.violate || 0,
+                userProfile: tutor.userProfile || {
+                    avatar: 'https://via.placeholder.com/150',
+                    gender: 'Unknown',
+                    dob: '',
+                    address: '',
+                },
+                tutorProfile: tutor.tutorProfile
+                    ? {
+                          ...tutor.tutorProfile,
+                          hourlyPrice: tutor.tutorProfile.hourlyPrice || 0,
+                          experiences: tutor.tutorProfile.experiences || 0,
+                          taughtStudentsCount: tutor.tutorProfile.taughtStudentsCount || 0,
+                          rating: tutor.tutorProfile.rating || 0,
+                          description: tutor.tutorProfile.description || '',
+                          tutorLocations: tutor.tutorProfile.tutorLocations || [],
+                          specializations: tutor.tutorProfile.specializations || [],
+                          learningTypes: tutor.tutorProfile.learningTypes || [],
+                          reviews: tutor.tutorProfile.reviews || [],
+                          isFavorite: tutor.tutorProfile.isFavorite ?? false,
+                          freeTime: tutor.tutorProfile.freeTime || [],
+                          qualification: tutor.tutorProfile.qualification || '',
+                      }
+                    : undefined,
             }));
 
             setTimeout(() => {
@@ -96,20 +128,22 @@ const Tutor: React.FC = () => {
                         setSubjects(response.data.data.map((item: { name: string }) => item.name));
                     }
                 })
-                .catch((error) => console.error('Lỗi khi lấy danh sách môn học:', error));
+                .catch((error) => {
+                    console.error('Lỗi khi lấy danh sách môn học:', error);
+                });
         }
     }, [showPopup]);
 
     const filteredTutors = tutors.filter((tutor) => {
         return (
             (!searchText || tutor.name.toLowerCase().includes(searchText.toLowerCase())) &&
-            (!filters.priceFrom || tutor.pricePerSession >= filters.priceFrom) &&
-            (!filters.priceTo || tutor.pricePerSession <= filters.priceTo) &&
-            (!filters.selectedSubject || tutor.subjects.includes(filters.selectedSubject)) &&
-            (!filters.selectedRating || tutor.rating >= filters.selectedRating) &&
-            (!filters.countFrom || tutor.totalClasses >= filters.countFrom) &&
-            (!filters.countTo || tutor.totalClasses <= filters.countTo) &&
-            (!filters.isFavorited || tutor.isFavorite)
+            (!filters.priceFrom || (tutor.tutorProfile?.hourlyPrice ?? 0) >= filters.priceFrom) &&
+            (!filters.priceTo || (tutor.tutorProfile?.hourlyPrice ?? 0) <= filters.priceTo) &&
+            (!filters.selectedSubject || tutor.tutorProfile?.specializations?.includes(filters.selectedSubject)) &&
+            (!filters.selectedRating || (tutor.tutorProfile?.rating ?? 0) >= filters.selectedRating) &&
+            (!filters.countFrom || (tutor.tutorProfile?.taughtStudentsCount ?? 0) >= filters.countFrom) &&
+            (!filters.countTo || (tutor.tutorProfile?.taughtStudentsCount ?? 0) <= filters.countTo) &&
+            (!filters.isFavorited || tutor.tutorProfile?.isFavorite)
         );
     });
 
@@ -132,6 +166,79 @@ const Tutor: React.FC = () => {
         localStorage.setItem('navbarExpanded', JSON.stringify(isExpanded));
     }, [isExpanded]);
 
+    const handleRequestClick = (tutor: TutorProfileComponentTutor) => {
+        setSelectedTutor(tutor);
+        setRequestForm({
+            title: '',
+            content: '',
+            specializations: tutor.tutorProfile?.specializations?.[0] || '',
+            location: tutor.tutorProfile?.tutorLocations?.[0] || '',
+            duration: 60,
+            mode: 'online',
+            hourlyPrice: tutor.tutorProfile?.hourlyPrice || 0,
+        });
+        setShowRequestModal(true);
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setRequestForm((prev) => ({
+            ...prev,
+            [name]: value,
+            ...(name === 'duration' &&
+                selectedTutor?.tutorProfile && {
+                    hourlyPrice: (parseInt(value) / 60) * selectedTutor.tutorProfile.hourlyPrice,
+                }),
+        }));
+    };
+
+    // const toggleTimeSelection = (timeRange: string) => {
+    //     setSelectedTimes((prev) => {
+    //         if (prev.includes(timeRange)) {
+    //             return prev.filter((t) => t !== timeRange);
+    //         }
+    //         if (prev.length >= sessionCount) {
+    //             setNotification({
+    //                 message: `Bạn chỉ có thể chọn tối đa ${sessionCount} khung giờ`,
+    //                 show: true,
+    //                 type: 'error',
+    //             });
+    //             setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
+    //             return prev;
+    //         }
+    //         return [...prev, timeRange];
+    //     });
+    // };
+
+    const handleSubmit = async () => {
+        if (!selectedTutor) return;
+
+        try {
+            const response = await fetch('/api/send-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...requestForm,
+                    tutorId: selectedTutor.id,
+                    selectedTimes,
+                }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Gửi yêu cầu thất bại');
+            }
+            setNotification({ message: 'Gửi yêu cầu thành công!', show: true, type: 'success' });
+            setShowRequestModal(false);
+        } catch (error) {
+            setNotification({
+                message: error instanceof Error ? error.message : 'Lỗi khi gửi yêu cầu',
+                show: true,
+                type: 'error',
+            });
+            setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
+        }
+    };
+
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -150,15 +257,12 @@ const Tutor: React.FC = () => {
 
     return (
         <div className="min-h-screen flex bg-gray-50">
-            {/* Navbar */}
             <Navbar isExpanded={isExpanded} toggleNavbar={() => setIsExpanded((prev) => !prev)} />
-            <div className="absolute top-0 z-30">
+            <div className="absolute top-0">
                 <TopNavbar />
             </div>
-            {/* Nội dung chính */}
             <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
-                {/* Thanh tìm kiếm và bộ lọc */}
-                <div className="sticky top-[60px] z-20 bg-white shadow-md px-6 py-4 flex items-center gap-4">
+                <div className="sticky top-[60px] bg-white shadow-md px-6 py-4 flex items-center gap-4">
                     <input
                         type="text"
                         placeholder="Tìm kiếm gia sư..."
@@ -182,10 +286,9 @@ const Tutor: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Popup bộ lọc */}
                 {showPopup && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+                        <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md relative z-[10000]">
                             <h2 className="text-xl font-semibold text-[#1B73E8] mb-4">Bộ lọc gia sư</h2>
                             <div className="space-y-4">
                                 <div>
@@ -239,7 +342,7 @@ const Tutor: React.FC = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 font-medium mb-1">Số lớp</label>
+                                    <label className="block text-gray-700 font-medium mb-1">Số học sinh</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="number"
@@ -286,7 +389,6 @@ const Tutor: React.FC = () => {
                     </div>
                 )}
 
-                {/* Danh sách gia sư */}
                 <div
                     className="flex-1 overflow-y-auto p-6 mt-12 h-[calc(100vh-140px)]"
                     style={{
@@ -307,6 +409,7 @@ const Tutor: React.FC = () => {
                                     key={tutor.id}
                                     {...tutor}
                                     className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                                    onRequestClick={() => handleRequestClick(tutor)}
                                 />
                             ))}
                         </div>
@@ -317,6 +420,254 @@ const Tutor: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {showRequestModal && selectedTutor && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
+                    <div className="bg-white p-8 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto relative z-[10000]">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-[#1B223B]">Gửi yêu cầu dạy</h2>
+                            <button
+                                onClick={() => setShowRequestModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block font-semibold text-gray-700 mb-2 text-left">Tiêu đề</label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={requestForm.title}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                    placeholder="Nhập tiêu đề yêu cầu"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-gray-700 mb-2 text-left">
+                                    Yêu cầu đối với gia sư
+                                </label>
+                                <textarea
+                                    name="content"
+                                    value={requestForm.content}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                    rows={4}
+                                    placeholder="Mô tả chi tiết yêu cầu của bạn"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block font-semibold text-gray-700 mb-2 text-left">Môn học</label>
+                                    <select
+                                        name="specializations"
+                                        value={requestForm.specializations}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                    >
+                                        {selectedTutor.tutorProfile?.specializations?.length ? (
+                                            selectedTutor.tutorProfile.specializations.map((spec) => (
+                                                <option key={spec} value={spec}>
+                                                    {spec}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="">Không có môn học</option>
+                                        )}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block font-semibold text-gray-700 mb-2 text-left">Địa điểm</label>
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        value={requestForm.location}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                        placeholder="Nhập địa điểm học"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
+                                        Số buổi/tuần
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={sessionCount}
+                                        onChange={(e) => setSessionCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                        min="1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
+                                        Thời lượng/Buổi (phút)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="duration"
+                                        value={requestForm.duration}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                        min="30"
+                                        step="30"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-gray-700 mb-2 text-left">
+                                    Hình thức học
+                                </label>
+                                <div className="flex space-x-6">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="mode"
+                                            value="online"
+                                            checked={requestForm.mode === 'online'}
+                                            onChange={handleChange}
+                                            className="text-[#1B223B] focus:ring-[#FFC569]"
+                                        />
+                                        <span className="text-gray-700">Online</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="mode"
+                                            value="offline"
+                                            checked={requestForm.mode === 'offline'}
+                                            onChange={handleChange}
+                                            className="text-[#1B223B] focus:ring-[#FFC569]"
+                                        />
+                                        <span className="text-gray-700">Offline</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-gray-700 mb-2 text-left">
+                                    Chọn ngày và giờ học
+                                </label>
+                                <div className="space-y-4">
+                                    <div className="flex gap-2 flex-wrap">
+                                        {Object.keys(selectedTutor.tutorProfile?.freeTime || {}).map((day) => (
+                                            <Button
+                                                key={day}
+                                                title={day}
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                    selectedDay === day
+                                                        ? 'bg-[#1B223B] text-white shadow-md'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                                onClick={() => setSelectedDay(day)}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* {selectedDay && selectedTutor.tutorProfile?.freeTime?.[selectedDay] && (
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <h3 className="text-lg font-semibold text-gray-700 mb-3 text-left">
+                                                Chọn khung giờ:
+                                            </h3>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {Object.entries(
+                                                    selectedTutor.tutorProfile.freeTime[selectedDay],
+                                                ).flatMap(([period, times]) =>
+                                                    times?.map(([start, end]) => {
+                                                        const timeRange = `${start}-${end}`;
+                                                        return (
+                                                            <Button
+                                                                key={timeRange}
+                                                                title={`${period}: ${start}-${end}`}
+                                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                                    selectedTimes.includes(timeRange)
+                                                                        ? 'bg-[#1B223B] text-white shadow-md'
+                                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                                }`}
+                                                                onClick={() => toggleTimeSelection(timeRange)}
+                                                                disabled={
+                                                                    selectedTimes.length >= sessionCount &&
+                                                                    !selectedTimes.includes(timeRange)
+                                                                }
+                                                            />
+                                                        );
+                                                    }),
+                                                )}
+                                            </div>
+                                            <div className="mt-3 text-right">
+                                                <span className="text-sm text-gray-600">
+                                                    Đã chọn {selectedTimes.length}/{sessionCount} khung giờ
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )} */}
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block font-semibold text-gray-700 mb-2 text-left">Giá/giờ:</label>
+                                <input
+                                    type="number"
+                                    name="hourlyPrice"
+                                    value={requestForm.hourlyPrice}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
+                                    placeholder={new Intl.NumberFormat('vi-VN').format(
+                                        (requestForm.duration / 60) * (selectedTutor.tutorProfile?.hourlyPrice || 0),
+                                    )}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-4 pt-4">
+                                <Button
+                                    title="Hủy"
+                                    backgroundColor="#D1D5DB"
+                                    hoverBackgroundColor="#B3B8C2"
+                                    foreColor="#1B223B"
+                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
+                                    onClick={() => setShowRequestModal(false)}
+                                />
+                                <Button
+                                    title="Gửi yêu cầu"
+                                    backgroundColor="#1B223B"
+                                    hoverBackgroundColor="#2A3349"
+                                    foreColor="white"
+                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
+                                    onClick={handleSubmit}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {notification.show && (
+                <div
+                    className={`fixed bottom-5 right-5 p-3 text-white rounded-md shadow-lg ${
+                        notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                >
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };

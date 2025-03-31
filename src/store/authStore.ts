@@ -6,14 +6,39 @@ type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 interface User {
     id: string;
     name: string;
-    email: string;
-    avatar: string;
-    address?: string;
-    gender?: string;
-    birthYear?: number;
-    educationLevel?: string;
-    totalClasses?: number;
+    phone?: string;
+    email?: string;
+    status?: string;
+    violate?: number;
     role: Role;
+    location?: string[];
+    userProfile?: {
+        avatar: string;
+        gender: string;
+        dob: string;
+        address: string;
+    };
+    tutorProfile?: {
+        hourlyPrice: number;
+        level: string;
+        experiences: number;
+        taughtStudentsCount: number;
+        rating: number;
+        description: string;
+        tutorLocations: string[];
+        specializations: string[];
+        learningTypes: string[];
+        reviews?: {
+            avatar: string;
+            name: string;
+            date: string;
+            content: string;
+            rating: number;
+        }[];
+        isFavorite?: boolean;
+        freeTime: string[];
+        qualification: string;
+    };
 }
 
 interface AuthState {

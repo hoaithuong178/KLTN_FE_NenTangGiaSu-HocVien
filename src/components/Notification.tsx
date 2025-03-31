@@ -76,6 +76,7 @@ interface NotificationProps {
     message: string;
     show: boolean;
     type?: 'success' | 'error';
+    onClose?: () => void;
 }
 
 export const Notification: React.FC<NotificationProps> = ({ message, show, type = 'success' }) => {
