@@ -265,13 +265,16 @@ const EditProfile = () => {
                 description: currentUser.tutorProfile?.description || '',
                 role: currentUser.role || '',
                 // Tutor-specific information
-                specializations: currentUser.tutorProfile?.specializations || [],
-                experienceYear: currentUser.tutorProfile?.experiences || 0,
-                tutorLocation: currentUser.tutorProfile?.tutorLocations || [],
-                hourlyPrice: currentUser.tutorProfile?.hourlyPrice || 0,
-                fee: currentUser.tutorProfile?.fee || 0,
-                freeTime: currentUser.tutorProfile?.freeTime || [],
-                qualification: currentUser.tutorProfile?.qualification || '',
+                tutorProfile: {
+                    ...currentUser.tutorProfile,
+                    specializations: currentUser.tutorProfile?.specializations || [],
+                    experiences: currentUser.tutorProfile?.experiences || 0,
+                    tutorLocations: currentUser.tutorProfile?.tutorLocations || [],
+                    hourlyPrice: currentUser.tutorProfile?.hourlyPrice || 0,
+                    fee: currentUser.tutorProfile?.fee || 0,
+                    freeTime: currentUser.tutorProfile?.freeTime || [],
+                    qualification: currentUser.tutorProfile?.qualification || '',
+                },
             });
         } catch (error) {
             console.error('Error initializing formData:', error);
@@ -317,7 +320,7 @@ const EditProfile = () => {
                 location: formData.tutorProfile?.tutorLocations?.[0],
                 pricePerSession: formData.tutorProfile?.hourlyPrice,
                 availableTime: Object.entries(freeTime)
-                    .filter(([_, slots]) => slots.length > 0)
+                    .filter(([, slots]) => slots.length > 0)
                     .map(([day, slots]) => `${day}:${slots.join(',')}`),
                 educationLevel: formData.tutorProfile?.qualification,
             };
