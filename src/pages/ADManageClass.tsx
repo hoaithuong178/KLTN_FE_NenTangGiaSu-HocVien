@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Form, Input, Button, Tag, Modal, Select } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
 import { Notification } from '../components/Notification';
@@ -277,7 +277,7 @@ const ADManageClass: React.FC = () => {
         }
     }, [notification.show]);
 
-    const autoUpdateClassAndRooms = () => {
+    const autoUpdateClassAndRooms = useCallback(() => {
         const now = new Date().getTime();
 
         const updatedClasses = classes.map((c) => {
@@ -332,12 +332,12 @@ const ADManageClass: React.FC = () => {
         });
 
         setClasses(updatedClasses as Class[]);
-    };
+    }, [classes, onlineRooms]);
 
     useEffect(() => {
         const interval = setInterval(autoUpdateClassAndRooms, 60000);
         return () => clearInterval(interval);
-    }, [classes, onlineRooms]);
+    }, [autoUpdateClassAndRooms]);
 
     const renderRoomStatus = (room: OnlineRoom) => {
         const statusConfig = {

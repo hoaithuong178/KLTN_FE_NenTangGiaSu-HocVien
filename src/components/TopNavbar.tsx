@@ -24,7 +24,31 @@ interface Notification {
     type: string;
     link: string;
     deleted: boolean;
+    fromUser?: {
+        avatar: string;
+        name: string;
+    };
+    subject?: {
+        name: string;
+    };
+    grade?: string;
+    mode?: boolean;
+    locations?: string[];
+    sessionPerWeek?: number;
+    duration?: number;
+    feePerSession?: number;
+    schedule?: {
+        day: string;
+        startTime: string;
+        endTime: string;
+    }[];
 }
+
+const notificationTypes: { [key: string]: string } = {
+    TEACH_REQUEST: 'Yêu cầu dạy',
+    RECEIVE_CLASS: 'Yêu cầu nhận lớp',
+    TUTOR_REQUEST: 'Yêu cầu nhận lớp',
+};
 
 const TopNavbar: React.FC<TopNavbarProps> = ({
     backgroundColor = 'white',
@@ -60,9 +84,9 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         navigate('/');
     };
 
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    };
+    // const truncateText = (text: string, maxLength: number) => {
+    //     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    // };
 
     // Thêm useEffect để fetch notifications
     useEffect(() => {
@@ -274,8 +298,13 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                         ref={notificationRef}
                         className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg z-50"
                     >
-                        <div className="p-4 border-b">
+                        <div className="p-4 border-b flex justify-between items-center">
                             <h3 className="font-bold">Thông báo</h3>
+                            {notifications.length > 0 && (
+                                <button onClick={markAllAsRead} className="text-sm text-blue-600 hover:text-blue-800">
+                                    Đánh dấu tất cả là đã đọc
+                                </button>
+                            )}
                         </div>
                         <div className="max-h-96 overflow-y-auto">
                             {notifications.length > 0 ? (
@@ -287,27 +316,28 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                                             !noti.isRead ? 'bg-blue-50' : ''
                                         }`}
                                     >
-                                        <p className="font-semibold">{truncateText(noti.title, 50)}</p>
-                                        <p className="text-sm text-gray-600">{truncateText(noti.message, 100)}</p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {new Date(noti.createdAt).toLocaleString('vi-VN')}
-                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            <img
+                                                src={noti.fromUser?.avatar || Avatar}
+                                                alt=""
+                                                className="w-8 h-8 rounded-full"
+                                            />
+                                            <div>
+                                                <p className="font-semibold">{noti.fromUser?.name}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {notificationTypes[noti.type] || noti.type}
+                                                </p>
+                                                <p className="text-xs text-gray-400">
+                                                    {new Date(noti.createdAt).toLocaleString('vi-VN')}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
                                 <div className="p-4 text-center text-gray-500">Không có thông báo</div>
                             )}
                         </div>
-                        {notifications.length > 0 && (
-                            <div className="p-4 border-t">
-                                <button
-                                    onClick={markAllAsRead}
-                                    className="w-full bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800"
-                                >
-                                    Đánh dấu tất cả là đã đọc
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -315,34 +345,44 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Popup chi tiết thông báo */}
             {showNotificationDetail && selectedNotification && (
                 <>
-                    {/* Overlay để chặn click */}
                     <div
                         className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
-                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
                         onClick={() => {
                             setShowNotificationDetail(false);
                             setSelectedNotification(null);
                         }}
                     />
-
-                    {/* Popup content */}
-                    <div
-                        className="fixed inset-0 flex items-center justify-center z-[9999]"
-                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-                    >
-                        <div
-                            className="bg-white rounded-lg p-6 w-[500px] max-w-full"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-xl font-bold mb-4">{selectedNotification.title}</h3>
-                            <p className="text-gray-600 mb-4">{selectedNotification.message}</p>
-                            <p className="text-sm text-gray-400 mb-6">
-                                {new Date(selectedNotification.createdAt).toLocaleString('vi-VN')}
-                            </p>
-                            <div className="flex justify-end space-x-4">
+                    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+                        <div className="bg-white rounded-lg p-6 w-[500px] max-w-full">
+                            <h3 className="text-xl font-bold mb-4">Chi tiết yêu cầu</h3>
+                            <div className="space-y-2">
+                                <p>Môn học: {selectedNotification.subject?.name}</p>
+                                <p>Khối lớp: {selectedNotification.grade}</p>
+                                <p>Hình thức: {selectedNotification.mode ? 'Online' : 'Offline'}</p>
+                                <p>Địa điểm: {selectedNotification.locations?.join(', ')}</p>
+                                <p>Số buổi/tuần: {selectedNotification.sessionPerWeek}</p>
+                                <p>Thời lượng: {selectedNotification.duration} phút</p>
+                                <p>Học phí: {selectedNotification.feePerSession?.toLocaleString('vi-VN')}đ/buổi</p>
+                                <p>
+                                    Thời gian học:{' '}
+                                    {selectedNotification.schedule
+                                        ?.map(
+                                            (s) =>
+                                                `${s.day} từ ${new Date(s.startTime).toLocaleTimeString('vi-VN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })} - ${new Date(s.endTime).toLocaleTimeString('vi-VN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}`,
+                                        )
+                                        .join(', ')}
+                                </p>
+                            </div>
+                            <div className="flex justify-end space-x-4 mt-6">
                                 <button
                                     onClick={() => handleResponse(false)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
                                 >
                                     Từ chối
                                 </button>
