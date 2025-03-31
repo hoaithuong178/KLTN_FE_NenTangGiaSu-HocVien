@@ -9,19 +9,23 @@ import SEO from '../components/SEO';
 import axiosClient from '../configs/axios.config';
 import { PostSkeleton } from '../components/TutorSkeleton';
 
+type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
+
 const StudentProfile = () => {
     type User = {
-        avatar: string;
+        id: string;
         name: string;
-        email: string;
+        email?: string;
         phone?: string;
-        address?: string;
-        gender?: string;
-        birthYear?: number;
-        educationLevel?: string;
-        totalClasses?: number;
-        role?: 'STUDENT' | 'TUTOR' | 'ADMIN';
-        id?: string;
+        role: Role;
+        status?: string;
+        violate?: number;
+        userProfile?: {
+            avatar?: string;
+            gender: string;
+            dob: string;
+            address: string;
+        };
     };
 
     type Post = {
@@ -113,6 +117,8 @@ const StudentProfile = () => {
         }, 3000);
     };
 
+    console.log(currentUser);
+
     // Thêm useEffect để lấy danh sách bài đăng
     useEffect(() => {
         const fetchPosts = async () => {
@@ -180,8 +186,12 @@ const StudentProfile = () => {
             setCopyTooltip({ show: false, x: 0, y: 0 });
         }, 1000);
     };
-    const getAge = (birthYear: number): number => {
-        return new Date().getFullYear() - birthYear;
+    const getAge = (dob: string): number => {
+        const birthDate = new Date(dob); // Chuyển chuỗi thành Date
+        const currentYear = new Date().getFullYear();
+        const birthYear = birthDate.getFullYear();
+
+        return currentYear - birthYear;
     };
 
     // Hàm che giấu email
@@ -227,7 +237,7 @@ const StudentProfile = () => {
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                                 <div className="flex items-center mb-4 md:mb-0">
                                     <img
-                                        src={currentUser.avatar}
+                                        src={currentUser.userProfile?.avatar}
                                         className="w-24 h-24 rounded-full mr-4"
                                         alt="Avatar"
                                     />
@@ -236,16 +246,16 @@ const StudentProfile = () => {
                                         <div className="grid grid-cols-2 gap-2 mt-2">
                                             <div className="flex items-center gap-2">
                                                 <MailIcon className="w-5 h-5 text-gray-600" />
-                                                <p className="text-gray-600">{maskEmail(currentUser.email)}</p>
+                                                <p className="text-gray-600">{maskEmail(currentUser.email || '')}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <PhoneIcon className="w-5 h-5 text-gray-600" />
                                                 <p className="text-gray-600">{maskPhone(currentUser.phone || '')}</p>
                                             </div>
-                                            {currentUser.address && (
+                                            {currentUser.userProfile?.address && (
                                                 <div className="flex items-center gap-2">
                                                     <AddressIcon className="w-5 h-5 text-gray-600" />
-                                                    <p className="text-gray-600">{currentUser.address}</p>
+                                                    <p className="text-gray-600">{currentUser.userProfile.address}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -266,44 +276,29 @@ const StudentProfile = () => {
                                     <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
                                     <p className="text-gray-800 col-span-3">Lorem ipsum dolor sit amet...</p>
 
-                                    {currentUser.gender && (
+                                    {currentUser.userProfile?.gender && (
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
-                                            <p className="text-gray-800 col-span-3">{currentUser.gender}</p>
+                                            <p className="text-gray-800 col-span-3">{currentUser.userProfile.gender}</p>
                                         </>
                                     )}
 
-                                    {currentUser.birthYear && (
+                                    {currentUser.userProfile?.dob && (
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
                                             <p className="text-gray-800 col-span-3">
-                                                {currentUser.birthYear} ({getAge(currentUser.birthYear)} tuổi)
+                                                {currentUser.userProfile?.dob} ({getAge(currentUser.userProfile?.dob)}{' '}
+                                                tuổi)
                                             </p>
                                         </>
                                     )}
 
-                                    {currentUser.educationLevel && (
-                                        <>
-                                            <p className="text-gray-600 font-semibold col-span-1">Trình độ</p>
-                                            <p className="col-span-3">
-                                                <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg inline-block">
-                                                    {currentUser.educationLevel}
-                                                </span>
-                                            </p>
-                                        </>
-                                    )}
-
-                                    {currentUser.totalClasses !== undefined && (
-                                        <>
-                                            <p className="text-gray-600 font-semibold col-span-1">Số lớp đã học</p>
-                                            <p className="text-gray-800 col-span-3">{currentUser.totalClasses} lớp</p>
-                                        </>
-                                    )}
-
-                                    {currentUser.address && (
+                                    {currentUser.userProfile?.address && (
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Địa chỉ</p>
-                                            <p className="text-gray-800 col-span-3">{currentUser.address}</p>
+                                            <p className="text-gray-800 col-span-3">
+                                                {currentUser.userProfile?.address}
+                                            </p>
                                         </>
                                     )}
                                 </div>

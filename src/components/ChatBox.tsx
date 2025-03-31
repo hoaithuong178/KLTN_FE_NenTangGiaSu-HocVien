@@ -276,7 +276,11 @@ const ChatBox: React.FC = () => {
                                                 )}
                                             </div>
                                             <img
-                                                src={msg.isUser ? user?.avatar || 'default-avatar.png' : SmallIcon}
+                                                src={
+                                                    msg.isUser
+                                                        ? user?.userProfile?.avatar || 'default-avatar.png'
+                                                        : SmallIcon
+                                                }
                                                 alt={msg.isUser ? 'User' : 'AI'}
                                                 className="w-8 h-8 rounded-full"
                                             />

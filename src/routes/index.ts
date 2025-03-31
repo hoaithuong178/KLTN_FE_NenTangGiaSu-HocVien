@@ -22,12 +22,10 @@ const ClassDetail = lazy(() => import('../pages/ClassDetail'));
 const ClassDetailTutor = lazy(() => import('../pages/ClassDetailTutor'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const EditProfile = lazy(() => import('../pages/EditProfile'));
-const PostsLanding = lazy(() => import('../pages/PostsLanding'));
 const Tutors = lazy(() => import('../pages/Tutors'));
 const TutorProfile = lazy(() => import('../pages/TutorProfile'));
 const Sitemap = lazy(() => import('../pages/Sitemap'));
 const NotFound = lazy(() => import('../pages/NotFound'));
-const FaqsLanding = lazy(() => import('../pages/FaqsLanding'));
 const ADManagePost = lazy(() => import('../pages/ADManagePost'));
 const ADManageUser = lazy(() => import('../pages/ADManageUser'));
 const ADManageClass = lazy(() => import('../pages/ADManageClass'));
@@ -55,12 +53,10 @@ const publicRoutes: Array<IRoute> = [
     { path: '/dashboard', component: Dashboard },
     { path: '/transaction', component: Transaction },
     { path: '/faqs', component: Faqs },
-    { path: '/faqs-landing', component: FaqsLanding },
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '/student-profile', component: StudentProfile },
     { path: '/edit-profile', component: EditProfile },
-    { path: '/posts-landing', component: PostsLanding },
     { path: '/tutors-landing', component: Tutors },
     { path: '/tutor-profile', component: TutorProfile },
     { path: '/tutor-profile/:id', component: TutorProfile },

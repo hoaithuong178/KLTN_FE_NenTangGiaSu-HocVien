@@ -141,7 +141,7 @@ const HeaderLanding = () => {
                                 onClick={() => setShowDropdown(!showDropdown)}
                             >
                                 <img
-                                    src={user.avatar}
+                                    src={user.userProfile?.avatar}
                                     alt="Avatar"
                                     className="h-10 w-10 rounded-full object-cover border-2 border-[#FFC569]"
                                 />

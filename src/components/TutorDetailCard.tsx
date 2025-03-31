@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { HeartIcon, ChatIcon, StarIcon } from '../components/icons';
 import { useNavigate } from 'react-router-dom';
-import { TutorProfileComponentProps } from './TutorProfileComponent';
+import { TutorProfileComponentTutor } from '../pages/TutorProfile';
 import { Button } from './Button'; // Giả sử bạn đã có Button component
 
-interface TutorDetailCardProps extends TutorProfileComponentProps {
+interface TutorDetailCardProps extends TutorProfileComponentTutor {
     className?: string;
     onRequestClick: () => void;
 }
 
 const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onRequestClick, ...tutor }) => {
     const navigate = useNavigate();
-    const [isFavorite, setIsFavorite] = useState(tutor.isFavorite);
+    const [isFavorite, setIsFavorite] = useState(tutor.tutorProfile?.isFavorite || false);
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
         message: '',
         show: false,
@@ -38,10 +38,8 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
 
         // Xử lý địa điểm dạy
         const locations =
-            Array.isArray(tutor.tutorLocations) && tutor.tutorLocations.length > 0
-                ? tutor.tutorLocations
-                : tutor.location
-                ? [tutor.location]
+            Array.isArray(tutor.tutorProfile?.tutorLocations) && tutor.tutorProfile?.tutorLocations.length > 0
+                ? tutor.tutorProfile?.tutorLocations
                 : [];
 
         const correctedTutor = {
@@ -49,12 +47,12 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
             id: tutorId,
             email: tutor.email || tutor.email || '',
             phone: tutor.phone || tutor.phone || '',
-            learningTypes: Array.isArray(tutor.learningTypes)
-                ? tutor.learningTypes
-                : [tutor.learningTypes || 'Unknown'],
-            subjects: tutor.subjects || [],
-            schedule: tutor.schedule || {},
-            reviews: tutor.reviews || [],
+            learningTypes: Array.isArray(tutor.tutorProfile?.learningTypes)
+                ? tutor.tutorProfile?.learningTypes
+                : ['Unknown'],
+            subjects: tutor.tutorProfile?.specializations || [],
+            freeTime: tutor.tutorProfile?.freeTime || {},
+            reviews: tutor.tutorProfile?.reviews || [],
             tutorLocations: locations,
         };
 
@@ -70,12 +68,12 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
                 {/* Avatar và thông tin cơ bản */}
                 <div className="flex flex-col items-center">
                     <img
-                        src={tutor.avatar}
+                        src={tutor.userProfile?.avatar}
                         alt={tutor.name}
                         className="w-24 h-24 object-cover border border-gray-300 rounded-lg"
                         onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
                     />
-                    <span className="mt-2 text-sm">{tutor.totalClasses} lớp</span>
+                    <span className="mt-2 text-sm">{tutor.tutorProfile?.taughtStudentsCount} lớp</span>
                     <div className="flex space-x-2 mt-2">
                         <HeartIcon
                             className={`cursor-pointer ${isFavorite ? 'text-red-500 fill-current' : 'text-gray-500'}`}
@@ -88,26 +86,30 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
                 {/* Thông tin chi tiết */}
                 <div className="flex-1">
                     <h2 className="text-xl font-bold">{tutor.name}</h2>
-                    <p className="text-lg font-semibold">{tutor.pricePerSession.toLocaleString('vi-VN')}đ/h</p>
-                    <p className="mt-2 text-gray-700">{tutor.description}</p>
+                    <p className="text-lg font-semibold">
+                        {tutor.tutorProfile?.hourlyPrice.toLocaleString('vi-VN')}đ/h
+                    </p>
+                    <p className="mt-2 text-gray-700">{tutor.tutorProfile?.description}</p>
                     <div className="flex flex-wrap gap-2 mt-4">
-                        {tutor.subjects.map((subject) => (
+                        {tutor.tutorProfile?.specializations.map((subject) => (
                             <span key={subject} className="px-4 py-2 bg-red-100 text-red-600 rounded-md text-sm">
                                 {subject}
                             </span>
                         ))}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-4">
-                        {(Array.isArray(tutor.tutorLocations) && tutor.tutorLocations.length > 0
-                            ? tutor.tutorLocations
-                            : tutor.location
-                            ? [tutor.location]
-                            : []
-                        ).map((location) => (
-                            <span key={location} className="px-4 py-2 bg-blue-100 text-blue-600 rounded-md text-sm">
-                                {location}
-                            </span>
-                        ))}
+                        {tutor.tutorProfile?.tutorLocations?.length ? (
+                            tutor.tutorProfile.tutorLocations.map((location, index) => (
+                                <span
+                                    key={`location-${index}`}
+                                    className="px-4 py-2 bg-blue-100 text-blue-600 rounded-md text-sm"
+                                >
+                                    {location}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-gray-500">Chưa có thông tin địa điểm</span>
+                        )}
                     </div>
                 </div>
 
@@ -125,16 +127,23 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
                         }}
                     />
                     <div className="flex items-center space-x-1">
-                        <span className="text-lg font-semibold">{tutor.rating}</span>
+                        <span className="text-lg font-semibold">
+                            {tutor.tutorProfile?.rating ?? 0} {/* Nếu rating undefined, hiển thị 0 */}
+                        </span>
                         {[...Array(5)].map((_, index) => (
                             <StarIcon
                                 key={index}
-                                className={index < tutor.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}
+                                className={
+                                    index < (tutor.tutorProfile?.rating ?? 0)
+                                        ? 'text-yellow-500 fill-current'
+                                        : 'text-gray-300'
+                                }
                             />
                         ))}
                     </div>
+
                     <a href="#" className="text-blue-500" onClick={(e) => e.stopPropagation()}>
-                        {tutor.reviews.length} đánh giá
+                        {tutor.tutorProfile?.reviews?.length} đánh giá
                     </a>
                 </div>
             </div>

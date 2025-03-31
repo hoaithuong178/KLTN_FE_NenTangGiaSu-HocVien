@@ -5,7 +5,7 @@ import TopNavbar from '../components/TopNavbar';
 import { FilterIcon, ResetIcon } from '../components/icons';
 import TutorDetailCard from '../components/TutorDetailCard';
 import TutorSkeleton from '../components/TutorSkeleton';
-import { TutorProfileComponentProps } from '../components/TutorProfileComponent';
+import { TutorProfileComponentTutor } from './TutorProfile';
 import { Button } from '../components/Button';
 
 const Tutor: React.FC = () => {
@@ -14,22 +14,22 @@ const Tutor: React.FC = () => {
         return storedState ? JSON.parse(storedState) : true;
     });
 
-    const [tutors, setTutors] = useState<TutorProfileComponentProps[]>([]);
+    const [tutors, setTutors] = useState<TutorProfileComponentTutor[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [showRequestModal, setShowRequestModal] = useState(false);
-    const [selectedTutor, setSelectedTutor] = useState<TutorProfileComponentProps | null>(null);
+    const [selectedTutor, setSelectedTutor] = useState<TutorProfileComponentTutor | null>(null);
     const [requestForm, setRequestForm] = useState({
         title: '',
         content: '',
-        subject: '',
+        specializations: '', // Thay subject bằng specializations
         location: '',
         duration: 60,
         mode: 'online' as 'online' | 'offline',
-        pricePerSession: 0,
+        hourlyPrice: 0, // Thay pricePerSession bằng hourlyPrice
     });
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
-    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+    const [selectedTimes] = useState<string[]>([]);
     const [sessionCount, setSessionCount] = useState<number>(1);
     const [notification, setNotification] = useState<{
         message: string;
@@ -52,27 +52,34 @@ const Tutor: React.FC = () => {
 
             if (!Array.isArray(tutorsData)) throw new Error('Invalid tutor list from API');
 
-            const mappedTutors: TutorProfileComponentProps[] = tutorsData.map((tutor) => ({
-                id: tutor.id ? parseInt(tutor.id) : 0,
-                avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
-                name: tutor.name || 'Unknown',
-                pricePerSession: tutor.tutorProfile?.hourlyPrice ?? 0,
-                email: tutor.email || tutor.userProfile?.email || '',
-                phone: tutor.phone || tutor.userProfile?.phone || '',
-                isFavorite: false,
-                learningTypes: tutor.tutorProfile?.learningTypes || 'Unknown',
-                subjects: tutor.tutorProfile?.specializations ?? [],
-                gender: tutor.userProfile?.gender || 'UNKNOWN',
-                educationLevel: tutor.tutorProfile?.level || 'Unknown',
-                experience: tutor.tutorProfile?.experiences ?? 0,
-                birthYear: tutor.userProfile?.dob ? new Date(tutor.userProfile.dob).getFullYear() : 2000,
-                totalClasses: tutor.tutorProfile?.taughtStudentsCount ?? 0,
-                location: tutor.tutorProfile?.tutorLocations?.[0] ?? 'Unknown',
-                tutorLocations: tutor.tutorProfile?.tutorLocations ?? [],
-                schedule: tutor.schedule || {},
-                rating: tutor.tutorProfile?.rating ?? 0,
-                reviews: tutor.reviews || [],
-                description: tutor.tutorProfile?.description || 'Không có mô tả',
+            const mappedTutors = tutorsData.map((tutor: TutorProfileComponentTutor) => ({
+                ...tutor,
+                currentUserId: tutor.currentUserId,
+                status: tutor.status || 'ACTIVE',
+                violate: tutor.violate || 0,
+                userProfile: tutor.userProfile || {
+                    avatar: 'https://via.placeholder.com/150',
+                    gender: 'Unknown',
+                    dob: '',
+                    address: '',
+                },
+                tutorProfile: tutor.tutorProfile
+                    ? {
+                          ...tutor.tutorProfile,
+                          hourlyPrice: tutor.tutorProfile.hourlyPrice || 0,
+                          experiences: tutor.tutorProfile.experiences || 0,
+                          taughtStudentsCount: tutor.tutorProfile.taughtStudentsCount || 0,
+                          rating: tutor.tutorProfile.rating || 0,
+                          description: tutor.tutorProfile.description || '',
+                          tutorLocations: tutor.tutorProfile.tutorLocations || [],
+                          specializations: tutor.tutorProfile.specializations || [],
+                          learningTypes: tutor.tutorProfile.learningTypes || [],
+                          reviews: tutor.tutorProfile.reviews || [],
+                          isFavorite: tutor.tutorProfile.isFavorite ?? false,
+                          freeTime: tutor.tutorProfile.freeTime || [],
+                          qualification: tutor.tutorProfile.qualification || '',
+                      }
+                    : undefined,
             }));
 
             setTimeout(() => {
@@ -130,13 +137,13 @@ const Tutor: React.FC = () => {
     const filteredTutors = tutors.filter((tutor) => {
         return (
             (!searchText || tutor.name.toLowerCase().includes(searchText.toLowerCase())) &&
-            (!filters.priceFrom || tutor.pricePerSession >= filters.priceFrom) &&
-            (!filters.priceTo || tutor.pricePerSession <= filters.priceTo) &&
-            (!filters.selectedSubject || tutor.subjects.includes(filters.selectedSubject)) &&
-            (!filters.selectedRating || tutor.rating >= filters.selectedRating) &&
-            (!filters.countFrom || tutor.totalClasses >= filters.countFrom) &&
-            (!filters.countTo || tutor.totalClasses <= filters.countTo) &&
-            (!filters.isFavorited || tutor.isFavorite)
+            (!filters.priceFrom || (tutor.tutorProfile?.hourlyPrice ?? 0) >= filters.priceFrom) &&
+            (!filters.priceTo || (tutor.tutorProfile?.hourlyPrice ?? 0) <= filters.priceTo) &&
+            (!filters.selectedSubject || tutor.tutorProfile?.specializations?.includes(filters.selectedSubject)) &&
+            (!filters.selectedRating || (tutor.tutorProfile?.rating ?? 0) >= filters.selectedRating) &&
+            (!filters.countFrom || (tutor.tutorProfile?.taughtStudentsCount ?? 0) >= filters.countFrom) &&
+            (!filters.countTo || (tutor.tutorProfile?.taughtStudentsCount ?? 0) <= filters.countTo) &&
+            (!filters.isFavorited || tutor.tutorProfile?.isFavorite)
         );
     });
 
@@ -159,19 +166,16 @@ const Tutor: React.FC = () => {
         localStorage.setItem('navbarExpanded', JSON.stringify(isExpanded));
     }, [isExpanded]);
 
-    const handleRequestClick = (tutor: TutorProfileComponentProps) => {
+    const handleRequestClick = (tutor: TutorProfileComponentTutor) => {
         setSelectedTutor(tutor);
         setRequestForm({
             title: '',
             content: '',
-            subject: tutor.subjects.length > 0 ? tutor.subjects[0] : '',
-            location:
-                Array.isArray(tutor.tutorLocations) && tutor.tutorLocations.length > 0
-                    ? tutor.tutorLocations[0]
-                    : tutor.location || '',
+            specializations: tutor.tutorProfile?.specializations?.[0] || '',
+            location: tutor.tutorProfile?.tutorLocations?.[0] || '',
             duration: 60,
             mode: 'online',
-            pricePerSession: tutor.pricePerSession,
+            hourlyPrice: tutor.tutorProfile?.hourlyPrice || 0,
         });
         setShowRequestModal(true);
     };
@@ -182,29 +186,29 @@ const Tutor: React.FC = () => {
             ...prev,
             [name]: value,
             ...(name === 'duration' &&
-                selectedTutor && {
-                    pricePerSession: (parseInt(value) / 60) * selectedTutor.pricePerSession,
+                selectedTutor?.tutorProfile && {
+                    hourlyPrice: (parseInt(value) / 60) * selectedTutor.tutorProfile.hourlyPrice,
                 }),
         }));
     };
 
-    const toggleTimeSelection = (timeRange: string) => {
-        setSelectedTimes((prev) => {
-            if (prev.includes(timeRange)) {
-                return prev.filter((t) => t !== timeRange);
-            }
-            if (prev.length >= sessionCount) {
-                setNotification({
-                    message: `Bạn chỉ có thể chọn tối đa ${sessionCount} khung giờ`,
-                    show: true,
-                    type: 'error',
-                });
-                setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
-                return prev;
-            }
-            return [...prev, timeRange];
-        });
-    };
+    // const toggleTimeSelection = (timeRange: string) => {
+    //     setSelectedTimes((prev) => {
+    //         if (prev.includes(timeRange)) {
+    //             return prev.filter((t) => t !== timeRange);
+    //         }
+    //         if (prev.length >= sessionCount) {
+    //             setNotification({
+    //                 message: `Bạn chỉ có thể chọn tối đa ${sessionCount} khung giờ`,
+    //                 show: true,
+    //                 type: 'error',
+    //             });
+    //             setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
+    //             return prev;
+    //         }
+    //         return [...prev, timeRange];
+    //     });
+    // };
 
     const handleSubmit = async () => {
         if (!selectedTutor) return;
@@ -231,6 +235,7 @@ const Tutor: React.FC = () => {
                 show: true,
                 type: 'error',
             });
+            setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 3000);
         }
     };
 
@@ -252,14 +257,11 @@ const Tutor: React.FC = () => {
 
     return (
         <div className="min-h-screen flex bg-gray-50">
-            {/* Navbar */}
             <Navbar isExpanded={isExpanded} toggleNavbar={() => setIsExpanded((prev) => !prev)} />
             <div className="absolute top-0">
                 <TopNavbar />
             </div>
-            {/* Nội dung chính */}
             <div className={`flex-1 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
-                {/* Thanh tìm kiếm và bộ lọc */}
                 <div className="sticky top-[60px] bg-white shadow-md px-6 py-4 flex items-center gap-4">
                     <input
                         type="text"
@@ -284,7 +286,6 @@ const Tutor: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Popup bộ lọc */}
                 {showPopup && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
                         <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md relative z-[10000]">
@@ -341,7 +342,7 @@ const Tutor: React.FC = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 font-medium mb-1">Số lớp</label>
+                                    <label className="block text-gray-700 font-medium mb-1">Số học sinh</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="number"
@@ -388,7 +389,6 @@ const Tutor: React.FC = () => {
                     </div>
                 )}
 
-                {/* Danh sách gia sư */}
                 <div
                     className="flex-1 overflow-y-auto p-6 mt-12 h-[calc(100vh-140px)]"
                     style={{
@@ -421,7 +421,6 @@ const Tutor: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal Gửi yêu cầu dạy */}
             {showRequestModal && selectedTutor && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
                     <div className="bg-white p-8 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto relative z-[10000]">
@@ -473,15 +472,15 @@ const Tutor: React.FC = () => {
                                 <div>
                                     <label className="block font-semibold text-gray-700 mb-2 text-left">Môn học</label>
                                     <select
-                                        name="subject"
-                                        value={requestForm.subject}
+                                        name="specializations"
+                                        value={requestForm.specializations}
                                         onChange={handleChange}
                                         className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
                                     >
-                                        {selectedTutor.subjects?.length > 0 ? (
-                                            selectedTutor.subjects.map((subj) => (
-                                                <option key={subj} value={subj}>
-                                                    {subj}
+                                        {selectedTutor.tutorProfile?.specializations?.length ? (
+                                            selectedTutor.tutorProfile.specializations.map((spec) => (
+                                                <option key={spec} value={spec}>
+                                                    {spec}
                                                 </option>
                                             ))
                                         ) : (
@@ -510,7 +509,6 @@ const Tutor: React.FC = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        name="sessions"
                                         value={sessionCount}
                                         onChange={(e) => setSessionCount(Math.max(1, parseInt(e.target.value) || 1))}
                                         className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
@@ -570,7 +568,7 @@ const Tutor: React.FC = () => {
                                 </label>
                                 <div className="space-y-4">
                                     <div className="flex gap-2 flex-wrap">
-                                        {Object.keys(selectedTutor.schedule || {}).map((day) => (
+                                        {Object.keys(selectedTutor.tutorProfile?.freeTime || {}).map((day) => (
                                             <Button
                                                 key={day}
                                                 title={day}
@@ -584,19 +582,21 @@ const Tutor: React.FC = () => {
                                         ))}
                                     </div>
 
-                                    {selectedDay && (
+                                    {/* {selectedDay && selectedTutor.tutorProfile?.freeTime?.[selectedDay] && (
                                         <div className="bg-gray-50 p-4 rounded-lg">
                                             <h3 className="text-lg font-semibold text-gray-700 mb-3 text-left">
                                                 Chọn khung giờ:
                                             </h3>
                                             <div className="flex gap-2 flex-wrap">
-                                                {Object.entries(selectedTutor.schedule[selectedDay] || {}).map(
-                                                    ([period]) => {
-                                                        const timeRange = `${period}`;
+                                                {Object.entries(
+                                                    selectedTutor.tutorProfile.freeTime[selectedDay],
+                                                ).flatMap(([period, times]) =>
+                                                    times?.map(([start, end]) => {
+                                                        const timeRange = `${start}-${end}`;
                                                         return (
                                                             <Button
                                                                 key={timeRange}
-                                                                title={timeRange}
+                                                                title={`${period}: ${start}-${end}`}
                                                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                                                     selectedTimes.includes(timeRange)
                                                                         ? 'bg-[#1B223B] text-white shadow-md'
@@ -609,7 +609,7 @@ const Tutor: React.FC = () => {
                                                                 }
                                                             />
                                                         );
-                                                    },
+                                                    }),
                                                 )}
                                             </div>
                                             <div className="mt-3 text-right">
@@ -618,7 +618,7 @@ const Tutor: React.FC = () => {
                                                 </span>
                                             </div>
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
 
@@ -626,12 +626,12 @@ const Tutor: React.FC = () => {
                                 <label className="block font-semibold text-gray-700 mb-2 text-left">Giá/giờ:</label>
                                 <input
                                     type="number"
-                                    name="pricePerSession"
-                                    value={requestForm.pricePerSession}
+                                    name="hourlyPrice"
+                                    value={requestForm.hourlyPrice}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
                                     placeholder={new Intl.NumberFormat('vi-VN').format(
-                                        (requestForm.duration / 60) * selectedTutor.pricePerSession,
+                                        (requestForm.duration / 60) * (selectedTutor.tutorProfile?.hourlyPrice || 0),
                                     )}
                                 />
                             </div>
@@ -659,7 +659,6 @@ const Tutor: React.FC = () => {
                 </div>
             )}
 
-            {/* Thông báo */}
             {notification.show && (
                 <div
                     className={`fixed bottom-5 right-5 p-3 text-white rounded-md shadow-lg ${

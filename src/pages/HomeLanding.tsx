@@ -10,58 +10,10 @@ import ReviewCard from '../components/ReviewCard';
 import Logo from '../assets/FullLogo.png';
 import axios from 'axios';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
-
-interface Tutor {
-    id: number;
-    name: string;
-    experience: number;
-    email: string;
-    phone: string;
-    rating: number;
-    avatar: string;
-    learningTypes: string[];
-    subjects: string[];
-    gender: string;
-    educationLevel: string;
-    totalClasses: number;
-    tutorLocations: string[];
-    location?: string;
-    schedule: {
-        [key: string]: {
-            morning?: [string, string][];
-            afternoon?: [string, string][];
-            evening?: [string, string][];
-        };
-    };
-    description: string;
-    reviews: {
-        avatar: string;
-        name: string;
-        date: string;
-        content: string;
-        rating: number;
-    }[];
-    userProfile?: {
-        email: string;
-        phone: string;
-        avatar: string;
-        gender: string;
-        dob: string;
-    };
-    tutorProfile?: {
-        hourlyPrice: number;
-        level: string;
-        experiences: number;
-        taughtStudentsCount: number;
-        rating: number;
-        description: string;
-    };
-    pricePerSession?: number;
-    birthYear?: number;
-}
+import { TutorProfileComponentTutor } from './TutorProfile';
 
 const TutorSection = () => {
-    const [tutors, setTutors] = useState<Tutor[]>([]);
+    const [tutors, setTutors] = useState<TutorProfileComponentTutor[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -81,38 +33,42 @@ const TutorSection = () => {
                     throw new Error('Invalid tutor list from API');
                 }
 
-                const processedTutors: Tutor[] = tutorsData.map((tutor) => {
-                    const mappedTutor = {
-                        id: tutor.id ? parseInt(String(tutor.id)) : 0,
-                        name: tutor.name || 'Unknown',
-                        experience: tutor.tutorProfile?.experiences ?? 0,
-                        email: tutor.email || tutor.userProfile?.email || '',
-                        phone: tutor.phone || tutor.userProfile?.phone || '',
-                        rating: tutor.tutorProfile?.rating ?? 0,
-                        avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
-                        learningTypes: Array.isArray(tutor.tutorProfile?.learningTypes)
-                            ? tutor.tutorProfile.learningTypes
-                            : [],
-                        subjects: Array.isArray(tutor.tutorProfile?.specializations)
-                            ? tutor.tutorProfile.specializations
-                            : [],
-                        gender: tutor.userProfile?.gender || 'Unknown',
-                        educationLevel: tutor.tutorProfile?.level || 'Unknown',
-                        totalClasses: tutor.tutorProfile?.taughtStudentsCount ?? 0,
-                        tutorLocations: Array.isArray(tutor.tutorProfile?.tutorLocations)
-                            ? tutor.tutorProfile.tutorLocations
-                            : [],
-                        schedule: {},
-                        description: tutor.tutorProfile?.description || '',
-                        reviews: [],
-                        pricePerSession: tutor.tutorProfile?.hourlyPrice ?? 0,
-                        birthYear: tutor.userProfile?.dob ? new Date(tutor.userProfile.dob).getFullYear() : 2000,
-                        userProfile: tutor.userProfile,
-                        tutorProfile: tutor.tutorProfile,
-                    };
-                    console.log('Mapped tutor data:', mappedTutor);
-                    return mappedTutor;
+                const mapTutorData = (
+                    data: TutorProfileComponentTutor,
+                    isCurrentUser: boolean,
+                ): TutorProfileComponentTutor => ({
+                    ...data,
+                    currentUserId: isCurrentUser ? data.id : data.currentUserId,
+                    status: data.status || 'ACTIVE',
+                    violate: data.violate || 0,
+                    userProfile: data.userProfile || {
+                        avatar: 'https://via.placeholder.com/150',
+                        gender: 'Unknown',
+                        dob: '',
+                        address: '',
+                    },
+                    tutorProfile: data.tutorProfile
+                        ? {
+                              ...data.tutorProfile,
+                              hourlyPrice: data.tutorProfile.hourlyPrice || 0,
+                              experiences: data.tutorProfile.experiences || 0,
+                              taughtStudentsCount: data.tutorProfile.taughtStudentsCount || 0,
+                              rating: data.tutorProfile.rating || 0,
+                              description: data.tutorProfile.description || '',
+                              tutorLocations: data.tutorProfile.tutorLocations || [],
+                              specializations: data.tutorProfile.specializations || [],
+                              learningTypes: data.tutorProfile.learningTypes || [],
+                              reviews: data.tutorProfile.reviews || [],
+                              isFavorite: data.tutorProfile.isFavorite ?? false,
+                              freeTime: data.tutorProfile.freeTime || [],
+                              qualification: data.tutorProfile.qualification || '',
+                          }
+                        : undefined,
                 });
+
+                const processedTutors: TutorProfileComponentTutor[] = tutorsData.map((tutor) =>
+                    mapTutorData(tutor, false),
+                );
 
                 setTutors(processedTutors);
             } catch (err) {
@@ -126,21 +82,25 @@ const TutorSection = () => {
         fetchTutors();
     }, []);
 
-    const handleTutorClick = (tutor: Tutor) => {
-        const tutorId = tutor.id ? parseInt(String(tutor.id)) : 0;
-        navigate(`/tutor-profile/${tutorId}`, {
+    const handleTutorClick = (tutor: TutorProfileComponentTutor) => {
+        navigate(`/tutor-profile/${tutor.id}`, {
             state: {
                 ...tutor,
-                id: tutorId,
-                email: tutor.email || tutor.userProfile?.email || '',
-                phone: tutor.phone || tutor.userProfile?.phone || '',
-                learningTypes: Array.isArray(tutor.learningTypes)
-                    ? tutor.learningTypes
-                    : [tutor.learningTypes || 'Unknown'],
-                subjects: tutor.subjects || [],
-                schedule: tutor.schedule || {},
-                reviews: tutor.reviews || [],
-                tutorLocations: tutor.tutorLocations || [],
+                id: tutor.id,
+                email: tutor.email || '',
+                phone: tutor.phone || '',
+                userProfile: {
+                    ...tutor.userProfile,
+                    avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
+                },
+                tutorProfile: {
+                    ...tutor.tutorProfile,
+                    learningTypes: tutor.tutorProfile?.learningTypes || [],
+                    specializations: tutor.tutorProfile?.specializations || [],
+                    freeTime: tutor.tutorProfile?.freeTime || {},
+                    reviews: tutor.tutorProfile?.reviews || [],
+                    tutorLocations: tutor.tutorProfile?.tutorLocations || [],
+                },
             },
         });
     };
@@ -188,7 +148,7 @@ const TutorSection = () => {
                             >
                                 <div className="relative">
                                     <img
-                                        src={tutor.avatar}
+                                        src={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
                                         alt={tutor.name}
                                         className="w-full h-48 object-cover"
                                         onError={(e) => {
@@ -196,17 +156,25 @@ const TutorSection = () => {
                                         }}
                                     />
                                     <div className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-md">
-                                        <HeartIcon className="w-6 h-6 text-gray-500" />
+                                        <HeartIcon
+                                            className={`w-6 h-6 ${
+                                                tutor.tutorProfile?.isFavorite
+                                                    ? 'text-red-500 fill-current'
+                                                    : 'text-gray-500'
+                                            }`}
+                                        />
                                     </div>
                                 </div>
                                 <div className="p-4">
                                     <h3 className="text-xl font-bold text-[#1B223B] mb-2">{tutor.name}</h3>
                                     <div className="flex items-center mb-2">
                                         <StarIcon className="w-5 h-5 text-yellow-400 mr-1" />
-                                        <span className="text-gray-600">{tutor.rating.toFixed(1)}</span>
+                                        <span className="text-gray-600">
+                                            {(tutor.tutorProfile?.rating || 0).toFixed(1)}
+                                        </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                        {tutor.subjects.slice(0, 3).map((subject, index) => (
+                                        {tutor.tutorProfile?.specializations?.slice(0, 3).map((subject, index) => (
                                             <span
                                                 key={index}
                                                 className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-sm"
@@ -216,8 +184,8 @@ const TutorSection = () => {
                                         ))}
                                     </div>
                                     <div className="flex items-center justify-between text-sm text-gray-600">
-                                        <span>{tutor.experience} năm kinh nghiệm</span>
-                                        <span>{tutor.totalClasses} lớp đã dạy</span>
+                                        <span>{tutor.tutorProfile?.experiences || 0} năm kinh nghiệm</span>
+                                        <span>{tutor.tutorProfile?.taughtStudentsCount || 0} lớp đã dạy</span>
                                     </div>
                                 </div>
                             </div>

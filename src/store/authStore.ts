@@ -4,21 +4,19 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 
 interface User {
-    id: number;
     id: string;
     name: string;
     phone?: string;
-    email: string;
-    name: string;
+    email?: string;
+    status?: string;
+    violate?: number;
     role: Role;
-    avatar?: string;
     location?: string[];
     userProfile?: {
-        email: string;
-        phone: string;
         avatar: string;
         gender: string;
         dob: string;
+        address: string;
     };
     tutorProfile?: {
         hourlyPrice: number;
@@ -27,9 +25,19 @@ interface User {
         taughtStudentsCount: number;
         rating: number;
         description: string;
-        learningTypes: string[];
-        specializations: string[];
         tutorLocations: string[];
+        specializations: string[];
+        learningTypes: string[];
+        reviews?: {
+            avatar: string;
+            name: string;
+            date: string;
+            content: string;
+            rating: number;
+        }[];
+        isFavorite?: boolean;
+        freeTime: string[];
+        qualification: string;
     };
 }
 
