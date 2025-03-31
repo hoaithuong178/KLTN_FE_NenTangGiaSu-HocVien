@@ -7,7 +7,6 @@ import UserDataDeletion from '../pages/UserDataDeletion';
 const SignIn = lazy(() => import('../pages/SignIn'));
 const Post = lazy(() => import('../pages/Post'));
 const Tutor = lazy(() => import('../pages/Tutor'));
-const Contacts = lazy(() => import('../pages/Contacts'));
 const Register = lazy(() => import('../pages/Register'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const VerifyOTP = lazy(() => import('../pages/OTP'));
@@ -22,7 +21,6 @@ const ClassDetail = lazy(() => import('../pages/ClassDetail'));
 const ClassDetailTutor = lazy(() => import('../pages/ClassDetailTutor'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const EditProfile = lazy(() => import('../pages/EditProfile'));
-const Tutors = lazy(() => import('../pages/Tutors'));
 const TutorProfile = lazy(() => import('../pages/TutorProfile'));
 const Sitemap = lazy(() => import('../pages/Sitemap'));
 const NotFound = lazy(() => import('../pages/NotFound'));
@@ -42,7 +40,6 @@ const publicRoutes: Array<IRoute> = [
     { path: '/sign-in', component: SignIn, layout: DefaultLayout },
     { path: '/post', component: Post },
     { path: '/tutors', component: Tutor },
-    { path: '/contact', component: Contacts },
     { path: '/register', component: Register },
     { path: '/verify-otp', component: VerifyOTP },
     { path: '/notify-success', component: NotifySuccess },
@@ -57,7 +54,6 @@ const publicRoutes: Array<IRoute> = [
     { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '/student-profile', component: StudentProfile },
     { path: '/edit-profile', component: EditProfile },
-    { path: '/tutors-landing', component: Tutors },
     { path: '/tutor-profile', component: TutorProfile },
     { path: '/tutor-profile/:id', component: TutorProfile },
     { path: '/class', component: ClassDetail },

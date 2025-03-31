@@ -421,7 +421,7 @@ const Post: React.FC = () => {
                 user: {
                     id: String(user?.id) || '',
                     name: user?.name || '',
-                    avatar: user?.avatar || '',
+                    avatar: user?.userProfile?.avatar || '',
                 },
                 id: crypto.randomUUID(),
                 title: postTitle,
@@ -647,7 +647,11 @@ const Post: React.FC = () => {
                             }`}
                         >
                             <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <img src={user?.avatar || Avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                <img
+                                    src={user?.userProfile?.avatar || Avatar}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <button
                                 onClick={togglePopup}
