@@ -10,10 +10,11 @@ interface User {
     email?: string;
     status?: string;
     violate?: number;
+    avatar?: string;
     role: Role;
     location?: string[];
     userProfile?: {
-        avatar: string;
+        avatar?: string;
         gender: string;
         dob: string;
         address: string;
@@ -24,6 +25,7 @@ interface User {
         experiences: number;
         taughtStudentsCount: number;
         rating: number;
+        fee: number;
         description: string;
         tutorLocations: string[];
         specializations: string[];

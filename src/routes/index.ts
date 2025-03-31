@@ -3,7 +3,6 @@ import DefaultLayout from '../layouts/DefaultLayout';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
 import UserDataDeletion from '../pages/UserDataDeletion';
 
-//const Home = lazy(() => import('../pages/Home'));
 const SignIn = lazy(() => import('../pages/SignIn'));
 const Post = lazy(() => import('../pages/Post'));
 const Tutor = lazy(() => import('../pages/Tutor'));

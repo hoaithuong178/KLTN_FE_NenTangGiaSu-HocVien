@@ -3,6 +3,7 @@ import { Link as ScrollLink } from 'react-scroll';
 import Logo from '../assets/FullLogo.png';
 import { useAuthStore } from '../store/authStore';
 import { useState, useEffect, useRef } from 'react';
+import defaultAvatar from '../assets/avatar.jpg';
 
 const HeaderLanding = () => {
     const navigate = useNavigate();
@@ -141,7 +142,7 @@ const HeaderLanding = () => {
                                 onClick={() => setShowDropdown(!showDropdown)}
                             >
                                 <img
-                                    src={user.userProfile?.avatar}
+                                    src={user.userProfile?.avatar || user.avatar || defaultAvatar}
                                     alt="Avatar"
                                     className="h-10 w-10 rounded-full object-cover border-2 border-[#FFC569]"
                                 />
@@ -151,7 +152,7 @@ const HeaderLanding = () => {
                             {showDropdown && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 animate-fade-in">
                                     <Link
-                                        to="/information"
+                                        to={user.role === 'TUTOR' ? '/tutor-profile' : '/student-profile'}
                                         className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors"
                                         onClick={() => setShowDropdown(false)}
                                     >
