@@ -5,8 +5,9 @@ import useUserProfileStore from '../store/userProfileStore';
 import { ethers } from 'ethers';
 import contract from '../assets/TeachMeContract.json';
 import { useWallet } from '../hooks/useWallet';
+import { v4 } from 'uuid';
 
-const contractAddress = '0x1f6BC0f73a630822Ae77c83ca201AbBa33266A7B';
+const contractAddress = '0x00FC4c58dB7DBCA3693c1367994F74da362a3958';
 const contractABI = contract.abi;
 
 export interface UserProfile {
@@ -65,24 +66,27 @@ const Blockchain = () => {
 
             // Ví dụ dữ liệu để tạo contract
             const contractParams = {
-                id: 'contract_' + Date.now(),
-                studentId: 'student_123',
-                tutorId: 'tutor_456',
-                classId: 'class_789',
+                id: v4(),
+                studentId: 'cm7q4px020000opjkjc1lwvm1',
+                tutorId: 'cm5xogoc60000op6snb2cc6cn',
+                classId: v4(),
                 startDate: Math.floor(Date.now() / 1000),
                 endDate: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 ngày
-                depositAmount: ethers.utils.parseEther('0.1'),
-                totalAmount: ethers.utils.parseEther('1'),
-                feePerSession: ethers.utils.parseEther('0.1'),
+                depositAmount: 100000,
+                totalAmount: 300000,
+                feePerSession: 100000,
             };
 
             const extraParams = {
-                grade: '12',
-                subject: 'Math',
-                feePerHour: ethers.utils.parseEther('0.05'),
-                totalFee: ethers.utils.parseEther('1.5'),
+                grade: 'UNIVERSITY',
+                subject: '28d129a9-0e98-42dd-8469-f477c33d30c6',
+                feePerHour: 100000,
+                totalFee: 100000,
                 mode: true,
+                schedules: ['Thứ hai'],
             };
+
+            console.log(contractParams, extraParams);
 
             const tx = await teachMeContract.createContract(contractParams, extraParams);
             await tx.wait();
