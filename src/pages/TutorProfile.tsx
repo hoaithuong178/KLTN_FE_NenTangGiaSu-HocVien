@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from '../components/icons';
 import { Button } from '../components/Button';
 import { useAuthStore } from '../store/authStore';
+import defaultAvatar from '../assets/avatar.jpg';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -298,7 +299,7 @@ const TutorProfile: React.FC = () => {
                           } học sinh.`
                         : 'Thông tin gia sư'
                 }
-                ogImage={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
+                ogImage={tutor.userProfile?.avatar || defaultAvatar}
             />
             <div className="w-full">
                 <header className="w-full bg-white shadow-md">
@@ -318,10 +319,10 @@ const TutorProfile: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                         <div className="flex items-center mb-4 md:mb-0">
                             <img
-                                src={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
+                                src={tutor.userProfile?.avatar || defaultAvatar}
                                 alt={tutor.name}
                                 className="w-24 h-24 rounded-full mr-4 object-cover"
-                                onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
+                                onError={(e) => (e.currentTarget.src = defaultAvatar)}
                             />
                             <div>
                                 <h1 className="text-2xl font-bold">{tutor.name}</h1>
