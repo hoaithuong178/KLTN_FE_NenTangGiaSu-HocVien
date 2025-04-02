@@ -11,6 +11,7 @@ import Logo from '../assets/FullLogo.png';
 import axios from 'axios';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { TutorProfileComponentTutor } from './TutorProfile';
+import defaultAvatar from '../assets/avatar.jpg';
 
 const TutorSection = () => {
     const [tutors, setTutors] = useState<TutorProfileComponentTutor[]>([]);
@@ -42,7 +43,7 @@ const TutorSection = () => {
                     status: data.status || 'ACTIVE',
                     violate: data.violate || 0,
                     userProfile: data.userProfile || {
-                        avatar: 'https://via.placeholder.com/150',
+                        avatar: defaultAvatar,
                         gender: 'Unknown',
                         dob: '',
                         address: '',
@@ -91,7 +92,7 @@ const TutorSection = () => {
                 phone: tutor.phone || '',
                 userProfile: {
                     ...tutor.userProfile,
-                    avatar: tutor.userProfile?.avatar || 'https://via.placeholder.com/150',
+                    avatar: tutor.userProfile?.avatar || defaultAvatar,
                 },
                 tutorProfile: {
                     ...tutor.tutorProfile,
