@@ -3,11 +3,7 @@ import { Link as ScrollLink } from 'react-scroll';
 import Logo from '../assets/FullLogo.png';
 import { useAuthStore } from '../store/authStore';
 import { useState, useEffect, useRef } from 'react';
-<<<<<<< HEAD
-import defaultAvatar from '../assets/avatar.jpg';
-=======
 import defaultAvatar from '../assets/avatar.jpg'; // Import default avatar
->>>>>>> features_tutor
 
 const HeaderLanding = () => {
     const navigate = useNavigate();
@@ -148,11 +144,7 @@ const HeaderLanding = () => {
                                 onClick={() => setShowDropdown(!showDropdown)}
                             >
                                 <img
-<<<<<<< HEAD
                                     src={user.userProfile?.avatar || user.avatar || defaultAvatar}
-=======
-                                    src={user.userProfile?.avatar || defaultAvatar}
->>>>>>> features_tutor
                                     alt="Avatar"
                                     className="h-10 w-10 rounded-full object-cover border-2 border-[#FFC569]"
                                     onError={(e) => {
