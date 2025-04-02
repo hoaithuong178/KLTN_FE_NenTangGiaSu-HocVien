@@ -20,6 +20,15 @@ interface Subject {
 import { useLocation } from 'react-router-dom';
 import { Slider } from 'antd';
 
+interface User {
+    id: string;
+    avatar?: string;
+    name: string;
+    userProfile?: {
+        avatar?: string;
+    };
+}
+
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
     const [filterAvailableTimes, setFilterAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
@@ -62,7 +71,19 @@ const Post: React.FC = () => {
         const fetchPosts = async () => {
             try {
                 setLoading(true);
-                const response = await axiosClient.get('/posts');
+                let response;
+
+                // Kiểm tra vai trò người dùng và gọi API tương ứng
+                if (user?.role === 'STUDENT') {
+                    // Nếu là học sinh, lấy bài đăng được đề xuất cho học sinh
+                    response = await axiosClient.get('/recommend/post-for-student');
+                } else if (user?.role === 'TUTOR') {
+                    // Nếu là gia sư, lấy bài đăng được đề xuất cho gia sư
+                    response = await axiosClient.get('/recommend/post-for-tutor?min_score=0');
+                } else {
+                    // Trường hợp khác hoặc chưa đăng nhập, lấy tất cả bài đăng
+                    response = await axiosClient.get('/posts');
+                }
 
                 if (response.data) {
                     console.log('Response data:', response.data);
@@ -94,7 +115,7 @@ const Post: React.FC = () => {
         };
 
         fetchPosts();
-    }, []);
+    }, [user?.role]); // Thêm user?.role vào dependency array để khi vai trò thay đổi sẽ gọi lại API
 
     const bgColors = ['#EBF5FF', '#E6F0FD', '#F0F7FF'];
 
@@ -985,7 +1006,7 @@ const Post: React.FC = () => {
                         ) : (
                             posts.map((post, index) => (
                                 <div
-                                    key={post.id}
+                                    key={post.id || index}
                                     className="relative border p-4 mb-4 shadow-md rounded-lg"
                                     style={{ backgroundColor: bgColors[index % bgColors.length] }}
                                 >
@@ -1005,13 +1026,20 @@ const Post: React.FC = () => {
                                     {/* User Info & Title Section */}
                                     <div className="flex items-center space-x-4 mb-2">
                                         <img
-                                            src={post.user.avatar || Avatar}
-                                            alt={post.user.name}
+                                            src={
+                                                (post.user as User)?.userProfile?.avatar ||
+                                                post.user?.avatar ||
+                                                'https://via.placeholder.com/50'
+                                            }
+                                            alt={post.user?.name || 'User'}
                                             className="w-10 h-10 rounded-full"
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/50';
+                                            }}
                                         />
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
-                                                <p className="font-semibold text-lg">{post.user.name}</p>
+                                                <p className="font-semibold text-lg">{post.user?.name}</p>
                                             </div>
                                             <span className="text-sm text-gray-500 block mt-1">
                                                 {new Date(post.createdAt).toLocaleString('vi-VN', {
@@ -1142,7 +1170,7 @@ const Post: React.FC = () => {
                                 >
                                     <h2 className="text-xl font-semibold mb-4">Xác nhận nhận lớp</h2>
                                     <p className="text-lg text-gray-600 mb-4">
-                                        Bạn muốn gửi yêu cầu nhận lớp đến {selectedPost.user.name}?
+                                        Bạn muốn gửi yêu cầu nhận lớp đến {selectedPost.user?.name}?
                                     </p>
 
                                     <ScheduleSelector
