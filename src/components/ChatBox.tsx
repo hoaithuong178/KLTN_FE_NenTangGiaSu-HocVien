@@ -5,6 +5,9 @@ import { useAuthStore } from '../store/authStore';
 import axiosClient from '../configs/axios.config';
 import { AxiosError } from 'axios';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
+import Avatar from '../assets/avatar.jpg';
 
 type ChatType = 'AI' | 'ADMIN' | null;
 
@@ -12,18 +15,25 @@ interface Message {
     text: string;
     timestamp: Date;
     isUser: boolean;
+    source_documents?: {
+        id: string;
+        name: string;
+        avatar: string;
+    }[];
 }
 
 interface ChatHistory {
     request: string;
     response: string;
     createdAt: string;
+    source_documents?: {
+        id: string;
+        name: string;
+        avatar: string;
+    }[];
 }
 
 const ChatBox: React.FC = () => {
-    const [isExpanded, setIsExpanded] = useState(() => {
-        return localStorage.getItem('chatbox_expanded') === 'true';
-    });
     const [isMinimized, setIsMinimized] = useState(() => {
         return localStorage.getItem('chatbox_minimized') === 'true';
     });
@@ -54,6 +64,7 @@ const ChatBox: React.FC = () => {
                                 text: chat.response,
                                 timestamp: new Date(chat.createdAt),
                                 isUser: false,
+                                source_documents: chat.source_documents || [],
                             },
                         ]);
 
@@ -79,17 +90,19 @@ const ChatBox: React.FC = () => {
 
     // Lưu trạng thái chatbox vào localStorage
     useEffect(() => {
-        localStorage.setItem('chatbox_expanded', String(isExpanded));
         localStorage.setItem('chatbox_minimized', String(isMinimized));
         localStorage.setItem('chatbox_type', chatType || '');
-    }, [isExpanded, isMinimized, chatType]);
-
-    const toggleExpand = () => {
-        setIsExpanded(!isExpanded);
-    };
+    }, [isMinimized, chatType]);
 
     const toggleMinimize = () => {
         setIsMinimized(!isMinimized);
+        // Nếu đang chuyển từ thu nhỏ sang mở rộng, cuộn xuống cuối
+        if (isMinimized) {
+            // Sử dụng setTimeout để đảm bảo DOM đã được cập nhật
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+        }
     };
 
     const handleBack = () => {
@@ -99,6 +112,10 @@ const ChatBox: React.FC = () => {
 
     const handleChatTypeChange = (type: ChatType) => {
         setChatType(type);
+        // Thêm setTimeout để đảm bảo DOM được cập nhật trước khi cuộn
+        setTimeout(() => {
+            scrollToBottom();
+        }, 100);
     };
 
     const handleSend = async () => {
@@ -110,33 +127,55 @@ const ChatBox: React.FC = () => {
             isUser: true,
         };
 
+        // Cập nhật state messages với tin nhắn của người dùng
         setMessages((prev) => [...prev, userMessage]);
         setMessage('');
 
         if (chatType === 'AI') {
             try {
-                console.log('Sending message to AI:', message.trim());
+                // Thêm thông báo đang xử lý
+                const loadingMessage = {
+                    text: 'Đang xử lý...',
+                    timestamp: new Date(),
+                    isUser: false,
+                };
 
+                // Cập nhật state với thông báo đang xử lý
+                setMessages((prev) => [...prev, loadingMessage]);
+
+                // Gọi API
                 const response = await axiosClient.post('/chatbot', {
-                    question: message.trim(),
+                    question: userMessage.text,
                     code: '888',
                 });
 
-                // console.log('Full API Response:', response);
-                // console.log('Response data:', response.data);
-                // console.log('AI Answer:', response.data?.answer);
-
+                // Xử lý phản hồi từ API
                 if (response.data?.answer) {
-                    const aiMessage = {
+                    // Tạo tin nhắn phản hồi
+                    const aiResponse = {
                         text: response.data.answer,
                         timestamp: new Date(),
                         isUser: false,
+                        source_documents: response.data.source_documents || [],
                     };
-                    console.log('Created AI message:', aiMessage);
-                    setMessages((prev) => [...prev, aiMessage]);
+
+                    // Cập nhật state messages bằng cách loại bỏ thông báo đang xử lý và thêm phản hồi mới
+                    setMessages((prev) => prev.filter((msg) => msg !== loadingMessage).concat(aiResponse));
                 }
             } catch (error) {
                 console.error('Error sending message to chatbot:', error);
+
+                // Hiển thị thông báo lỗi
+                setMessages((prev) =>
+                    prev
+                        .filter((msg) => msg.text !== 'Đang xử lý...')
+                        .concat({
+                            text: 'Xin lỗi, đã xảy ra lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.',
+                            timestamp: new Date(),
+                            isUser: false,
+                        }),
+                );
+
                 if (error instanceof AxiosError) {
                     console.error('Error response:', error.response?.data);
                     console.error('Error status:', error.response?.status);
@@ -145,24 +184,32 @@ const ChatBox: React.FC = () => {
         }
     };
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
+    // Đảm bảo cuộn xuống tin nhắn mới
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Thêm hàm xử lý khi click vào khu vực chat
+    const handleChatAreaClick = () => {
+        scrollToBottom();
+    };
+
     return (
         <div
-            className={`fixed bottom-4 right-4 bg-white rounded-lg shadow-lg transition-all duration-300 ${
-                isMinimized ? 'w-12 h-12' : isExpanded ? 'w-96 h-[500px]' : 'w-72 h-[200px]'
+            className={`fixed bottom-4 right-4 bg-white shadow-lg transition-all duration-300 z-50 ${
+                isMinimized
+                    ? 'w-12 h-12 rounded-full overflow-hidden animate-bounce hover:animate-none'
+                    : 'w-96 h-[500px] rounded-lg'
             }`}
         >
             {/* Header */}
             <div className="flex justify-between items-center p-3 bg-blue-900 text-blue-100 rounded-t-lg cursor-move">
                 <div className="flex items-center space-x-2">
-                    {chatType && (
+                    {chatType && !isMinimized && (
                         <button onClick={handleBack} className="hover:bg-blue-700/30 p-1 rounded">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -198,24 +245,6 @@ const ChatBox: React.FC = () => {
                             </svg>
                         )}
                     </button>
-                    {!isMinimized && (
-                        <button onClick={toggleExpand} className="hover:bg-blue-700/30 p-1 rounded">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
-                                />
-                            </svg>
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -242,7 +271,7 @@ const ChatBox: React.FC = () => {
                     ) : (
                         <>
                             {/* Chat messages area */}
-                            <div className="flex-1 p-2 overflow-y-auto pl-0">
+                            <div className="flex-1 p-2 overflow-y-auto pl-0" onClick={handleChatAreaClick}>
                                 {messages.map((msg, index) => (
                                     <div
                                         key={index}
@@ -261,24 +290,122 @@ const ChatBox: React.FC = () => {
                                                 {msg.isUser ? (
                                                     <p className="text-sm whitespace-pre-line">{msg.text}</p>
                                                 ) : (
-                                                    <ReactMarkdown
-                                                        components={{
-                                                            p: ({ children }) => (
-                                                                <p className="text-sm mb-2 last:mb-0">{children}</p>
-                                                            ),
-                                                            strong: ({ children }) => (
-                                                                <strong className="font-semibold">{children}</strong>
-                                                            ),
-                                                        }}
-                                                    >
-                                                        {msg.text}
-                                                    </ReactMarkdown>
+                                                    <>
+                                                        <ReactMarkdown
+                                                            remarkPlugins={[remarkGfm]}
+                                                            rehypePlugins={[rehypeRaw]}
+                                                            components={{
+                                                                p: ({ ...props }) => (
+                                                                    <p
+                                                                        className="text-sm mb-2 last:mb-0 markdown-content"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                                strong: ({ ...props }) => (
+                                                                    <strong className="font-semibold" {...props} />
+                                                                ),
+                                                                a: ({ ...props }) => (
+                                                                    <a
+                                                                        className="text-blue-600 hover:underline"
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                                code: ({
+                                                                    inline,
+                                                                    ...props
+                                                                }: {
+                                                                    inline?: boolean;
+                                                                } & React.HTMLAttributes<HTMLElement>) =>
+                                                                    inline ? (
+                                                                        <code
+                                                                            className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono"
+                                                                            {...props}
+                                                                        />
+                                                                    ) : (
+                                                                        <code
+                                                                            className="block bg-gray-100 p-2 rounded text-sm font-mono my-2 overflow-x-auto"
+                                                                            {...props}
+                                                                        />
+                                                                    ),
+                                                                ul: ({ ...props }) => (
+                                                                    <ul
+                                                                        className="list-disc pl-5 my-2 text-sm"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                                ol: ({ ...props }) => (
+                                                                    <ol
+                                                                        className="list-decimal pl-5 my-2 text-sm"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                                li: ({ ...props }) => (
+                                                                    <li className="mb-1" {...props} />
+                                                                ),
+                                                                h1: ({ ...props }) => (
+                                                                    <h1 className="text-xl font-bold my-3" {...props} />
+                                                                ),
+                                                                h2: ({ ...props }) => (
+                                                                    <h2 className="text-lg font-bold my-2" {...props} />
+                                                                ),
+                                                                h3: ({ ...props }) => (
+                                                                    <h3
+                                                                        className="text-base font-bold my-2"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                                blockquote: ({ ...props }) => (
+                                                                    <blockquote
+                                                                        className="border-l-4 border-gray-300 pl-3 italic my-2"
+                                                                        {...props}
+                                                                    />
+                                                                ),
+                                                            }}
+                                                        >
+                                                            {msg.text}
+                                                        </ReactMarkdown>
+
+                                                        {/* Hiển thị danh sách gia sư từ source_documents */}
+                                                        {msg.source_documents && msg.source_documents.length > 0 && (
+                                                            <div className="mt-3 pt-2 border-t border-gray-200">
+                                                                <p className="text-xs text-gray-500 mb-2">
+                                                                    Gia sư được đề xuất:
+                                                                </p>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {msg.source_documents.map((doc) => (
+                                                                        <a
+                                                                            key={doc.id}
+                                                                            href={`/tutor-profile/${doc.id}`}
+                                                                            className="flex items-center p-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                        >
+                                                                            <img
+                                                                                src={
+                                                                                    doc.avatar || '/default-avatar.png'
+                                                                                }
+                                                                                alt={doc.name}
+                                                                                className="w-6 h-6 rounded-full mr-1"
+                                                                            />
+                                                                            <span className="text-xs text-blue-700">
+                                                                                {doc.name}
+                                                                            </span>
+                                                                        </a>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
                                                 )}
                                             </div>
                                             <img
                                                 src={
                                                     msg.isUser
-                                                        ? user?.userProfile?.avatar || 'default-avatar.png'
+                                                        ? user
+                                                            ? user.userProfile?.avatar || Avatar
+                                                            : Avatar
                                                         : SmallIcon
                                                 }
                                                 alt={msg.isUser ? 'User' : 'AI'}

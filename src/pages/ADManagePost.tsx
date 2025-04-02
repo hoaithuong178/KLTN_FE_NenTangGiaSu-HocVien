@@ -8,8 +8,15 @@ import { AxiosError } from 'axios';
 import { Notification } from '../components/Notification';
 
 interface Post {
-    user: User;
-    subject: Subject;
+    user: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
+    subject: {
+        id: string;
+        name: string;
+    };
     id: string;
     grade: string;
     postTime: string;
@@ -25,25 +32,12 @@ interface Post {
     status: string;
     createdAt: string;
     updatedAt: string;
-    rejects: Reject[];
-}
-
-interface Subject {
-    id: string;
-    name: string;
-}
-
-interface User {
-    id: string;
-    name: string;
-    avatar: string;
-}
-
-interface Reject {
-    id: string;
-    postId: string;
-    reason: string;
-    createdAt: string;
+    rejects?: {
+        id: string;
+        postId: string;
+        reason: string;
+        createdAt: string;
+    }[];
 }
 
 const ADManagePost: React.FC = () => {
@@ -79,7 +73,7 @@ const ADManagePost: React.FC = () => {
     const fetchPostsByStatus = async (status: string) => {
         try {
             setLoading(true);
-            const response = await axiosClient.get(`/posts/status/${status}`);
+            const response = await axiosClient.get(`/posts/status/${status.toUpperCase()}`);
 
             if (response.data) {
                 console.log(`Posts with status ${status}:`, response.data);
@@ -95,7 +89,7 @@ const ADManagePost: React.FC = () => {
                     type: 'error',
                 });
             }
-            setPosts([]); // Set empty array on error
+            setPosts([]);
         } finally {
             setLoading(false);
         }
@@ -104,9 +98,9 @@ const ADManagePost: React.FC = () => {
     // Fetch posts when tab changes
     const handleTabChange = (activeKey: string) => {
         const statusMap: { [key: string]: string } = {
-            pending: 'PENDING',
-            approved: 'APPROVED',
-            rejected: 'REJECTED',
+            PENDING: 'PENDING',
+            APPROVED: 'APPROVED',
+            REJECTED: 'REJECTED',
         };
         fetchPostsByStatus(statusMap[activeKey]);
     };
@@ -150,22 +144,92 @@ const ADManagePost: React.FC = () => {
         if (!selectedPost) return;
 
         try {
-            // TODO: Gọi API reject post
-            setPosts(posts.map((p) => (p.id === selectedPost.id ? { ...p, status: 'REJECTED', rejectReason } : p)));
+            // Gọi API reject post với lý do từ chối
+            const response = await axiosClient.put(`/posts/${selectedPost.id}/reject`, {
+                reason: rejectReason,
+            });
+
+            setShowRejectModal(false);
+
+            // Cập nhật trạng thái bài đăng trong state
+            setPosts(
+                posts.map((p) =>
+                    p.id === selectedPost.id
+                        ? {
+                              ...p,
+                              status: 'REJECTED',
+                              rejects: [
+                                  ...(p.rejects || []),
+                                  {
+                                      id: response.data.id || Date.now().toString(),
+                                      postId: selectedPost.id,
+                                      reason: rejectReason,
+                                      createdAt: new Date().toISOString(),
+                                  },
+                              ],
+                          }
+                        : p,
+                ),
+            );
+
+            // Hiển thị thông báo thành công
             setNotification({
                 message: 'Đã từ chối bài đăng',
                 show: true,
                 type: 'success',
             });
-            setShowRejectModal(false);
+
+            // Reset state
             setRejectReason('');
             setSelectedPost(null);
-        } catch {
-            setNotification({
-                message: 'Có lỗi xảy ra',
-                show: true,
-                type: 'error',
-            });
+
+            // Làm mới trang sau 3 giây
+            setTimeout(() => {
+                // Làm mới dữ liệu
+                fetchPostsByStatus('PENDING');
+
+                // Ẩn thông báo
+                setNotification((prev) => ({ ...prev, show: false }));
+            }, 3000);
+        } catch (error) {
+            console.error('Error rejecting post:', error);
+            if (error instanceof AxiosError) {
+                const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi từ chối bài đăng';
+
+                // Đóng modal
+                setShowRejectModal(false);
+
+                // Hiển thị thông báo lỗi
+                setNotification({
+                    message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
+                    show: true,
+                    type: 'error',
+                });
+
+                // Ẩn thông báo sau 3 giây
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+            } else {
+                // Đóng modal
+                setShowRejectModal(false);
+
+                // Hiển thị thông báo lỗi
+                setNotification({
+                    message: 'Có lỗi xảy ra khi từ chối bài đăng',
+                    show: true,
+                    type: 'error',
+                });
+
+                // Ẩn thông báo sau 3 giây
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+            }
+
+            // Reset state
+            setRejectReason('');
+            setSelectedPost(null);
         }
     };
 
@@ -181,7 +245,7 @@ const ADManagePost: React.FC = () => {
                                 <h3 className="text-xl font-semibold text-[#1B223B]">{post.title}</h3>
                                 <p className="text-gray-600 mt-2">{post.content}</p>
                             </div>
-                            {status === 'pending' && (
+                            {status === 'PENDING' && (
                                 <div className="flex space-x-2">
                                     <Button
                                         type="primary"
@@ -206,7 +270,7 @@ const ADManagePost: React.FC = () => {
                                 </p>
                                 <p>
                                     <span className="font-semibold">Học phí:</span>{' '}
-                                    {post.feePerSession.toLocaleString('vi-VN')}đ/buổi
+                                    {post.feePerSession.toLocaleString('vi-VN')}đ/giờ
                                 </p>
                                 <p>
                                     <span className="font-semibold">Địa điểm:</span> {post.locations.join(', ')}
@@ -215,7 +279,7 @@ const ADManagePost: React.FC = () => {
                                     <span className="font-semibold">Số buổi/tuần:</span> {post.sessionPerWeek} buổi
                                 </p>
                                 <p>
-                                    <span className="font-semibold">Thời lượng/buổi:</span> {post.duration} giờ
+                                    <span className="font-semibold">Thời lượng/buổi:</span> {post.duration / 60} giờ
                                 </p>
                             </div>
                             <div>
@@ -247,7 +311,7 @@ const ADManagePost: React.FC = () => {
                                 </ul>
                             </div>
                         </div>
-                        {post.status === 'rejected' && post.rejects && post.rejects.length > 0 && (
+                        {post.status === 'REJECTED' && post.rejects && post.rejects.length > 0 && (
                             <div className="mt-4 p-3 bg-red-50 text-red-700 rounded">
                                 <p className="font-semibold">Lý do từ chối:</p>
                                 <ul className="list-disc list-inside pl-4">
@@ -272,15 +336,15 @@ const ADManagePost: React.FC = () => {
             <TopNavbar />
             <div className={`transition-all duration-300 ${isExpanded ? 'ml-64' : 'ml-20'} p-4`}>
                 <h1 className="text-2xl font-bold mb-6">Quản lý bài đăng</h1>
-                <Tabs defaultActiveKey="pending" onChange={handleTabChange}>
-                    <Tabs.TabPane tab="Chờ duyệt" key="pending">
-                        {loading ? <LoadingSkeleton /> : renderPostList('pending')}
+                <Tabs defaultActiveKey="PENDING" onChange={handleTabChange}>
+                    <Tabs.TabPane tab="Chờ duyệt" key="PENDING">
+                        {loading ? <LoadingSkeleton /> : renderPostList('PENDING')}
                     </Tabs.TabPane>
-                    <Tabs.TabPane tab="Đã duyệt" key="approved">
-                        {loading ? <LoadingSkeleton /> : renderPostList('approved')}
+                    <Tabs.TabPane tab="Đã duyệt" key="APPROVED">
+                        {loading ? <LoadingSkeleton /> : renderPostList('APPROVED')}
                     </Tabs.TabPane>
-                    <Tabs.TabPane tab="Đã từ chối" key="rejected">
-                        {loading ? <LoadingSkeleton /> : renderPostList('rejected')}
+                    <Tabs.TabPane tab="Đã từ chối" key="REJECTED">
+                        {loading ? <LoadingSkeleton /> : renderPostList('REJECTED')}
                     </Tabs.TabPane>
                 </Tabs>
                 <Modal
