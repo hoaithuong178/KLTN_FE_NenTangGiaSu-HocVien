@@ -3,7 +3,7 @@ import { Link as ScrollLink } from 'react-scroll';
 import Logo from '../assets/FullLogo.png';
 import { useAuthStore } from '../store/authStore';
 import { useState, useEffect, useRef } from 'react';
-import defaultAvatar from '../assets/avatar.jpg';
+import defaultAvatar from '../assets/avatar.jpg'; // Import default avatar
 
 const HeaderLanding = () => {
     const navigate = useNavigate();
@@ -11,6 +11,7 @@ const HeaderLanding = () => {
     const { user, logout } = useAuthStore();
     const [showDropdown, setShowDropdown] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Xử lý scroll
@@ -38,10 +39,11 @@ const HeaderLanding = () => {
         setShowDropdown(false);
     }, [location.pathname]);
 
-    const handleLogout = () => {
+    const handleLogoutConfirm = () => {
         localStorage.removeItem('token');
         logout();
         navigate('/');
+        setShowLogoutModal(false);
     };
 
     return (
@@ -145,6 +147,9 @@ const HeaderLanding = () => {
                                     src={user.userProfile?.avatar || user.avatar || defaultAvatar}
                                     alt="Avatar"
                                     className="h-10 w-10 rounded-full object-cover border-2 border-[#FFC569]"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = defaultAvatar; // Fallback to default avatar on error
+                                    }}
                                 />
                                 <span className="font-medium">Xin chào {user.name}</span>
                             </button>
@@ -166,7 +171,7 @@ const HeaderLanding = () => {
                                         Chuyển đến workspace
                                     </Link>
                                     <button
-                                        onClick={handleLogout}
+                                        onClick={() => setShowLogoutModal(true)}
                                         className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors"
                                     >
                                         Đăng xuất
@@ -208,6 +213,29 @@ const HeaderLanding = () => {
                     </button>
                 </div>
             </div>
+
+            {showLogoutModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Xác nhận đăng xuất</h2>
+                        <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn đăng xuất không?</p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowLogoutModal(false)}
+                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleLogoutConfirm}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                Đăng xuất
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </header>
     );
 };

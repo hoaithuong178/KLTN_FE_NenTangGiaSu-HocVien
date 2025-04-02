@@ -260,8 +260,8 @@ const EditProfile = () => {
                 address: currentUser.userProfile?.address || '',
                 gender: convertGender(currentUser.userProfile?.gender) || '', // Use gender from userProfile
                 dob: currentUser.userProfile?.dob
-                    ? new Date(currentUser.userProfile.dob).toISOString().split('T')[0]
-                    : '', // Format date to YYYY-MM-DD
+                    ? new Date(currentUser.userProfile.dob).toLocaleDateString('en-GB').split('/').join('')
+                    : '', // Format date to ddmmyyyy
                 description: currentUser.tutorProfile?.description || '',
                 role: currentUser.role || '',
                 // Tutor-specific information
