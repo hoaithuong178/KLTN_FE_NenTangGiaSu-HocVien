@@ -132,9 +132,9 @@ const TutorProfile: React.FC = () => {
 
             userProfile: data.userProfile || {
                 avatar: (data.userProfile as UserProfile | undefined)?.avatar || defaultAvatar,
-                gender: data.userProfile?.gender || 'Unknown',
-                dob: data.userProfile?.dob || '',
-                address: data.userProfile?.address || '',
+                 gender: 'Unknown',
+                dob: '',
+                address: '',
             },
             tutorProfile: data.tutorProfile
                 ? {
