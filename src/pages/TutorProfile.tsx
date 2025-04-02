@@ -56,6 +56,13 @@ export interface TutorProfileComponentTutor {
     currentUserId?: string;
 }
 
+interface UserProfile {
+    avatar?: string;
+    gender?: string;
+    dob?: string;
+    address?: string;
+}
+
 const TutorProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
@@ -123,7 +130,7 @@ const TutorProfile: React.FC = () => {
             status: data.status,
             violate: data.violate,
             userProfile: data.userProfile || {
-                avatar: data.userProfile?.avatar || defaultAvatar,
+                avatar: (data.userProfile as UserProfile | undefined)?.avatar || defaultAvatar,
                 gender: 'Unknown',
                 dob: '',
                 address: '',
