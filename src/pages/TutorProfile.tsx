@@ -123,10 +123,10 @@ const TutorProfile: React.FC = () => {
             status: data.status,
             violate: data.violate,
             userProfile: {
-                avatar: data.userProfile?.avatar || defaultAvatar,
-                gender: data.userProfile?.gender || 'Unknown',
-                dob: data.userProfile?.dob || '',
-                address: data.userProfile?.address || '',
+                avatar: (data as TutorProfileComponentTutor).userProfile?.avatar || defaultAvatar,
+                gender: (data as TutorProfileComponentTutor).userProfile?.gender || 'Unknown',
+                dob: (data as TutorProfileComponentTutor).userProfile?.dob || '',
+                address: (data as TutorProfileComponentTutor).userProfile?.address || '',
             },
             tutorProfile: data.tutorProfile
                 ? {

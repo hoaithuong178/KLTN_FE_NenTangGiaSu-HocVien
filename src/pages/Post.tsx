@@ -1,5 +1,3 @@
-// Post.tsx
-import { Slider, Form } from 'antd';
 import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
 import Avatar from '../assets/avatar.jpg';
@@ -14,13 +12,13 @@ import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
-import ChatBox from '../components/ChatBox';
 
 interface Subject {
     id: string;
     name: string;
 }
 import { useLocation } from 'react-router-dom';
+import { Slider } from 'antd';
 
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
@@ -50,10 +48,15 @@ const Post: React.FC = () => {
     type APIPost = Omit<Post, 'mode'> & { mode: string };
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true); // Thêm state để theo dõi trạng thái tải dữ liệu
-    const [form] = Form.useForm();
 
     const [postTitle, setPostTitle] = useState('');
     const [content, setContent] = useState('');
+
+    // Thêm state để lưu địa chỉ nhập vào
+    const [location, setLocation] = useState<string>(
+        Array.isArray(user?.location) ? user.location[0] || '' : user?.location || '',
+    );
+    const [showLocationInput, setShowLocationInput] = useState<boolean>(!user?.location);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -106,6 +109,7 @@ const Post: React.FC = () => {
     };
 
     const closePopupPost = () => {
+        console.log('Closing post popup');
         setShowPopup(false);
     };
 
@@ -135,10 +139,9 @@ const Post: React.FC = () => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [negotiatedPrice, setNegotiatedPrice] = useState('');
     const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Sửa để ban đầu là null
-    const [subject, setSubject] = useState<string>('');
+    const [, setSubject] = useState<string>('');
     const [grade, setGrade] = useState('');
     const [studyMode, setStudyMode] = useState('');
-    const [, setLocation] = useState('Địa chỉ của học viên');
     const [sessionsPerWeek, setSessionsPerWeek] = useState('');
     const [duration, setDuration] = useState('');
     const [requirements, setRequirements] = useState('');
@@ -272,14 +275,14 @@ const Post: React.FC = () => {
         }
         if (schedule) {
             return (
-                <div className="mt-1">
+                <span className="mt-1 block">
                     {schedule.map((time, i) => (
-                        <div key={i} className="ml-2">
+                        <span key={i} className="ml-2 block">
                             {'- '}
                             {String(time)}
-                        </div>
+                        </span>
                     ))}
-                </div>
+                </span>
             );
         }
         // Giữ lại logic cũ cho text thông thường
@@ -390,92 +393,156 @@ const Post: React.FC = () => {
     };
     const [selectedGrade, setSelectedGrade] = useState('');
 
+    // Thêm state để lưu subject đã chọn
+    const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+
+    // Thêm state để theo dõi trạng thái đang gửi request
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const handleSubmitPost = async () => {
+        // Nếu đang trong quá trình gửi, không cho phép gửi lại
+        if (isSubmitting) return;
+
         try {
-            let selectedSubject;
+            setIsSubmitting(true); // Đánh dấu đang gửi request
 
-            // Tìm subject trong danh sách có sẵn
-            const existingSubject = subjects.find((s) => s.name === subject);
-
-            if (!existingSubject) {
-                // Nếu không tìm thấy, tạo subject mới
-                try {
-                    const response = await axiosClient.post('/subjects', {
-                        name: subject,
-                    });
-                    selectedSubject = response.data;
-                } catch (error) {
-                    console.error('Error creating new subject:', error);
-                    setNotification({
-                        message: 'Có lỗi xảy ra khi tạo môn học mới',
-                        show: true,
-                        type: 'error',
-                    });
-                    return;
-                }
-            } else {
-                selectedSubject = existingSubject;
-            }
-
-            const formattedData = {
-                user: {
-                    id: String(user?.id) || '',
-                    name: user?.name || '',
-                    avatar: user?.userProfile?.avatar || '',
-                },
-                id: crypto.randomUUID(),
-                title: postTitle,
-                content,
-                subject: {
-                    id: selectedSubject.id,
-                    name: selectedSubject.name,
-                },
-                grade,
-                postTime: new Date().toISOString(),
-                mode: studyMode === 'Online',
-                locations: Array.isArray(user?.location) ? user.location : [user?.location || ''],
-                sessionPerWeek: Number(sessionsPerWeek.replace(/\D/g, '')),
-                duration: Number(duration.replace(/\D/g, '')),
-                requirements: requirements.split('\n').filter((r) => r),
-                schedule: postAvailableTimes
-                    .filter((t) => t.day && t.from && t.to)
-                    .map((t) => `${t.day} từ ${t.from} - ${t.to}`),
-                feePerSession: maxPrice,
-                status: 'PENDING',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-
-            console.log('Sending data:', formattedData);
-
-            const response = await axiosClient.post('/posts', formattedData);
-
-            if (response.status === 201) {
+            // Kiểm tra các trường bắt buộc
+            if (!postTitle || !content || !selectedSubjectId || !grade || !studyMode || !sessionsPerWeek || !duration) {
                 setNotification({
-                    message: 'Đăng bài thành công, vui lòng chờ admin phê duyệt',
+                    message: 'Vui lòng điền đầy đủ thông tin bắt buộc',
                     show: true,
-                    type: 'success',
+                    type: 'error',
                 });
                 setTimeout(() => {
                     setNotification((prev) => ({ ...prev, show: false }));
                 }, 3000);
-                setShowPopup(false);
-                form.resetFields();
+                setIsSubmitting(false); // Reset trạng thái
+                return;
             }
-        } catch (error: unknown) {
-            if (error instanceof AxiosError) {
-                console.log('Request data:', error.response?.data);
-                console.log('Error message:', error.response?.data.message); // Thêm log chi tiết message
+
+            // Đảm bảo các giá trị số đúng định dạng
+            const sessionPerWeekValue = parseInt(sessionsPerWeek.replace(/\D/g, ''));
+
+            // Chuyển đổi duration từ giờ sang phút
+            let durationValue = 0;
+            if (duration.includes('giờ')) {
+                // Trích xuất số từ chuỗi (ví dụ: "1.5 giờ" -> 1.5)
+                const hourMatch = duration.match(/(\d+(\.\d+)?)/);
+                if (hourMatch) {
+                    const hours = parseFloat(hourMatch[0]);
+                    durationValue = Math.round(hours * 60); // Chuyển giờ sang phút và làm tròn
+                }
+            } else {
+                // Nếu đã là phút thì chỉ cần lấy số
+                durationValue = parseInt(duration.replace(/\D/g, ''));
             }
+
+            console.log(`Chuyển đổi thời lượng: ${duration} -> ${durationValue} phút`);
+
+            // Lọc thời gian rảnh hợp lệ
+            const validSchedules = postAvailableTimes
+                .filter((t) => t.day && t.from && t.to)
+                .map((t) => `${t.day} từ ${t.from} - ${t.to}`);
+
+            if (validSchedules.length === 0) {
+                setNotification({
+                    message: 'Vui lòng chọn ít nhất một khung thời gian rảnh',
+                    show: true,
+                    type: 'error',
+                });
+                return;
+            }
+
+            // Sử dụng địa chỉ từ input nếu đã nhập, nếu không thì dùng địa chỉ của user
+            const userLocation = showLocationInput ? location : user?.location || '';
+
+            // Thêm thời gian đăng bài (thời gian hiện tại)
+            const postTime = new Date().toISOString();
+
+            // Trước khi gửi request
+            console.log('Selected subject ID:', selectedSubjectId);
+
+            // Định dạng dữ liệu theo mẫu API yêu cầu
+            const formattedData = {
+                title: postTitle,
+                content: content,
+                subject: selectedSubjectId, // Gửi ID dưới dạng chuỗi, không phải đối tượng
+                grade: grade,
+                mode: studyMode === 'Online',
+                locations: [userLocation],
+                sessionPerWeek: sessionPerWeekValue,
+                duration: durationValue,
+                requirements: requirements.split('\n').filter((r) => r),
+                schedule: validSchedules,
+                feePerSession: parseInt(String(maxPrice)),
+                postTime: postTime,
+            };
+
+            console.log('Sending data:', JSON.stringify(formattedData));
+
+            await axiosClient.post('/posts', formattedData);
+
+            console.log('Post created successfully');
+
+            // Đóng popup
+            setShowPopup(false);
+
+            // Reset form
+            setPostTitle('');
+            setContent('');
+            setSelectedSubjectId('');
+            setGrade('');
+            setStudyMode('');
+            setSessionsPerWeek('');
+            setDuration('');
+            setRequirements('');
+            setPostAvailableTimes([{ day: '', from: '', to: '' }]);
+            setMaxPrice(30000);
+
+            // Hiển thị thông báo thành công
             setNotification({
-                message: 'Có lỗi xảy ra khi đăng bài',
+                message: 'Đăng bài thành công, vui lòng chờ admin phê duyệt',
                 show: true,
-                type: 'error',
+                type: 'success',
             });
+
+            // Tự động ẩn thông báo sau 3 giây
             setTimeout(() => {
                 setNotification((prev) => ({ ...prev, show: false }));
             }, 3000);
+        } catch (error) {
             console.error('Error posting:', error);
+            if (error instanceof AxiosError) {
+                console.log('Request data:', error.config?.data);
+                console.log('Error response:', error.response?.data);
+
+                // Hiển thị thông báo lỗi cụ thể từ server nếu có
+                if (error.response?.data?.message) {
+                    const errorMessage = Array.isArray(error.response.data.message)
+                        ? error.response.data.message[0]
+                        : error.response.data.message;
+
+                    setNotification({
+                        message: errorMessage,
+                        show: true,
+                        type: 'error',
+                    });
+                    setTimeout(() => {
+                        setNotification((prev) => ({ ...prev, show: false }));
+                    }, 3000);
+                } else {
+                    setNotification({
+                        message: 'Có lỗi xảy ra khi đăng bài',
+                        show: true,
+                        type: 'error',
+                    });
+                    setTimeout(() => {
+                        setNotification((prev) => ({ ...prev, show: false }));
+                    }, 3000);
+                }
+            }
+        } finally {
+            setIsSubmitting(false); // Reset trạng thái khi hoàn thành
         }
     };
 
@@ -619,7 +686,6 @@ const Post: React.FC = () => {
             <div className="absolute top-0 left-0 flex h-screen w-screen bg-white z-10">
                 <Navbar isExpanded={isExpanded} toggleNavbar={toggleNavbar} />
                 <TopNavbar />
-                <ChatBox />
                 <div
                     className={`flex-1 p-6 transition-all duration-300 ${
                         isExpanded ? 'ml-56' : 'ml-16'
@@ -696,21 +762,29 @@ const Post: React.FC = () => {
                                         onChange={(value) => setContent(value)}
                                     />
                                     <div className="mt-4">
-                                        <label className="block text-gray-700 font-bold mb-2">Môn học</label>
-                                        <input
-                                            list="subjects"
-                                            value={subject}
-                                            onChange={(e) => setSubject(e.target.value)}
-                                            onFocus={(e) => e.target.select()}
-                                            placeholder="Chọn hoặc nhập môn học"
-                                            className="border p-2 rounded w-full"
-                                            required
-                                        />
-                                        <datalist id="subjects">
-                                            {subjects.map((subject, index) => (
-                                                <option key={index} value={subject.name} />
+                                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                                            Môn học <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            value={selectedSubjectId}
+                                            onChange={(e) => {
+                                                const id = e.target.value;
+                                                setSelectedSubjectId(id);
+                                                // Tìm tên subject tương ứng với ID
+                                                const selected = subjects.find((s) => s.id === id);
+                                                if (selected) {
+                                                    setSubject(selected.name);
+                                                }
+                                            }}
+                                        >
+                                            <option value="">-- Chọn môn học --</option>
+                                            {subjects.map((s) => (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.name}
+                                                </option>
                                             ))}
-                                        </datalist>
+                                        </select>
                                     </div>
                                     <ComboBox
                                         title="Khối học"
@@ -743,18 +817,31 @@ const Post: React.FC = () => {
                                         value={studyMode}
                                         onChange={(value) => setStudyMode(value)}
                                     />
-                                    <InputField
-                                        type="text"
-                                        title="Địa điểm"
-                                        placeholder="Địa chỉ của học viên"
-                                        required={true}
-                                        value={
-                                            Array.isArray(user?.location)
-                                                ? user.location.join(', ')
-                                                : user?.location || ''
-                                        }
-                                        onChange={(value) => setLocation(value)}
-                                    />
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700 text-sm font-bold mb-2">Địa chỉ</label>
+                                        {!showLocationInput ? (
+                                            <div className="flex items-center">
+                                                <span className="block w-full bg-gray-100 p-2 rounded">
+                                                    {user?.location || 'Chưa có địa chỉ'}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    className="ml-2 text-blue-500 hover:text-blue-700"
+                                                    onClick={() => setShowLocationInput(true)}
+                                                >
+                                                    Thay đổi
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                placeholder="Nhập địa chỉ của bạn"
+                                            />
+                                        )}
+                                    </div>
                                     <ComboBox
                                         title="Số buổi/tuần"
                                         options={['1 buổi', '2 buổi', '3 buổi', '4 buổi', '5 buổi']}
@@ -841,19 +928,20 @@ const Post: React.FC = () => {
                                             onTimesChange={setPostAvailableTimes}
                                         />
                                     </div>
-                                    <div className="flex justify-between mt-6">
+                                    <div className="flex justify-end mt-6">
                                         <button
                                             type="button"
-                                            onClick={togglePopup}
-                                            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
+                                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md mr-2"
+                                            onClick={closePopupPost}
                                         >
-                                            Đóng
+                                            Hủy
                                         </button>
                                         <button
                                             type="submit"
-                                            className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                                            disabled={isSubmitting}
                                         >
-                                            Đăng bài
+                                            {isSubmitting ? 'Đang đăng...' : 'Đăng bài'}
                                         </button>
                                     </div>
                                 </form>
