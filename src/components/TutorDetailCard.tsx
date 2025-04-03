@@ -32,10 +32,6 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
 
     // Xử lý click vào card
     const handleCardClick = () => {
-        // Chuyển đổi id sang số
-        const tutorId =
-            typeof tutor.id === 'string' ? parseInt(String(tutor.id).replace(/\D/g, '')) || 0 : tutor.id || 0;
-
         // Xử lý địa điểm dạy
         const locations =
             Array.isArray(tutor.tutorProfile?.tutorLocations) && tutor.tutorProfile?.tutorLocations.length > 0
@@ -44,7 +40,7 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
 
         const correctedTutor = {
             ...tutor,
-            id: tutorId,
+            id: tutor.id || tutor.id || '',
             email: tutor.email || tutor.email || '',
             phone: tutor.phone || tutor.phone || '',
             learningTypes: Array.isArray(tutor.tutorProfile?.learningTypes)
@@ -56,7 +52,7 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
             tutorLocations: locations,
         };
 
-        navigate(`/tutor-profile/${tutorId}`, { state: correctedTutor });
+        navigate(`/tutor-profile/${tutor.id}`, { state: correctedTutor });
     };
 
     return (

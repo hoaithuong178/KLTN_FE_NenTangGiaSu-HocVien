@@ -47,7 +47,22 @@ const Tutor: React.FC = () => {
             const API_URL = import.meta.env.VITE_APP_API_BASE_URL;
             if (!API_URL) throw new Error('API_BASE_URL not set in .env');
 
-            const response = await axios.get(`${API_URL}/tutors/search?page=1&limit=10`);
+            let response;
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userRole = user?.role;
+
+            // Kiểm tra vai trò người dùng và gọi API tương ứng
+            if (userRole === 'TUTOR') {
+                // Nếu là gia sư, lấy danh sách gia sư được đề xuất cho gia sư
+                response = await axios.get(`${API_URL}/recommend/tutor-for-tutor`);
+            } else if (userRole === 'STUDENT') {
+                // Nếu là học sinh, lấy danh sách gia sư được đề xuất cho học sinh
+                response = await axios.get(`${API_URL}/recommend/tutor-for-student`);
+            } else {
+                // Trường hợp khác hoặc chưa đăng nhập, lấy tất cả gia sư
+                response = await axios.get(`${API_URL}/tutors/search?page=1&limit=10`);
+            }
+
             const tutorsData = response.data?.data;
 
             if (!Array.isArray(tutorsData)) throw new Error('Invalid tutor list from API');

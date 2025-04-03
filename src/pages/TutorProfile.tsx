@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from '../components/icons';
 import { Button } from '../components/Button';
 import { useAuthStore } from '../store/authStore';
+import defaultAvatar from '../assets/avatar.jpg';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -26,7 +27,7 @@ export interface TutorProfileComponentTutor {
     status?: string;
     violate?: number;
     userProfile?: {
-        avatar: string;
+        avatar?: string;
         gender: string;
         dob: string;
         address: string;
@@ -42,7 +43,7 @@ export interface TutorProfileComponentTutor {
         specializations: string[];
         learningTypes: string[];
         reviews?: {
-            avatar: string;
+            avatar?: string;
             name: string;
             date: string;
             content: string;
@@ -121,11 +122,11 @@ const TutorProfile: React.FC = () => {
             currentUserId: isCurrentUser ? data.id : data.currentUserId,
             status: data.status,
             violate: data.violate,
-            userProfile: data.userProfile || {
-                avatar: 'https://via.placeholder.com/150',
-                gender: 'Unknown',
-                dob: '',
-                address: '',
+            userProfile: {
+                avatar: (data as TutorProfileComponentTutor).userProfile?.avatar || defaultAvatar,
+                gender: (data as TutorProfileComponentTutor).userProfile?.gender || 'Unknown',
+                dob: (data as TutorProfileComponentTutor).userProfile?.dob || '',
+                address: (data as TutorProfileComponentTutor).userProfile?.address || '',
             },
             tutorProfile: data.tutorProfile
                 ? {
