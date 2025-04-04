@@ -3,7 +3,7 @@ import { Text } from './Text'; // Import Text component
 
 interface ButtonProps {
     variant?: 'primary' | 'secondary' | 'danger';
-    onClick?: (e: React.MouseEvent<Element>) => void;
+    onClick?: (e: React.MouseEvent<Element>) => void; 
     className?: string;
     children?: React.ReactNode; // Thêm thuộc tính children
     title: string; // Tiêu đề của nút
