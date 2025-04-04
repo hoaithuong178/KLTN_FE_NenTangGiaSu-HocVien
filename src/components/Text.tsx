@@ -62,3 +62,43 @@ export const TitleText: React.FC<TitleTextProps> = ({
         </Tag>
     );
 };
+
+interface MultiLineTextProps {
+    text?: string;
+    locations?: string[];
+    schedule?: string[];
+}
+
+export const MultiLineText: React.FC<MultiLineTextProps> = ({ text, locations, schedule }) => {
+    if (text) {
+        return <span className="whitespace-pre-line">{text}</span>;
+    }
+
+    if (locations && locations.length > 0) {
+        return (
+            <span className="whitespace-pre-line">
+                {locations.map((location, index) => (
+                    <React.Fragment key={index}>
+                        {location}
+                        {index < locations.length - 1 && <br />}
+                    </React.Fragment>
+                ))}
+            </span>
+        );
+    }
+
+    if (schedule && schedule.length > 0) {
+        return (
+            <span className="whitespace-pre-line">
+                {schedule.map((time, index) => (
+                    <React.Fragment key={index}>
+                        {time}
+                        {index < schedule.length - 1 && <br />}
+                    </React.Fragment>
+                ))}
+            </span>
+        );
+    }
+
+    return null;
+};
