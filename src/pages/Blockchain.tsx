@@ -68,7 +68,7 @@ const Blockchain = () => {
             const contractParams = {
                 id: v4(),
                 studentId: 'cm7q4px020000opjkjc1lwvm1',
-                tutorId: 'cm5xogoc60000op6snb2cc6cn',
+                tutorId: 'cm6040phs0000opwcxnqmgv1h',
                 classId: v4(),
                 startDate: Math.floor(Date.now() / 1000),
                 endDate: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 ngày
