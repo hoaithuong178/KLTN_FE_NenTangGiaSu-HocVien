@@ -24,7 +24,7 @@ interface User {
     id: string;
     avatar?: string;
     name: string;
-    userProfile?: {
+    user?: {
         avatar?: string;
     };
 }
@@ -734,11 +734,7 @@ const Post: React.FC = () => {
                             }`}
                         >
                             <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <img
-                                    src={user?.userProfile?.avatar || Avatar}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={user?.avatar || Avatar} alt="Avatar" className="w-full h-full object-cover" />
                             </div>
                             <button
                                 onClick={togglePopup}
@@ -1026,11 +1022,7 @@ const Post: React.FC = () => {
                                     {/* User Info & Title Section */}
                                     <div className="flex items-center space-x-4 mb-2">
                                         <img
-                                            src={
-                                                (post.user as User)?.userProfile?.avatar ||
-                                                post.user?.avatar ||
-                                                'https://via.placeholder.com/50'
-                                            }
+                                            src={(post.user as User)?.user?.avatar || post.user?.avatar || Avatar}
                                             alt={post.user?.name || 'User'}
                                             className="w-10 h-10 rounded-full"
                                             onError={(e) => {
