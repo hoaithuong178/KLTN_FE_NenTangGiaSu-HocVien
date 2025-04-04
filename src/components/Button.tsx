@@ -1,7 +1,11 @@
 import React from 'react';
 import { Text } from './Text'; // Import Text component
 
-type ButtonProps = {
+interface ButtonProps {
+    variant: 'primary' | 'secondary' | 'danger';
+    onClick?: () => void;
+    className?: string;
+    children?: React.ReactNode; // Thêm thuộc tính children
     title: string; // Tiêu đề của nút
     foreColor?: string; // Màu chữ
     backgroundColor?: string; // Màu nền
@@ -11,11 +15,9 @@ type ButtonProps = {
     disabledBackgroundColor?: string; // Màu nền khi nút bị disable
     size?: 'small' | 'medium' | 'large'; // Kích thước chữ
     weight?: 'normal' | 'bold'; // Độ đậm
-    className?: string; // ClassName để tùy chỉnh width và height
-    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void; // Hàm callback khi nút được nhấn
     disabled?: boolean; // Trạng thái nút bị vô hiệu hóa
     type?: 'button' | 'submit' | 'reset'; // Loại nút
-};
+}
 
 export const Button: React.FC<ButtonProps> = ({
     title,

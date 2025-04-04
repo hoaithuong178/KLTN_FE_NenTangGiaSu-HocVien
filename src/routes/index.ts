@@ -27,6 +27,7 @@ const ADManagePost = lazy(() => import('../pages/ADManagePost'));
 const ADManageUser = lazy(() => import('../pages/ADManageUser'));
 const ADManageClass = lazy(() => import('../pages/ADManageClass'));
 const HomeLanding = lazy(() => import('../pages/HomeLanding'));
+const PostDetail = lazy(() => import('../pages/PostDetail'));
 
 export interface IRoute {
     path: string;
@@ -62,6 +63,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/admin-class', component: ADManageClass },
     { path: '/privacy-policy', component: PrivacyPolicy },
     { path: '/user-data-deletion', component: UserDataDeletion },
+    { path: '/post-detail/:id', component: PostDetail },
     { path: '*', component: NotFound },
 ];
 
