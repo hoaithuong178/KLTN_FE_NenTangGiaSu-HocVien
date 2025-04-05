@@ -12,6 +12,8 @@ interface InputFieldProps {
     required?: boolean;
     className?: string; // Allow className to be passed for custom styles
     value?: string;
+    onEnterPress?: () => void; // Thêm prop để xử lý sự kiện Enter
+    inputRef?: React.RefObject<HTMLInputElement>; // Thêm ref để focus input
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -25,6 +27,8 @@ export const InputField: React.FC<InputFieldProps> = ({
     required = false, // Default to not required
     className = '', // Default className is empty if not provided
     value = '', // Default value is empty string
+    onEnterPress,
+    inputRef,
 }) => {
     const [inputValue, setInputValue] = useState<string>(value); // Sử dụng value từ props làm giá trị mặc định
     const [error, setError] = useState<string>(''); // To store error message
@@ -53,6 +57,13 @@ export const InputField: React.FC<InputFieldProps> = ({
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && onEnterPress) {
+            e.preventDefault(); // Ngăn form submit nếu nằm trong form
+            onEnterPress();
+        }
+    };
+
     return (
         <div className="mb-6 mt-5">
             {/* Display title with required asterisk */}
@@ -61,9 +72,11 @@ export const InputField: React.FC<InputFieldProps> = ({
             </Text>
             {/* Input field with dynamic class */}
             <input
+                ref={inputRef}
                 type={type}
                 value={inputValue}
                 onChange={handleChange}
+                onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className={`w-full p-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 ${className} ${
                     error || errorTitle ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
