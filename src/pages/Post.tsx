@@ -2,31 +2,47 @@ import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
 import Avatar from '../assets/avatar.jpg';
 import FreeTimeSelection from '../components/FreeTimeSelection';
-import { CoppyLinkIcon, FilterIcon, HeartIcon } from '../components/icons';
+import { CoppyLinkIcon, FilterIcon } from '../components/icons';
 import { Checkbox, ComboBox, InputField, RadioButton } from '../components/InputField';
 import Navbar from '../components/Navbar'; // Đảm bảo đúng đường dẫn
 import { Notification } from '../components/Notification';
-import { TitleText } from '../components/Text';
+import { MultiLineText, TitleText } from '../components/Text';
 import TopNavbar from '../components/TopNavbar';
 import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Slider } from 'antd';
 
 interface Subject {
     id: string;
     name: string;
 }
-import { useLocation } from 'react-router-dom';
-import { Slider } from 'antd';
 
 interface User {
     id: string;
     avatar?: string;
     name: string;
-    userProfile?: {
+    user?: {
         avatar?: string;
     };
+}
+
+// Thêm interfaces cho dữ liệu địa chỉ
+interface Province {
+    code: string;
+    name: string;
+}
+
+interface District {
+    code: string;
+    name: string;
+}
+
+interface Ward {
+    code: string;
+    name: string;
 }
 
 const Post: React.FC = () => {
@@ -42,7 +58,6 @@ const Post: React.FC = () => {
     const [showPopup, setShowPopup] = useState(showCreatePostModal);
     const [minPrice, setMinPrice] = useState(20000);
     const [maxPrice, setMaxPrice] = useState(50000);
-    // const [availableTimes] = useState([{ day: '', from: '', to: '' }]);
     const toggleNavbar = () => {
         setIsExpanded((prev) => !prev);
     };
@@ -62,67 +77,89 @@ const Post: React.FC = () => {
     const [content, setContent] = useState('');
 
     // Thêm state để lưu địa chỉ nhập vào
-    const [location, setLocation] = useState<string>(
-        Array.isArray(user?.location) ? user.location[0] || '' : user?.location || '',
-    );
-    const [showLocationInput, setShowLocationInput] = useState<boolean>(!user?.location);
+    const [location] = useState<string>(Array.isArray(user?.location) ? user.location[0] || '' : user?.location || '');
+    const [showLocationInput] = useState<boolean>(!user?.location);
 
+    const navigate = useNavigate();
+
+    // State cho danh sách địa chỉ
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [districts, setDistricts] = useState<District[]>([]);
+    const [wards, setWards] = useState<Ward[]>([]);
+
+    const [selectedProvince, setSelectedProvince] = useState<string>('');
+    const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+    const [selectedWard, setSelectedWard] = useState<string>('');
+
+    // Fetch danh sách tỉnh/thành phố khi component mount
     useEffect(() => {
-        const fetchPosts = async () => {
+        const fetchProvinces = async () => {
             try {
-                setLoading(true);
-                let response;
-
-                // Kiểm tra vai trò người dùng và gọi API tương ứng
-                if (user?.role === 'STUDENT') {
-                    // Nếu là học sinh, lấy bài đăng được đề xuất cho học sinh
-                    response = await axiosClient.get('/recommend/post-for-student');
-                } else if (user?.role === 'TUTOR') {
-                    // Nếu là gia sư, lấy bài đăng được đề xuất cho gia sư
-                    response = await axiosClient.get('/recommend/post-for-tutor?min_score=0');
-                } else {
-                    // Trường hợp khác hoặc chưa đăng nhập, lấy tất cả bài đăng
-                    response = await axiosClient.get('/posts');
-                }
-
-                if (response.data) {
-                    console.log('Response data:', response.data);
-
-                    const formattedPosts = response.data.map((post: APIPost) => ({
-                        ...post,
-                        mode: String(post.mode).toLowerCase() === 'true',
-                    }));
-
-                    setPosts(formattedPosts);
-                }
+                const response = await fetch('https://provinces.open-api.vn/api/?depth=1');
+                const data = await response.json();
+                setProvinces(data);
             } catch (error) {
-                console.error('Error fetching posts:', error);
-                if (error instanceof AxiosError) {
-                    const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi tải bài viết';
-                    setNotification({
-                        message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
-                        show: true,
-                        type: 'error',
-                    });
-                    setTimeout(() => {
-                        setNotification((prev) => ({ ...prev, show: false }));
-                    }, 3000);
-                    setPosts([]); // Set empty array on error
-                }
-            } finally {
-                setLoading(false);
+                console.error('Lỗi khi lấy danh sách tỉnh/thành phố:', error);
             }
         };
 
-        fetchPosts();
-    }, [user?.role]); // Thêm user?.role vào dependency array để khi vai trò thay đổi sẽ gọi lại API
+        fetchProvinces();
+    }, []);
+
+    // Fetch danh sách quận/huyện khi chọn tỉnh/thành phố
+    const handleProvinceChange = (provinceCode: string) => {
+        setSelectedProvince(provinceCode);
+        setSelectedDistrict('');
+        setSelectedWard('');
+
+        if (!provinceCode) {
+            setDistricts([]);
+            return;
+        }
+
+        const fetchDistricts = async () => {
+            try {
+                const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+                const data = await response.json();
+                setDistricts(data.districts);
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách quận/huyện:', error);
+            }
+        };
+
+        fetchDistricts();
+    };
+
+    // Fetch danh sách phường/xã khi chọn quận/huyện
+    const handleDistrictChange = (districtCode: string) => {
+        setSelectedDistrict(districtCode);
+        setSelectedWard('');
+
+        if (!districtCode) {
+            setWards([]);
+            return;
+        }
+
+        const fetchWards = async () => {
+            try {
+                const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+                const data = await response.json();
+                setWards(data.wards);
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách phường/xã:', error);
+            }
+        };
+
+        fetchWards();
+    };
 
     const bgColors = ['#EBF5FF', '#E6F0FD', '#F0F7FF'];
 
     const [isOpen, setIsOpen] = useState(false);
 
     const togglePopupFilter = () => {
-        setIsOpen((prev) => !prev);
+        console.log('togglePopupFilter được gọi, isOpen hiện tại:', isOpen);
+        setIsOpen(!isOpen);
     };
 
     const closePopupFilter = () => {
@@ -136,8 +173,6 @@ const Post: React.FC = () => {
 
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedCity, setSelectedCity] = useState('');
-    const [selectedDistrict, setSelectedDistrict] = useState('');
-    const [selectedWard, setSelectedWard] = useState('');
     const [selectedStudyMode, setSelectedStudyMode] = useState<string[]>([]);
     const [selectedSessionPerWeek, setSelectedSessionPerWeek] = useState<string[]>([]);
     const [selectedDuration, setSelectedDuration] = useState<string[]>([]);
@@ -167,7 +202,7 @@ const Post: React.FC = () => {
     const [duration, setDuration] = useState('');
     const [requirements, setRequirements] = useState('');
 
-    const [favoritePosts, setFavoritePosts] = useState<number[]>([]);
+    // const [favoritePosts, setFavoritePosts] = useState<string[]>([]);
 
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
         message: '',
@@ -175,28 +210,67 @@ const Post: React.FC = () => {
         type: 'success',
     });
 
-    const handleFavorite = (postId: number) => {
-        const isFavorite = favoritePosts.includes(postId);
-        if (isFavorite) {
-            setFavoritePosts((prev) => prev.filter((id) => id !== postId));
-            setNotification({
-                message: 'Đã xóa yêu thích bài viết',
-                show: true,
-                type: 'success',
-            });
-        } else {
-            setFavoritePosts((prev) => [...prev, postId]);
-            setNotification({
-                message: 'Đã thêm bài viết vào yêu thích',
-                show: true,
-                type: 'success',
-            });
-        }
+    // const handleFavorite = async (postId: string) => {
+    //     try {
+    //         // Kiểm tra xem người dùng đã đăng nhập chưa
+    //         if (!user || !user.id) {
+    //             setNotification({
+    //                 message: 'Vui lòng đăng nhập để thêm bài viết vào danh sách yêu thích',
+    //                 show: true,
+    //                 type: 'error',
+    //             });
+    //             setTimeout(() => {
+    //                 setNotification((prev) => ({ ...prev, show: false }));
+    //             }, 3000);
+    //             return;
+    //         }
 
-        setTimeout(() => {
-            setNotification((prev) => ({ ...prev, show: false }));
-        }, 3000);
-    };
+    //         // Kiểm tra xem bài viết đã được yêu thích chưa
+    //         const isFavorited = favoritePosts.includes(postId);
+
+    //         if (isFavorited) {
+    //             // Nếu đã yêu thích, gọi API để xóa khỏi danh sách yêu thích
+    //             await axiosClient.delete(`/favorite-posts/${postId}`);
+
+    //             // Cập nhật state để xóa khỏi danh sách yêu thích
+    //             setFavoritePosts(favoritePosts.filter((id) => id !== postId));
+
+    //             setNotification({
+    //                 message: 'Đã xóa bài viết khỏi danh sách yêu thích',
+    //                 show: true,
+    //                 type: 'success',
+    //             });
+    //         } else {
+    //             // Nếu chưa yêu thích, gọi API để thêm vào danh sách yêu thích
+    //             await axiosClient.post(`/favorite-posts/${postId}`);
+
+    //             // Cập nhật state để thêm vào danh sách yêu thích
+    //             setFavoritePosts([...favoritePosts, postId]);
+
+    //             setNotification({
+    //                 message: 'Đã thêm bài viết vào danh sách yêu thích',
+    //                 show: true,
+    //                 type: 'success',
+    //             });
+    //         }
+
+    //         setTimeout(() => {
+    //             setNotification((prev) => ({ ...prev, show: false }));
+    //         }, 3000);
+    //     } catch (error) {
+    //         console.error('Error toggling favorite post:', error);
+
+    //         setNotification({
+    //             message: 'Có lỗi xảy ra khi thao tác với bài viết yêu thích',
+    //             show: true,
+    //             type: 'error',
+    //         });
+
+    //         setTimeout(() => {
+    //             setNotification((prev) => ({ ...prev, show: false }));
+    //         }, 3000);
+    //     }
+    // };
 
     type Post = {
         id: number;
@@ -261,63 +335,43 @@ const Post: React.FC = () => {
         y: 0,
     });
 
-    const handleCopyLink = (e: React.MouseEvent, postId: number) => {
-        const x = e.clientX;
-        const y = e.clientY;
-        const postUrl = `${window.location.origin}/post/${postId}`;
-        navigator.clipboard.writeText(postUrl);
-        setCopyTooltip({ show: true, x, y });
-        setTimeout(() => {
-            setCopyTooltip({ show: false, x: 0, y: 0 });
-        }, 1000);
+    const handleCopyLink = (e: React.MouseEvent, postId: string) => {
+        e.stopPropagation(); // Ngăn sự kiện click lan truyền đến div cha
+
+        // Tạo URL đầy đủ đến trang chi tiết bài viết
+        const postDetailUrl = `${window.location.origin}/post-detail/${postId}`;
+
+        // Copy URL vào clipboard
+        navigator.clipboard
+            .writeText(postDetailUrl)
+            .then(() => {
+                // Hiển thị tooltip thành công
+                setCopyTooltip({
+                    show: true,
+                    x: e.clientX,
+                    y: e.clientY,
+                });
+
+                // Ẩn tooltip sau 2 giây
+                setTimeout(() => {
+                    setCopyTooltip({ show: false, x: 0, y: 0 });
+                }, 2000);
+            })
+            .catch((error) => {
+                console.error('Không thể copy link:', error);
+                // Hiển thị thông báo lỗi nếu cần
+                setNotification({
+                    message: 'Không thể copy link bài viết',
+                    show: true,
+                    type: 'error',
+                });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+            });
     };
 
     const userRole = 'TUTOR';
-
-    const MultiLineText = ({
-        text,
-        locations,
-        schedule,
-    }: {
-        text?: string;
-        locations?: string[];
-        schedule?: string[];
-    }) => {
-        if (locations) {
-            return (
-                <>
-                    {locations.map((location, i) => (
-                        <span key={i} className="mr-8">
-                            {location}
-                        </span>
-                    ))}
-                </>
-            );
-        }
-        if (schedule) {
-            return (
-                <span className="mt-1 block">
-                    {schedule.map((time, i) => (
-                        <span key={i} className="ml-2 block">
-                            {'- '}
-                            {String(time)}
-                        </span>
-                    ))}
-                </span>
-            );
-        }
-        // Giữ lại logic cũ cho text thông thường
-        return (
-            <>
-                {text?.split('\n').map((line, i) => (
-                    <span key={i}>
-                        {line}
-                        <br />
-                    </span>
-                ))}
-            </>
-        );
-    };
 
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -372,45 +426,31 @@ const Post: React.FC = () => {
         }
     };
 
-    const handleApplyFilter = async () => {
-        try {
-            setLoading(true);
-            const response = await axiosClient.get('/posts/search', {
-                params: {
-                    page: 1,
-                    limit: 5,
-                    grade: selectedGrade || null,
-                    title: null,
-                    content: null,
-                    location: selectedCity || selectedDistrict || selectedWard || null,
-                    minSessionPerWeek: selectedSessionPerWeek.length > 0 ? selectedSessionPerWeek[0] : null,
-                    maxSessionPerWeek: selectedSessionPerWeek.length > 0 ? selectedSessionPerWeek[0] : null,
-                    minDuration: selectedDuration.length > 0 ? selectedDuration[0] : null,
-                    maxDuration: selectedDuration.length > 0 ? selectedDuration[0] : null,
-                    subject: selectedSubject || null,
-                    requirements: null,
-                    mode: selectedStudyMode.length > 0 ? (selectedStudyMode[0] === 'Online' ? 'true' : 'false') : null,
-                    minFeePerSession: minPrice || null,
-                    maxFeePerSession: maxPrice || null,
-                    sessionPerWeek: null,
-                },
-            });
+    const handleApplyFilter = () => {
+        console.log('Áp dụng bộ lọc với các giá trị:', {
+            subject: selectedSubject,
+            city: selectedCity,
+            district: selectedDistrict,
+            ward: selectedWard,
+            studyMode: selectedStudyMode,
+            sessionPerWeek: selectedSessionPerWeek,
+            duration: selectedDuration,
+            minPrice,
+            maxPrice,
+        });
 
-            console.log('Filter response:', response.data); // Log để debug
-            const formattedPosts = response.data.map((post: APIPost) => ({
-                ...post,
-                mode: String(post.mode).toLowerCase() === 'true',
-            }));
-            setPosts(formattedPosts);
-            closePopupFilter();
-        } catch (error) {
-            console.error('Error filtering posts:', error);
-            if (error instanceof Error) {
-                console.log('Error details:', (error as AxiosError).response);
-            }
-        } finally {
-            setLoading(false);
-        }
+        // Định nghĩa filteredPosts
+        const filteredPosts = posts.filter((post) => {
+            // Ví dụ về điều kiện lọc sử dụng post
+            if (selectedSubject && post.subject.id !== selectedSubject) return false;
+            // Thêm các điều kiện lọc khác nếu cần
+            return true;
+        });
+
+        console.log('Kết quả sau khi lọc:', filteredPosts);
+
+        // Nếu muốn cập nhật state để hiển thị bài đăng đã lọc
+        // setPosts(filteredPosts);
     };
     const [selectedGrade, setSelectedGrade] = useState('');
 
@@ -690,6 +730,48 @@ const Post: React.FC = () => {
         }
     };
 
+    // Thêm hàm xử lý khi bấm vào bài post
+    const handlePostClick = (postId: string) => {
+        navigate(`/post-detail/${postId}`);
+    };
+
+    // Trong useEffect để fetch bài đăng
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                setLoading(true);
+                console.log('Đang gọi API lấy bài đăng...');
+                const response = await axiosClient.get('/posts');
+                console.log('Kết quả API:', response.data);
+
+                if (response.data) {
+                    setPosts(
+                        response.data.map((post: APIPost) => ({
+                            ...post,
+                            mode: post.mode === 'ONLINE',
+                        })),
+                    );
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách bài đăng:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, []);
+
+    // Thêm useEffect để kiểm tra state posts
+    useEffect(() => {
+        console.log('State posts:', posts);
+    }, [posts]);
+
+    // Thêm log để kiểm tra state isOpen
+    useEffect(() => {
+        console.log('isOpen state:', isOpen);
+    }, [isOpen]);
+
     return (
         <>
             <Helmet>
@@ -734,11 +816,7 @@ const Post: React.FC = () => {
                             }`}
                         >
                             <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <img
-                                    src={user?.userProfile?.avatar || Avatar}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={user?.avatar || Avatar} alt="Avatar" className="w-full h-full object-cover" />
                             </div>
                             <button
                                 onClick={togglePopup}
@@ -839,29 +917,67 @@ const Post: React.FC = () => {
                                         onChange={(value) => setStudyMode(value)}
                                     />
                                     <div className="mb-4">
-                                        <label className="block text-gray-700 text-sm font-bold mb-2">Địa chỉ</label>
-                                        {!showLocationInput ? (
-                                            <div className="flex items-center">
-                                                <span className="block w-full bg-gray-100 p-2 rounded">
-                                                    {user?.location || 'Chưa có địa chỉ'}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    className="ml-2 text-blue-500 hover:text-blue-700"
-                                                    onClick={() => setShowLocationInput(true)}
+                                        <label className="block text-gray-700 font-bold mb-2">Địa điểm</label>
+                                        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                                            <div className="w-full md:w-1/3">
+                                                <select
+                                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                    value={selectedProvince}
+                                                    onChange={(e) => handleProvinceChange(e.target.value)}
                                                 >
-                                                    Thay đổi
-                                                </button>
+                                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                                    {provinces && provinces.length > 0 ? (
+                                                        provinces.map((province) => (
+                                                            <option key={province.code} value={province.code}>
+                                                                {province.name}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <option value="">-- Không có dữ liệu --</option>
+                                                    )}
+                                                </select>
                                             </div>
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                value={location}
-                                                onChange={(e) => setLocation(e.target.value)}
-                                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                                placeholder="Nhập địa chỉ của bạn"
-                                            />
-                                        )}
+
+                                            <div className="w-full md:w-1/3">
+                                                <select
+                                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                    value={selectedDistrict}
+                                                    onChange={(e) => handleDistrictChange(e.target.value)}
+                                                    disabled={!selectedProvince}
+                                                >
+                                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                                    {districts && districts.length > 0 ? (
+                                                        districts.map((district) => (
+                                                            <option key={district.code} value={district.code}>
+                                                                {district.name}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <option value="">-- Không có dữ liệu --</option>
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            <div className="w-full md:w-1/3">
+                                                <select
+                                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                    value={selectedWard}
+                                                    onChange={(e) => setSelectedWard(e.target.value)}
+                                                    disabled={!selectedDistrict}
+                                                >
+                                                    <option value="">-- Chọn Phường/Xã --</option>
+                                                    {wards && wards.length > 0 ? (
+                                                        wards.map((ward) => (
+                                                            <option key={ward.code} value={ward.code}>
+                                                                {ward.name}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <option value="">-- Không có dữ liệu --</option>
+                                                    )}
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                     <ComboBox
                                         title="Số buổi/tuần"
@@ -992,45 +1108,45 @@ const Post: React.FC = () => {
                                 <PostSkeleton />
                             </>
                         ) : posts.length === 0 ? (
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">
-                                    Không có bài viết nào hoặc đã xảy ra lỗi khi tải dữ liệu.
-                                </p>
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="mt-4 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-                                >
-                                    Tải lại trang
-                                </button>
+                            <div className="text-center py-10">
+                                <p className="text-gray-500">Không có bài đăng nào</p>
                             </div>
                         ) : (
                             posts.map((post, index) => (
                                 <div
                                     key={post.id || index}
-                                    className="relative border p-4 mb-4 shadow-md rounded-lg"
+                                    className="relative border p-4 mb-4 shadow-md rounded-lg cursor-pointer"
                                     style={{ backgroundColor: bgColors[index % bgColors.length] }}
+                                    onClick={() => handlePostClick(post.id.toString())}
                                 >
                                     {/* Header: Icons */}
-                                    <div className="absolute top-2 right-2 flex space-x-4">
-                                        <HeartIcon
+                                    <div
+                                        className="absolute top-2 right-2 flex space-x-4"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* <HeartIcon
                                             className={`h-5 w-5 cursor-pointer transition-colors duration-200 ${
-                                                favoritePosts.includes(post.id) ? 'text-red-500 fill-current' : ''
+                                                favoritePosts.includes(post.id.toString())
+                                                    ? 'text-red-500 fill-current'
+                                                    : ''
                                             }`}
-                                            onClick={() => handleFavorite(post.id)}
-                                        />
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleFavorite(post.id.toString());
+                                            }}
+                                        /> */}
                                         <CoppyLinkIcon
                                             className="h-5 w-5 cursor-pointer"
-                                            onClick={(e) => handleCopyLink(e, post.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCopyLink(e, post.id.toString());
+                                            }}
                                         />
                                     </div>
                                     {/* User Info & Title Section */}
                                     <div className="flex items-center space-x-4 mb-2">
                                         <img
-                                            src={
-                                                (post.user as User)?.userProfile?.avatar ||
-                                                post.user?.avatar ||
-                                                'https://via.placeholder.com/50'
-                                            }
+                                            src={(post.user as User)?.user?.avatar || post.user?.avatar || Avatar}
                                             alt={post.user?.name || 'User'}
                                             className="w-10 h-10 rounded-full"
                                             onError={(e) => {
@@ -1101,15 +1217,24 @@ const Post: React.FC = () => {
                                     </div>
                                     {/* Action Buttons */}
                                     {isTutor && (
-                                        <div className="flex justify-end space-x-4 mt-4">
+                                        <div
+                                            className="flex justify-end space-x-4 mt-4"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             <button
-                                                onClick={() => openNegotiationPopup(post)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openNegotiationPopup(post);
+                                                }}
                                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                             >
                                                 Thương lượng giá
                                             </button>
                                             <button
-                                                onClick={() => openConfirmPopup(post)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openConfirmPopup(post);
+                                                }}
                                                 className="px-4 py-2 bg-blue-900 text-white rounded-md font-bold hover:bg-blue-800 transition-colors"
                                             >
                                                 Nhận lớp
@@ -1263,25 +1388,65 @@ const Post: React.FC = () => {
                             />
                             <div className="mt-4">
                                 <label className="block text-gray-700 font-bold mb-2">Địa điểm</label>
-                                <div className="flex space-x-2">
-                                    <ComboBox
-                                        title="Tỉnh/Thành phố"
-                                        options={['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng']}
-                                        value={selectedCity}
-                                        onChange={(v) => setSelectedCity(v)}
-                                    />
-                                    <ComboBox
-                                        title="Quận/Huyện"
-                                        options={['Quận 1', 'Quận 2', 'Quận 3']}
-                                        value={selectedDistrict}
-                                        onChange={(v) => setSelectedDistrict(v)}
-                                    />
-                                    <ComboBox
-                                        title="Phường/Xã"
-                                        options={['Phường 1', 'Phường 2', 'Phường 3']}
-                                        value={selectedWard}
-                                        onChange={(v) => setSelectedWard(v)}
-                                    />
+                                <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                                    <div className="w-full md:w-1/3">
+                                        <select
+                                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            value={selectedProvince}
+                                            onChange={(e) => handleProvinceChange(e.target.value)}
+                                        >
+                                            <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                            {provinces && provinces.length > 0 ? (
+                                                provinces.map((province) => (
+                                                    <option key={province.code} value={province.code}>
+                                                        {province.name}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value="">-- Không có dữ liệu --</option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className="w-full md:w-1/3">
+                                        <select
+                                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            value={selectedDistrict}
+                                            onChange={(e) => handleDistrictChange(e.target.value)}
+                                            disabled={!selectedProvince}
+                                        >
+                                            <option value="">-- Chọn Quận/Huyện --</option>
+                                            {districts && districts.length > 0 ? (
+                                                districts.map((district) => (
+                                                    <option key={district.code} value={district.code}>
+                                                        {district.name}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value="">-- Không có dữ liệu --</option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className="w-full md:w-1/3">
+                                        <select
+                                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            value={selectedWard}
+                                            onChange={(e) => setSelectedWard(e.target.value)}
+                                            disabled={!selectedDistrict}
+                                        >
+                                            <option value="">-- Chọn Phường/Xã --</option>
+                                            {wards && wards.length > 0 ? (
+                                                wards.map((ward) => (
+                                                    <option key={ward.code} value={ward.code}>
+                                                        {ward.name}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value="">-- Không có dữ liệu --</option>
+                                            )}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <Checkbox

@@ -4,9 +4,9 @@ import { useAuthStore } from '../store/authStore';
 import SEO from '../components/SEO';
 import axiosClient from '../configs/axios.config';
 import { Notification } from '../components/Notification';
-import axios from 'axios';
-import defaultAvatar from '../assets/avatar.jpg'; // Import the default avatar
+import defaultAvatar from '../assets/avatar.jpg';
 import { Combobox } from '@headlessui/react';
+import axios from 'axios';
 
 const EditProfile = () => {
     type User = {
@@ -19,9 +19,11 @@ const EditProfile = () => {
         address?: string;
         gender?: string;
         dob?: string;
+        idCardNumber?: string;
         description?: string;
         role?: '' | 'STUDENT' | 'TUTOR' | 'ADMIN';
         userProfile?: {
+            idCardNumber?: string;
             avatar?: string;
             address?: string;
             gender?: string;
@@ -33,7 +35,7 @@ const EditProfile = () => {
             experiences?: number;
             tutorLocations?: string[];
             hourlyPrice?: number;
-            fee?: number; // Added fee property
+            fee?: number;
             freeTime?: string[];
             qualification?: string;
         };
@@ -41,7 +43,7 @@ const EditProfile = () => {
 
     const navigate = useNavigate();
     const { user: currentUser } = useAuthStore() as { user: User | null };
-    const [formData, setFormData] = useState<User | null>(currentUser); // Initialize with currentUser
+    const [formData, setFormData] = useState<User | null>(currentUser);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
@@ -67,7 +69,7 @@ const EditProfile = () => {
     const [endTime, setEndTime] = useState('');
     const [freeTime, setFreeTime] = useState<Record<string, string[]>>({});
     const [editingTime, setEditingTime] = useState<{ day: string; time: string } | null>(null);
-    const [timeError, setTimeError] = useState<string | null>(null); // Add state for time error
+    const [timeError, setTimeError] = useState<string | null>(null);
 
     const validateTime = () => {
         if (!startTime || !endTime) return false;
@@ -117,7 +119,7 @@ const EditProfile = () => {
         setStartTime('');
         setEndTime('');
         setSelectedSlot(null);
-        setTimeError(null); // Clear error after successful addition
+        setTimeError(null);
     };
 
     const handleRemoveTime = (day: string, time: string) => {
@@ -139,34 +141,34 @@ const EditProfile = () => {
         setEndTime(end);
     };
 
-    // Hàm chuyển đổi giới tính từ API sang hiển thị
     const convertGender = (gender: string | undefined): string => {
         switch (gender?.toUpperCase()) {
             case 'MALE':
                 return 'Nam';
             case 'FEMALE':
                 return 'Nữ';
+            case 'OTHER':
+                return 'Khác';
             default:
                 return '';
         }
     };
 
-    // Hàm chuyển đổi giới tính từ hiển thị sang API
     const convertGenderToApi = (gender: string): string => {
         switch (gender) {
             case 'Nam':
                 return 'MALE';
             case 'Nữ':
                 return 'FEMALE';
+            case 'Khác':
+                return 'OTHER';
             default:
                 return '';
         }
     };
 
-    // Kiểm tra role
     const isTutor = currentUser?.role === 'TUTOR';
 
-    // Hàm lấy danh sách tỉnh/thành phố
     const fetchCities = async () => {
         try {
             const response = await axios.get('https://vietnam-addresses.vercel.app/api/v1/cities');
@@ -176,32 +178,29 @@ const EditProfile = () => {
         }
     };
 
-    // Hàm lấy danh sách quận/huyện
     const fetchDistricts = async (cityId: string) => {
         try {
             const response = await axios.get(`https://vietnam-addresses.vercel.app/api/v1/districts?cityId=${cityId}`);
             setDistricts(response.data);
-            setSelectedDistrict(''); // Reset quận/huyện khi đổi tỉnh/thành phố
-            setSelectedWard(''); // Reset phường/xã khi đổi tỉnh/thành phố
+            setSelectedDistrict('');
+            setSelectedWard('');
         } catch (error) {
             console.error('Error fetching districts:', error);
         }
     };
 
-    // Hàm lấy danh sách phường/xã
     const fetchWards = async (districtId: string) => {
         try {
             const response = await axios.get(
                 `https://vietnam-addresses.vercel.app/api/v1/wards?districtId=${districtId}`,
             );
             setWards(response.data);
-            setSelectedWard(''); // Reset phường/xã khi đổi quận/huyện
+            setSelectedWard('');
         } catch (error) {
             console.error('Error fetching wards:', error);
         }
     };
 
-    // Hàm xử lý khi chọn tỉnh/thành phố
     const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const cityId = e.target.value;
         setSelectedCity(cityId);
@@ -210,7 +209,6 @@ const EditProfile = () => {
         }
     };
 
-    // Hàm xử lý khi chọn quận/huyện
     const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const districtId = e.target.value;
         setSelectedDistrict(districtId);
@@ -219,13 +217,11 @@ const EditProfile = () => {
         }
     };
 
-    // Hàm xử lý khi thay đổi địa chỉ chi tiết
     const handleStreetAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const value = e.target.value;
         if (e.target instanceof HTMLInputElement) {
             setStreetAddress(value);
         }
-        // Cập nhật formData với địa chỉ đầy đủ
         const fullAddress = `${streetAddress}, ${
             selectedWard ? wards.find((w) => w._id === selectedWard)?.name : ''
         }, ${selectedDistrict ? districts.find((d) => d._id === selectedDistrict)?.name : ''}, ${
@@ -240,17 +236,14 @@ const EditProfile = () => {
 
     useEffect(() => {
         if (!currentUser) {
-            setIsLoading(false); // Ensure loading is stopped even when navigating
+            setIsLoading(false);
             navigate('/login');
             return;
         }
 
-        console.log('Current User:', currentUser); // Debug log to check currentUser structure
-
-        setIsLoading(true); // Set loading to true before initializing data
+        setIsLoading(true);
 
         try {
-            // Set formData directly from currentUser
             setFormData({
                 id: currentUser.id,
                 fullName: currentUser.name || currentUser.fullName || '',
@@ -258,13 +251,11 @@ const EditProfile = () => {
                 email: currentUser.email || '',
                 phone: currentUser.phone || '',
                 address: currentUser.userProfile?.address || '',
-                gender: convertGender(currentUser.userProfile?.gender) || '', // Use gender from userProfile
-                dob: currentUser.userProfile?.dob
-                    ? new Date(currentUser.userProfile.dob).toLocaleDateString('en-GB').split('/').join('')
-                    : '', // Format date to ddmmyyyy
+                gender: convertGender(currentUser.userProfile?.gender) || '',
+                dob: currentUser.userProfile?.dob || '',
+                idCardNumber: currentUser.idCardNumber || '', // Initialize idCardNumber
                 description: currentUser.tutorProfile?.description || '',
                 role: currentUser.role || '',
-                // Tutor-specific information
                 tutorProfile: {
                     ...currentUser.tutorProfile,
                     specializations: currentUser.tutorProfile?.specializations || [],
@@ -280,17 +271,13 @@ const EditProfile = () => {
             console.error('Error initializing formData:', error);
             setError('Đã xảy ra lỗi khi tải dữ liệu người dùng.');
         } finally {
-            setIsLoading(false); // Ensure loading is stopped
+            setIsLoading(false);
         }
     }, [currentUser, navigate]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        console.log('Input Change:', name, value); // Debug log
-        setFormData((prev) => {
-            if (!prev) return null;
-            return { ...prev, [name]: value };
-        });
+        setFormData((prev) => (prev ? { ...prev, [name]: value } : null));
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,34 +286,123 @@ const EditProfile = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarPreview(reader.result as string);
-                setFormData((prev) => (prev ? { ...prev, avatar: reader.result as string } : null));
             };
             reader.readAsDataURL(file);
         }
     };
 
+    // const handleSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     if (!formData || !formData.id) return;
+
+    //     try {
+    //         const formDataToSend = new FormData();
+
+    //         // Add required fields
+    //         formDataToSend.append('id', formData.id);
+
+    //         // Add optional fields
+    //         if (formData.address) {
+    //             formDataToSend.append('address', formData.address);
+    //         }
+    //         if (formData.dob) {
+    //             formDataToSend.append('dob', formData.dob);
+    //         }
+    //         if (formData.gender) {
+    //             formDataToSend.append('gender', convertGenderToApi(formData.gender));
+    //         }
+
+    //         // Add avatar file if a new one was selected
+    //         const avatarInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    //         if (avatarInput?.files?.[0]) {
+    //             formDataToSend.append('avatar', avatarInput.files[0]);
+    //         }
+
+    //         // Add tutor-specific fields if applicable
+    //         if (isTutor && formData.tutorProfile) {
+    //             if (formData.tutorProfile.description) {
+    //                 formDataToSend.append('description', formData.tutorProfile.description);
+    //             }
+    //             if (formData.tutorProfile.specializations) {
+    //                 formDataToSend.append('subjects', formData.tutorProfile.specializations.join(','));
+    //             }
+    //             if (formData.tutorProfile.experiences) {
+    //                 formDataToSend.append('experience', formData.tutorProfile.experiences.toString());
+    //             }
+    //             if (formData.tutorProfile.tutorLocations) {
+    //                 formDataToSend.append('location', formData.tutorProfile.tutorLocations[0]);
+    //             }
+    //             if (formData.tutorProfile.hourlyPrice) {
+    //                 formDataToSend.append('pricePerSession', formData.tutorProfile.hourlyPrice.toString());
+    //             }
+    //             if (formData.tutorProfile.qualification) {
+    //                 formDataToSend.append('educationLevel', formData.tutorProfile.qualification);
+    //             }
+    //             if (Object.keys(freeTime).length > 0) {
+    //                 const availableTime = Object.entries(freeTime)
+    //                     .filter(([, slots]) => slots.length > 0)
+    //                     .map(([day, slots]) => `${day}:${slots.join(',')}`);
+    //                 formDataToSend.append('availableTime', availableTime.join(';'));
+    //             }
+    //         }
+
+    //         await axiosClient.patch(`/api/v1/user-profiles/update`, formDataToSend, {
+    //             headers: {
+    //                 'Content-Type': 'multipart/form-data',
+    //             },
+    //         });
+
+    //         setNotification({
+    //             message: 'Cập nhật thông tin thành công',
+    //             show: true,
+    //             type: 'success',
+    //         });
+    //         setTimeout(() => {
+    //             navigate('/profile');
+    //         }, 2000);
+    //     } catch (err) {
+    //         setNotification({
+    //             message: 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau.',
+    //             show: true,
+    //             type: 'error',
+    //         });
+    //         console.error('Error updating user data:', err);
+    //     }
+    // };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData) return;
+        if (!formData || !formData.id) return;
 
         try {
-            const apiData = {
-                ...formData,
-                name: formData.fullName,
-                birthYear: formData.dob ? new Date(formData.dob).getFullYear() : null,
-                gender: convertGenderToApi(formData.gender || ''),
-                subjects: formData.tutorProfile?.specializations,
-                experience: formData.tutorProfile?.experiences,
-                location: formData.tutorProfile?.tutorLocations?.[0],
-                pricePerSession: formData.tutorProfile?.hourlyPrice,
-                availableTime: Object.entries(freeTime)
-                    .filter(([, slots]) => slots.length > 0)
-                    .map(([day, slots]) => `${day}:${slots.join(',')}`),
-                educationLevel: formData.tutorProfile?.qualification,
-            };
+            const formDataToSend = new FormData();
 
-            // Include the user's ID in the API endpoint
-            await axiosClient.put(`/api/v1/user-profiles/${formData.id}`, apiData);
+            // Add optional fields based on your requirements
+            if (formData.dob) {
+                formDataToSend.append('dob', formData.dob);
+            }
+            if (formData.gender) {
+                formDataToSend.append('gender', convertGenderToApi(formData.gender));
+            }
+            if (formData.address) {
+                formDataToSend.append('address', formData.address);
+            }
+            if (formData.idCardNumber) {
+                formDataToSend.append('idCardNumber', formData.idCardNumber);
+            }
+
+            // Add avatar file if a new one was selected
+            const avatarInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+            if (avatarInput?.files?.[0]) {
+                formDataToSend.append('avatar', avatarInput.files[0]);
+            }
+
+            // Send the request to the correct endpoint with the user ID in the route
+            await axiosClient.patch(`/user-profiles/${formData.id}`, formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
             setNotification({
                 message: 'Cập nhật thông tin thành công',
@@ -342,7 +418,11 @@ const EditProfile = () => {
                 show: true,
                 type: 'error',
             });
-            console.error('Error updating user data:', err);
+            if (axios.isAxiosError(err) && err.response) {
+                console.error('Error updating user data:', err.response.data);
+            } else {
+                console.error('Error updating user data:', err instanceof Error ? err.message : err);
+            }
         }
     };
 
@@ -372,7 +452,7 @@ const EditProfile = () => {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <button
-                                    onClick={() => navigate(-1)} // Navigate to the previous page
+                                    onClick={() => navigate(-1)}
                                     className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     <svg
@@ -413,7 +493,7 @@ const EditProfile = () => {
                                             alt="Avatar"
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = defaultAvatar; // Set default avatar on error
+                                                (e.target as HTMLImageElement).src = defaultAvatar;
                                             }}
                                         />
                                     </div>
@@ -485,7 +565,7 @@ const EditProfile = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Giới tính</label>
                                     <select
                                         name="gender"
-                                        value={formData?.gender || ''} // Ensure gender is properly set
+                                        value={formData.gender || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                     >
@@ -500,9 +580,20 @@ const EditProfile = () => {
                                     <input
                                         type="date"
                                         name="dob"
-                                        value={formData?.dob || ''} // Ensure date of birth is properly set
+                                        value={formData.dob || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Số CMND/CCCD</label>
+                                    <input
+                                        type="text"
+                                        name="idCardNumber"
+                                        value={formData.idCardNumber || ''}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                                        placeholder="Nhập số CMND/CCCD"
                                     />
                                 </div>
                             </div>
@@ -615,7 +706,17 @@ const EditProfile = () => {
                                                     const specializations = e.target.value
                                                         .split(',')
                                                         .map((s) => s.trim());
-                                                    setFormData((prev) => (prev ? { ...prev, specializations } : null));
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      specializations,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    );
                                                 }}
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập các môn học, phân tách bằng dấu phẩy"
@@ -627,9 +728,21 @@ const EditProfile = () => {
                                             </label>
                                             <input
                                                 type="number"
-                                                name="experienceYear"
+                                                name="experiences"
                                                 value={formData.tutorProfile?.experiences || ''}
-                                                onChange={handleInputChange}
+                                                onChange={(e) =>
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      experiences: parseInt(e.target.value) || 0,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    )
+                                                }
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập số năm kinh nghiệm"
                                             />
@@ -640,12 +753,20 @@ const EditProfile = () => {
                                             </label>
                                             <input
                                                 type="text"
-                                                name="tutorLocation"
+                                                name="tutorLocations"
                                                 value={formData.tutorProfile?.tutorLocations?.join(', ') || ''}
                                                 onChange={(e) => {
                                                     const locations = e.target.value.split(',').map((l) => l.trim());
                                                     setFormData((prev) =>
-                                                        prev ? { ...prev, tutorLocation: locations } : null,
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      tutorLocations: locations,
+                                                                  },
+                                                              }
+                                                            : null,
                                                     );
                                                 }}
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
@@ -660,7 +781,19 @@ const EditProfile = () => {
                                                 type="number"
                                                 name="hourlyPrice"
                                                 value={formData.tutorProfile?.hourlyPrice || ''}
-                                                onChange={handleInputChange}
+                                                onChange={(e) =>
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      hourlyPrice: parseInt(e.target.value) || 0,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    )
+                                                }
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập giá theo giờ"
                                             />
@@ -673,7 +806,19 @@ const EditProfile = () => {
                                                 type="number"
                                                 name="fee"
                                                 value={formData.tutorProfile?.fee || ''}
-                                                onChange={handleInputChange}
+                                                onChange={(e) =>
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      fee: parseInt(e.target.value) || 0,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    )
+                                                }
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập phí dịch vụ"
                                             />
@@ -689,7 +834,15 @@ const EditProfile = () => {
                                                 onChange={(e) => {
                                                     const freeTimes = e.target.value.split(',').map((t) => t.trim());
                                                     setFormData((prev) =>
-                                                        prev ? { ...prev, freeTime: freeTimes } : null,
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      freeTime: freeTimes,
+                                                                  },
+                                                              }
+                                                            : null,
                                                     );
                                                 }}
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
@@ -704,7 +857,19 @@ const EditProfile = () => {
                                                 type="text"
                                                 name="qualification"
                                                 value={formData.tutorProfile?.qualification || ''}
-                                                onChange={handleInputChange}
+                                                onChange={(e) =>
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      qualification: e.target.value,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    )
+                                                }
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập bằng cấp"
                                             />
@@ -765,8 +930,7 @@ const EditProfile = () => {
                                             {editingTime ? 'Lưu' : '(+)'}
                                         </button>
                                     </div>
-                                    {timeError && <p className="text-red-500 mt-2">{timeError}</p>}{' '}
-                                    {/* Display error message */}
+                                    {timeError && <p className="text-red-500 mt-2">{timeError}</p>}
                                     <div className="mt-8">
                                         <h3 className="text-lg font-medium text-gray-900 mb-4">
                                             Tóm tắt thời gian đã chọn

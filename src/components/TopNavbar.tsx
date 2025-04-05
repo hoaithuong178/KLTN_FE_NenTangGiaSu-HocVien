@@ -47,7 +47,23 @@ interface Notification {
 const notificationTypes: { [key: string]: string } = {
     TEACH_REQUEST: 'Yêu cầu dạy',
     RECEIVE_CLASS: 'Yêu cầu nhận lớp',
-    TUTOR_REQUEST: 'Yêu cầu nhận lớp',
+    PRICE_ADJUSTMENT: 'Yêu cầu điều chỉnh giá',
+    MODIFY_CLASS: 'Yêu cầu sửa lớp',
+    CREATE_CLASS: 'Yêu cầu tạo lớp',
+    TUTOR_ACCEPTING: 'Gia sư đã chấp nhận',
+    TUTOR_REJECTING: 'Gia sư đã từ chối',
+    STUDENT_ACCEPTING: 'Học viên đã chấp nhận',
+    STUDENT_REJECTING: 'Học viên đã từ chối',
+    CLASS_CANCELLING: 'Hủy lớp',
+    CONTRACT_SIGNING: 'Ký hợp đồng',
+    PAYMENT_REMINDING: 'Nhắc nhở thanh toán',
+    PAYMENT_SUBMITTING: 'Đã thanh toán',
+    COMPLAINT_RESPONDING: 'Phản hồi khiếu nại',
+    TUTOR_RATING: 'Đánh giá gia sư',
+    CLASS_CHECK_IN: 'Điểm danh lớp học',
+    NEW_COMPLAINT: 'Khiếu nại mới',
+    SYSTEM_ALERT: 'Thông báo hệ thống',
+    CONTRACT_UPDATE: 'Cập nhật hợp đồng',
 };
 
 const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -64,7 +80,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [avatar, setAvatar] = useState(user?.userProfile?.avatar || Avatar);
+    const [avatar, setAvatar] = useState(user?.userProfile?.avatar || user?.avatar || Avatar);
     const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
     const [showNotificationDetail, setShowNotificationDetail] = useState(false);
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({

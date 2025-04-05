@@ -117,7 +117,7 @@ const TutorDetailCard: React.FC<TutorDetailCardProps> = ({ className = '', onReq
                         hoverBackgroundColor="#2A3349"
                         foreColor="white"
                         className="px-4 py-2 rounded-md text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300"
-                        onClick={(e: React.MouseEvent) => {
+                        onClick={(e: React.MouseEvent<Element>) => {
                             e.stopPropagation(); // Ngăn sự kiện click trên card
                             onRequestClick();
                         }}
