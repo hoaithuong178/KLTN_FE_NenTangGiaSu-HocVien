@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import SignInPic1 from '../assets/SignIn1.jpg';
 import SignInPic2 from '../assets/SignIn2.jpg';
 import SignInPic3 from '../assets/SignIn3.jpg';
+import Logo from '../assets/SmallLogo.png';
 import { Button } from '../components/Button';
 import FacebookAuthButton from '../components/FacebookAuthButton';
 import GoogleAuthButton from '../components/GoogleAuthButton';
@@ -125,6 +126,9 @@ const SignIn = () => {
             {/* Login Form Section */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+                    <Link to="/" className="flex justify-end mb-6">
+                        <img src={Logo} alt="Logo" className="h-12" />
+                    </Link>
                     <h2 className="text-3xl font-bold text-[#1B223B] mb-6 text-center">Đăng Nhập</h2>
 
                     {/* General Error Message */}
