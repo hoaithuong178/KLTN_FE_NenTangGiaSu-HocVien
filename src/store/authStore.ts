@@ -10,14 +10,18 @@ interface User {
     email?: string;
     status?: string;
     violate?: number;
+    gender?: string;
+    dob?: string;
+    address?: string;
     avatar?: string;
     role: Role;
     location?: string[];
     userProfile?: {
+        idCardNumber?: string;
         avatar?: string;
-        gender: string;
-        dob: string;
-        address: string;
+        gender?: string;
+        dob?: string;
+        address?: string;
     };
     tutorProfile?: {
         hourlyPrice: number;
@@ -69,8 +73,50 @@ export const useAuthStore = create<AuthState>()(
             setToken: (token) => set((state) => ({ ...state, token })),
         }),
         {
-            name: 'auth-storage', // Tên key trong localStorage
-            storage: createJSONStorage(() => localStorage), // Sử dụng localStorage
+            name: 'auth-storage',
+            storage: createJSONStorage(() => localStorage),
+            version: 2, // 🔁 Tăng version mỗi khi bạn thay đổi cấu trúc
+            migrate: async (persistedState, version) => {
+                console.log('[zustand migrate] Old version:', version);
+
+                if (version < 2) {
+                    const user = (persistedState as AuthState).user;
+
+                    return {
+                        ...(typeof persistedState === 'object' && persistedState !== null ? persistedState : {}),
+                        user: user
+                            ? {
+                                  ...user,
+                                  userProfile: {
+                                      idCardNumber: '',
+                                      avatar: '',
+                                      gender: '',
+                                      dob: '',
+                                      address: '',
+                                      ...(user.userProfile || {}),
+                                  },
+                                  tutorProfile: {
+                                      hourlyPrice: 0,
+                                      level: '',
+                                      experiences: 0,
+                                      taughtStudentsCount: 0,
+                                      rating: 0,
+                                      fee: 0,
+                                      description: '',
+                                      tutorLocations: [],
+                                      specializations: [],
+                                      learningTypes: [],
+                                      freeTime: [],
+                                      qualification: '',
+                                      ...(user.tutorProfile || {}),
+                                  },
+                              }
+                            : null,
+                    };
+                }
+
+                return persistedState as AuthState;
+            },
         },
     ),
 );

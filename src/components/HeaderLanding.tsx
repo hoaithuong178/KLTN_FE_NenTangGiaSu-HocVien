@@ -46,27 +46,6 @@ const HeaderLanding = () => {
         setShowLogoutModal(false);
     };
 
-    const handleWorkspaceRedirect = () => {
-        setShowDropdown(false);
-
-        if (user) {
-            switch (user.role) {
-                case 'ADMIN':
-                    navigate('/admin-post');
-                    break;
-                case 'TUTOR':
-                    navigate('/post');
-                    break;
-                case 'STUDENT':
-                    navigate('/tutors');
-                    break;
-                default:
-                    navigate('/post');
-                    break;
-            }
-        }
-    };
-
     return (
         <header
             className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
@@ -184,12 +163,13 @@ const HeaderLanding = () => {
                                     >
                                         Thông tin cá nhân
                                     </Link>
-                                    <button
-                                        onClick={handleWorkspaceRedirect}
-                                        className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors"
+                                    <Link
+                                        to="/post"
+                                        className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors"
+                                        onClick={() => setShowDropdown(false)}
                                     >
                                         Chuyển đến workspace
-                                    </button>
+                                    </Link>
                                     <button
                                         onClick={() => setShowLogoutModal(true)}
                                         className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors"

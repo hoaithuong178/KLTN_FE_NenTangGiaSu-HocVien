@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AddressIcon, ArrowLeftIcon, CoppyLinkIcon, HeartIcon, MailIcon, PhoneIcon } from '../components/icons';
 import { Notification } from '../components/Notification';
@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/authStore';
 import SEO from '../components/SEO';
 import axiosClient from '../configs/axios.config';
 import { PostSkeleton } from '../components/TutorSkeleton';
+import defaultAvatar from '../assets/avatar.jpg';
 
 type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 
@@ -18,15 +19,40 @@ const StudentProfile = () => {
         email?: string;
         phone?: string;
         role: Role;
+        gender?: string;
+        dob?: string;
+        address?: string;
+        avatar?: string;
         status?: string;
         violate?: number;
         userProfile?: {
+            idCardNumber?: string;
             avatar?: string;
-            gender: string;
-            dob: string;
-            address: string;
+            gender?: string;
+            dob?: string;
+            address?: string;
         };
     };
+
+    // Add these types at the top of the file
+    interface UserProfileData {
+        id: string;
+        avatar: string | null;
+        idCardNumber: string | null;
+        address: string | null;
+        dob: string;
+        gender: 'MALE' | 'FEMALE';
+        walletAddress: string | null;
+        createdAt: string;
+        updatedAt: string;
+        createdBy: string | null;
+        updatedBy: string | null;
+        deletedAt: string | null;
+    }
+    // Inside the StudentProfile component, add these new states
+    const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
+    const [, setIsProfileLoading] = useState(false);
+    const [, setProfileError] = useState<string | null>(null);
 
     type Post = {
         id: number;
@@ -47,7 +73,7 @@ const StudentProfile = () => {
 
     const { user: currentUser } = useAuthStore() as { user: User | null };
     const [posts, setPosts] = useState<Post[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false); // Bắt đầu là false để tránh loading không cần thiết
     const [error, setError] = useState<string | null>(null);
     const [minPrice, setMinPrice] = useState(100000);
     const [maxPrice, setMaxPrice] = useState(500000);
@@ -83,7 +109,7 @@ const StudentProfile = () => {
     const [isNegotiationOpen, setIsNegotiationOpen] = useState(false); // Popup cho thương lượng giá
     const [isConfirmOpen, setIsConfirmOpen] = useState(false); // Popup cho nhận lớp
     const [negotiatedPrice, setNegotiatedPrice] = useState(''); // Giá thương lượng
-    const [selectedPost, setSelectedPost] = useState<Post>(posts[0]); // Lưu bài viết được chọn
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
     const [favoritePosts, setFavoritePosts] = useState<number[]>([]);
     // Thay đổi state notification
@@ -120,26 +146,64 @@ const StudentProfile = () => {
     console.log(currentUser);
 
     // Thêm useEffect để lấy danh sách bài đăng
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                setIsLoading(true);
-                const response = await axiosClient.get('/posts');
-                // Lọc chỉ lấy những bài đăng của user hiện tại
-                const userPosts = response.data.filter((post: Post) => post.userId === currentUser?.id);
-                setPosts(userPosts);
-            } catch (err) {
-                setError('Không thể tải danh sách bài đăng');
-                console.error('Error fetching posts:', err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const fetchPosts = useCallback(async () => {
+        if (!currentUser?.id) {
+            setError('Không có thông tin người dùng để tải bài đăng');
+            return;
+        }
 
-        if (currentUser?.id) {
-            fetchPosts();
+        try {
+            setIsLoading(true);
+            const response = await axiosClient.get('/posts');
+            const userPosts = response.data.filter((post: Post) => post.userId === currentUser.id);
+            setPosts(userPosts);
+            setError(null);
+        } catch (err) {
+            setError('Không thể tải danh sách bài đăng.');
+            console.error('Error fetching posts:', err);
+        } finally {
+            setIsLoading(false);
         }
     }, [currentUser?.id]);
+
+    const fetchUserProfile = useCallback(async () => {
+        if (!currentUser?.id) return;
+
+        try {
+            setIsProfileLoading(true);
+            const response = await axiosClient.get('/user-profiles');
+            console.log('API Response:', response.data); // Debug API response
+            if (response.data) {
+                setUserProfileData(response.data.data);
+                // Update the auth store with the new profile data
+                useAuthStore.getState().setUser({
+                    ...currentUser,
+                    userProfile: {
+                        ...currentUser.userProfile,
+                        avatar: response.data.data.avatar,
+                        gender: response.data.data.gender,
+                        dob: response.data.data.dob,
+                        address: response.data.data.address,
+                    },
+                });
+            }
+        } catch (error) {
+            setProfileError('Could not fetch user profile');
+            console.error('Error fetching user profile:', error);
+        } finally {
+            setIsProfileLoading(false);
+        }
+    }, [currentUser]);
+
+    // Add this useEffect to fetch the profile data
+    useEffect(() => {
+        console.log('Fetching user profile...');
+        fetchUserProfile();
+    }, [fetchUserProfile]);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [currentUser, fetchPosts]); // Dependency includes fetchPosts
 
     const openNegotiationPopup = (post: Post) => {
         setSelectedPost(post);
@@ -211,9 +275,12 @@ const StudentProfile = () => {
     const isTutorOrAdmin = currentUser?.role === 'TUTOR' || currentUser?.role === 'ADMIN';
     const isStudent = currentUser?.role === 'STUDENT';
     const navigate = useNavigate();
+
+    console.log('Current User:', currentUser);
     if (!currentUser) {
         return <div>Không tìm thấy thông tin người dùng.</div>;
     }
+
     return (
         <>
             <SEO title="Thông tin học viên" description="Trang thông tin cá nhân học viên" />
@@ -237,12 +304,18 @@ const StudentProfile = () => {
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                                 <div className="flex items-center mb-4 md:mb-0">
                                     <img
-                                        src={currentUser.userProfile?.avatar}
+                                        src={
+                                            userProfileData?.avatar ||
+                                            currentUser?.userProfile?.avatar ||
+                                            currentUser?.avatar ||
+                                            defaultAvatar
+                                        }
+                                        onError={(e) => (e.currentTarget.src = defaultAvatar)}
                                         className="w-24 h-24 rounded-full mr-4"
                                         alt="Avatar"
                                     />
                                     <div>
-                                        <h1 className="text-2xl font-bold">{currentUser.name}</h1>
+                                        <div className="text-2xl font-bold">{currentUser.name}</div>
                                         <div className="grid grid-cols-2 gap-2 mt-2">
                                             <div className="flex items-center gap-2">
                                                 <MailIcon className="w-5 h-5 text-gray-600" />
@@ -273,32 +346,36 @@ const StudentProfile = () => {
 
                             <div className="space-y-4 mb-4 p-4 bg-white rounded-lg shadow-md">
                                 <div className="grid grid-cols-4 gap-4">
-                                    <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
-                                    <p className="text-gray-800 col-span-3">Lorem ipsum dolor sit amet...</p>
-
-                                    {currentUser.userProfile?.gender && (
+                                    {userProfileData?.gender && (
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
-                                            <p className="text-gray-800 col-span-3">{currentUser.userProfile.gender}</p>
-                                        </>
-                                    )}
-
-                                    {currentUser.userProfile?.dob && (
-                                        <>
-                                            <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
                                             <p className="text-gray-800 col-span-3">
-                                                {currentUser.userProfile?.dob} ({getAge(currentUser.userProfile?.dob)}{' '}
-                                                tuổi)
+                                                {userProfileData.gender === 'MALE' ? 'Nam' : 'Nữ'}
                                             </p>
                                         </>
                                     )}
 
-                                    {currentUser.userProfile?.address && (
+                                    {userProfileData?.dob && (
+                                        <>
+                                            <p className="text-gray-600 font-semibold col-span-1">Ngày sinh</p>
+                                            <p className="text-gray-800 col-span-3">
+                                                {new Date(userProfileData.dob).toLocaleDateString('vi-VN')}(
+                                                {getAge(userProfileData.dob)} tuổi)
+                                            </p>
+                                        </>
+                                    )}
+
+                                    {userProfileData?.address && (
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Địa chỉ</p>
-                                            <p className="text-gray-800 col-span-3">
-                                                {currentUser.userProfile?.address}
-                                            </p>
+                                            <p className="text-gray-800 col-span-3">{userProfileData.address}</p>
+                                        </>
+                                    )}
+
+                                    {userProfileData?.idCardNumber && (
+                                        <>
+                                            <p className="text-gray-600 font-semibold col-span-1">CCCD/CMND</p>
+                                            <p className="text-gray-800 col-span-3">{userProfileData.idCardNumber}</p>
                                         </>
                                     )}
                                 </div>
@@ -334,7 +411,15 @@ const StudentProfile = () => {
                                             ))}
                                         </div>
                                     ) : error ? (
-                                        <div className="text-center py-4 text-red-500">{error}</div>
+                                        <div className="text-center py-4 text-red-500">
+                                            {error}
+                                            <button
+                                                onClick={() => fetchPosts()}
+                                                className="ml-2 px-4 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                            >
+                                                Thử lại
+                                            </button>
+                                        </div>
                                     ) : posts.length === 0 ? (
                                         <div className="text-center py-4 text-gray-500">Chưa có bài đăng nào</div>
                                     ) : (
@@ -363,7 +448,8 @@ const StudentProfile = () => {
                                                 {/* Nội dung bài đăng */}
                                                 <div className="flex items-center space-x-4 mb-2">
                                                     <img
-                                                        src={post.avatar}
+                                                        src={post.avatar || defaultAvatar}
+                                                        onError={(e) => (e.currentTarget.src = defaultAvatar)}
                                                         alt={post.name}
                                                         className="w-10 h-10 rounded-full"
                                                     />
@@ -441,7 +527,9 @@ const StudentProfile = () => {
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <h2 className="text-xl font-semibold mb-4">Thương lượng giá</h2>
-                                            <p className="text-lg text-gray-600">Giá cũ: {selectedPost?.price}</p>
+                                            <p className="text-lg text-gray-600">
+                                                Giá cũ: {selectedPost?.price || 'Không có giá'}
+                                            </p>
                                             <div className="mt-4">
                                                 <label className="block text-sm font-semibold text-[#1B223B]">
                                                     Giá thương lượng:

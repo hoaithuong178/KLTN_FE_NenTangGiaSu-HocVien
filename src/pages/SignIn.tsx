@@ -53,20 +53,16 @@ const SignIn = () => {
             const user = userResponse.data;
             if (!user?.role) throw new Error('Không lấy được thông tin người dùng!');
 
-            // // Nếu là tutor, lấy thêm thông tin chi tiết
-            // if (user.role === 'TUTOR') {
-            //     try {
-            //         const tutorResponse = await axiosClient.get(`/tutors/${user.id}`, {
-            //             headers: { Authorization: `Bearer ${accessToken}` },
-            //         });
-            //         user.tutorProfile = tutorResponse.data;
-            //     } catch (tutorError) {
-            //         console.error('Error fetching tutor profile:', tutorError);
-            //         setErrors({ general: 'Không thể lấy thông tin gia sư. Vui lòng thử lại sau.' });
-            //     }
-            // }
+            // Fetch detailed user information
+            const detailedUserResponse = await axiosClient.get(`/api/v1/user-profiles/${user.id}`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const detailedUser = detailedUserResponse.data;
 
-            useAuthStore.getState().login(user, accessToken);
+            // Merge detailed user information into the user object
+            const updatedUser = { ...user, ...detailedUser };
+
+            useAuthStore.getState().login(updatedUser, accessToken);
             localStorage.setItem('token', accessToken);
 
             const roleRoutes: { [key: string]: string } = {
