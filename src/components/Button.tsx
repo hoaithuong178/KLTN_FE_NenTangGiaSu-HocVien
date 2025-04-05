@@ -49,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
                     color: disabled ? disabledForeColor : 'white',
                     hoverBg: '#B91C1C', // red-700
                 };
-            case 'primary': 
+            case 'primary':
             default:
                 return {
                     bg: disabled ? disabledBackgroundColor : backgroundColor,
