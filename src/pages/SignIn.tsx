@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import SignInPic1 from '../assets/SignIn1.jpg';
 import SignInPic2 from '../assets/SignIn2.jpg';
 import SignInPic3 from '../assets/SignIn3.jpg';
-import Logo from '../assets/SmallLogo.png';
 import { Button } from '../components/Button';
 import FacebookAuthButton from '../components/FacebookAuthButton';
 import GoogleAuthButton from '../components/GoogleAuthButton';
@@ -54,16 +53,20 @@ const SignIn = () => {
             const user = userResponse.data;
             if (!user?.role) throw new Error('Không lấy được thông tin người dùng!');
 
-            // Fetch detailed user information
-            const detailedUserResponse = await axiosClient.get(`/api/v1/user-profiles/${user.id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            const detailedUser = detailedUserResponse.data;
+            // // Nếu là tutor, lấy thêm thông tin chi tiết
+            // if (user.role === 'TUTOR') {
+            //     try {
+            //         const tutorResponse = await axiosClient.get(`/tutors/${user.id}`, {
+            //             headers: { Authorization: `Bearer ${accessToken}` },
+            //         });
+            //         user.tutorProfile = tutorResponse.data;
+            //     } catch (tutorError) {
+            //         console.error('Error fetching tutor profile:', tutorError);
+            //         setErrors({ general: 'Không thể lấy thông tin gia sư. Vui lòng thử lại sau.' });
+            //     }
+            // }
 
-            // Merge detailed user information into the user object
-            const updatedUser = { ...user, ...detailedUser };
-
-            useAuthStore.getState().login(updatedUser, accessToken);
+            useAuthStore.getState().login(user, accessToken);
             localStorage.setItem('token', accessToken);
 
             const roleRoutes: { [key: string]: string } = {
@@ -126,9 +129,6 @@ const SignIn = () => {
             {/* Login Form Section */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-                    <Link to="/" className="flex justify-end mb-6">
-                        <img src={Logo} alt="Logo" className="h-12" />
-                    </Link>
                     <h2 className="text-3xl font-bold text-[#1B223B] mb-6 text-center">Đăng Nhập</h2>
 
                     {/* General Error Message */}

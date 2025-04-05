@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { InputField } from '../components/InputField';
 import { Button } from '../components/Button';
 import { Text } from '../components/Text';
@@ -29,7 +29,33 @@ const Register: React.FC = () => {
     });
     const navigate = useNavigate();
 
+    // Tạo refs cho các input
+    const emailRef = useRef<HTMLInputElement>(null);
+    const phoneRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
+    const rePasswordRef = useRef<HTMLInputElement>(null);
+
     const validateForm = () => {
+        // Kiểm tra tên chỉ chứa chữ cái và khoảng trắng
+        const nameRegex = /^[A-Za-zÀ-ỹ\s]+$/;
+        if (!firstName) {
+            setNotification({
+                message: 'Họ tên không được để trống',
+                show: true,
+                type: 'error',
+            });
+            return false;
+        }
+
+        if (!nameRegex.test(firstName)) {
+            setNotification({
+                message: 'Họ tên chỉ được chứa chữ cái và khoảng trắng',
+                show: true,
+                type: 'error',
+            });
+            return false;
+        }
+
         // Email regex
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailRegex.test(email)) {
@@ -41,11 +67,20 @@ const Register: React.FC = () => {
             return false;
         }
 
-        // Phone number regex
+        // Phone number regex - chính xác 10 số, bắt đầu bằng số 0
         const phoneRegex = /^0\d{9}$/;
+        if (!phoneNumber) {
+            setNotification({
+                message: 'Số điện thoại không được để trống',
+                show: true,
+                type: 'error',
+            });
+            return false;
+        }
+
         if (!phoneRegex.test(phoneNumber)) {
             setNotification({
-                message: 'Số điện thoại phải đủ 10 số và bắt đầu bằng số 0',
+                message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0',
                 show: true,
                 type: 'error',
             });
@@ -67,16 +102,6 @@ const Register: React.FC = () => {
         if (password !== rePassword) {
             setNotification({
                 message: 'Mật khẩu nhập lại không khớp',
-                show: true,
-                type: 'error',
-            });
-            return false;
-        }
-
-        // Check if all fields are filled
-        if (!firstName || !email || !phoneNumber || !password || !rePassword) {
-            setNotification({
-                message: 'Vui lòng điền đầy đủ thông tin',
                 show: true,
                 type: 'error',
             });
@@ -109,26 +134,38 @@ const Register: React.FC = () => {
         }
 
         try {
-            // Gửi đầy đủ thông tin đăng ký
-            const response = await axiosClient.post('/auth/otp-register', {
-                firstName,
+            // Gửi đầy đủ thông tin đăng ký để nhận OTP
+            await axiosClient.post('/auth/otp-register', {
+                name: firstName,
                 email,
-                phoneNumber,
+                phone: phoneNumber,
                 password,
-                role: isTutor ? 'TUTOR' : 'STUDENT', // Thêm role
+                role: isTutor ? 'TUTOR' : 'STUDENT',
             });
             setNotification({
-                message: 'Đăng ký thành công, vui lòng kiểm tra email để nhập mã OTP',
+                message: 'Vui lòng kiểm tra email để nhập mã OTP',
                 show: true,
                 type: 'success',
             });
 
-            // Log để debug
-            console.log('Registration successful:', response.data);
+            // Tạo đối tượng chứa dữ liệu cần thiết để đăng ký
+            const registrationData = {
+                name: firstName,
+                email,
+                phone: phoneNumber,
+                password,
+                role: isTutor ? 'TUTOR' : 'STUDENT',
+            };
 
             setTimeout(() => {
                 setNotification((prev) => ({ ...prev, show: false }));
-                navigate('/verify-otp', { state: { email: email } });
+                // Chuyển hướng sang trang OTP với dữ liệu đăng ký
+                navigate('/verify-otp', {
+                    state: {
+                        registrationData,
+                        type: 'register',
+                    },
+                });
             }, 3000);
         } catch (error) {
             console.error('Registration error:', error); // Log lỗi để debug
@@ -160,6 +197,7 @@ const Register: React.FC = () => {
                     placeholder="Nhập họ và tên"
                     titleColor="#1B223B"
                     onChange={(value) => setFirstName(value)}
+                    onEnterPress={() => emailRef.current?.focus()}
                     required
                 />
                 <InputField
@@ -169,6 +207,8 @@ const Register: React.FC = () => {
                     errorTitle={errors.email}
                     titleColor="#1B223B"
                     onChange={(value) => setEmail(value)}
+                    onEnterPress={() => phoneRef.current?.focus()}
+                    inputRef={emailRef}
                     required
                 />
                 <InputField
@@ -178,6 +218,8 @@ const Register: React.FC = () => {
                     errorTitle={errors.phoneNumber}
                     titleColor="#1B223B"
                     onChange={(value) => setPhoneNumber(value)}
+                    onEnterPress={() => passwordRef.current?.focus()}
+                    inputRef={phoneRef}
                     required
                 />
                 <InputField
@@ -187,6 +229,8 @@ const Register: React.FC = () => {
                     errorTitle={errors.password}
                     titleColor="#1B223B"
                     onChange={(value) => setPassword(value)}
+                    onEnterPress={() => rePasswordRef.current?.focus()}
+                    inputRef={passwordRef}
                     required
                 />
                 <InputField
@@ -196,6 +240,8 @@ const Register: React.FC = () => {
                     errorTitle={errors.rePassword}
                     titleColor="#1B223B"
                     onChange={(value) => setRePassword(value)}
+                    onEnterPress={handleClickRegister}
+                    inputRef={rePasswordRef}
                     required
                 />
 
@@ -223,7 +269,7 @@ const Register: React.FC = () => {
                         />
                         <Text size="small" color="text-[#1B223B]">
                             Tôi đồng ý với các điều khoản trong{' '}
-                            <Link to="/terms" className="text-[#1B223B] font-semibold hover:underline">
+                            <Link to="/faqs" className="text-[#1B223B] font-semibold hover:underline">
                                 Điều khoản sử dụng
                             </Link>
                         </Text>
@@ -234,8 +280,8 @@ const Register: React.FC = () => {
                 <Button
                     title="Đăng ký"
                     foreColor="white"
-                    backgroundColor="bg-[#1B223B]"
-                    hoverBackgroundColor="hover:bg-[#2A3356]"
+                    backgroundColor={isAccept ? '#1E3A8A' : '#E5E7EB'}
+                    hoverBackgroundColor={isAccept ? '#1E40AF' : '#E5E7EB'}
                     className="w-full h-12 transition-colors rounded-lg mt-4"
                     onClick={handleClickRegister}
                     disabled={!isAccept}
