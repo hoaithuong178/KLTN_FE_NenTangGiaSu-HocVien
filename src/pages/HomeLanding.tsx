@@ -18,6 +18,8 @@ const TutorSection = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { user } = useAuthStore();
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const fetchTutors = async () => {
@@ -84,26 +86,30 @@ const TutorSection = () => {
     }, []);
 
     const handleTutorClick = (tutor: TutorProfileComponentTutor) => {
-        navigate(`/tutor-profile/${tutor.id}`, {
-            state: {
-                ...tutor,
-                id: tutor.id,
-                email: tutor.email || '',
-                phone: tutor.phone || '',
-                userProfile: {
-                    ...tutor.userProfile,
-                    avatar: tutor.userProfile?.avatar || defaultAvatar,
+        if (!user) {
+            setShowModal(true);
+        } else {
+            navigate(`/tutor-profile/${tutor.id}`, {
+                state: {
+                    ...tutor,
+                    id: tutor.id,
+                    email: tutor.email || '',
+                    phone: tutor.phone || '',
+                    userProfile: {
+                        ...tutor.userProfile,
+                        avatar: tutor.userProfile?.avatar || defaultAvatar,
+                    },
+                    tutorProfile: {
+                        ...tutor.tutorProfile,
+                        learningTypes: tutor.tutorProfile?.learningTypes || [],
+                        specializations: tutor.tutorProfile?.specializations || [],
+                        freeTime: tutor.tutorProfile?.freeTime || {},
+                        reviews: tutor.tutorProfile?.reviews || [],
+                        tutorLocations: tutor.tutorProfile?.tutorLocations || [],
+                    },
                 },
-                tutorProfile: {
-                    ...tutor.tutorProfile,
-                    learningTypes: tutor.tutorProfile?.learningTypes || [],
-                    specializations: tutor.tutorProfile?.specializations || [],
-                    freeTime: tutor.tutorProfile?.freeTime || {},
-                    reviews: tutor.tutorProfile?.reviews || [],
-                    tutorLocations: tutor.tutorProfile?.tutorLocations || [],
-                },
-            },
-        });
+            });
+        }
     };
 
     return (
@@ -202,6 +208,126 @@ const TutorSection = () => {
                     </button>
                 </div>
             </div>
+            {/* Login Modal */}
+            {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50 animate-fade-in">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-[90%] max-w-md animate-fade-in relative overflow-hidden">
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 bg-[url('/src/assets/pattern.svg')] opacity-5"></div>
+
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+
+                        {/* Content */}
+                        <div className="relative z-10">
+                            {/* Logo */}
+                            <div className="flex justify-center mb-6">
+                                <img src={Logo} alt="TeachMe Logo" className="h-12 w-auto" />
+                            </div>
+
+                            {/* Title */}
+                            <h2 className="text-2xl font-bold text-[#1B223B] text-center mb-2">
+                                Đăng nhập để trải nghiệm TeachMe!
+                            </h2>
+                            <p className="text-gray-600 text-center mb-8">
+                                Tạo tài khoản để kết nối với gia sư chất lượng và bắt đầu hành trình học tập của bạn
+                            </p>
+
+                            {/* Buttons */}
+                            <div className="space-y-4">
+                                <Button
+                                    title="Đăng nhập ngay"
+                                    backgroundColor="#FFC569"
+                                    hoverBackgroundColor="#FFB347"
+                                    foreColor="#1B223B"
+                                    className="w-full py-3 rounded-full text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+                                    onClick={() => navigate('/sign-in')}
+                                />
+                                <Button
+                                    title="Đăng ký tài khoản mới"
+                                    backgroundColor="transparent"
+                                    hoverBackgroundColor="#FFC569"
+                                    foreColor="#1B223B"
+                                    className="w-full py-3 rounded-full text-lg font-semibold border-2 border-[#FFC569] hover:bg-[#FFC569] transition-all duration-300"
+                                    onClick={() => navigate('/register')}
+                                />
+                            </div>
+
+                            {/* Features */}
+                            <div className="mt-8 space-y-3">
+                                <div className="flex items-center text-gray-600">
+                                    <svg
+                                        className="w-5 h-5 text-[#FFC569] mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                    <span>Kết nối với gia sư chất lượng</span>
+                                </div>
+                                <div className="flex items-center text-gray-600">
+                                    <svg
+                                        className="w-5 h-5 text-[#FFC569] mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                    <span>Quản lý lịch học linh hoạt</span>
+                                </div>
+                                <div className="flex items-center text-gray-600">
+                                    <svg
+                                        className="w-5 h-5 text-[#FFC569] mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                    <span>Đánh giá và phản hồi chi tiết</span>
+                                </div>
+                            </div>
+
+                            {/* Skip Button */}
+                            <button
+                                className="mt-6 text-sm text-gray-500 hover:text-[#FFC569] transition-colors mx-auto block"
+                                onClick={() => setShowModal(false)}
+                            >
+                                Để sau
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };
