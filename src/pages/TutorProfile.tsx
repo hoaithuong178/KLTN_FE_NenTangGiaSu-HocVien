@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import SEO from '../components/SEO';
 import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, StarIcon } from '../components/icons';
-import { Button } from '../components/Button';
+//import { Button } from '../components/Button';
 import { useAuthStore } from '../store/authStore';
 import defaultAvatar from '../assets/avatar.jpg';
+import { RequestModal } from '../components/ModalComponent';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -27,6 +28,7 @@ export interface TutorProfileComponentTutor {
     status?: string;
     violate?: number;
     userProfile?: {
+        idCardNumber?: string;
         avatar?: string;
         gender: string;
         dob: string;
@@ -75,6 +77,8 @@ const TutorProfile: React.FC = () => {
         duration: number;
         mode: 'online' | 'offline';
         hourlyPrice: number;
+        level: string;
+        sessionsPerWeek: number;
     }>({
         title: '',
         content: '',
@@ -84,10 +88,12 @@ const TutorProfile: React.FC = () => {
         duration: 60,
         mode: 'online',
         hourlyPrice: 0,
+        level: '',
+        sessionsPerWeek: 1,
     });
     //const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [selectedTimes] = useState<string[]>([]);
-    const [sessionCount, setSessionCount] = useState<number>(1);
+    //const [sessionCount, setSessionCount] = useState<number>(1);
     const [notification, setNotification] = useState<{
         message: string;
         show: boolean;
@@ -157,7 +163,18 @@ const TutorProfile: React.FC = () => {
                 }
 
                 if (currentUser?.role === 'TUTOR' && currentUser.id === tutorId) {
-                    const mappedTutor = mapTutorData(currentUser, true);
+                    const mappedTutor = mapTutorData(
+                        {
+                            ...currentUser,
+                            userProfile: {
+                                avatar: currentUser.userProfile?.avatar || defaultAvatar,
+                                gender: currentUser.userProfile?.gender || 'Unknown',
+                                dob: currentUser.userProfile?.dob || '',
+                                address: currentUser.userProfile?.address || '',
+                            },
+                        },
+                        true,
+                    );
                     setTutor(mappedTutor);
                     setLoading(false);
                     return;
@@ -272,6 +289,17 @@ const TutorProfile: React.FC = () => {
         return phone.slice(0, -3) + '***';
     };
 
+    const translateGender = (gender: string): string => {
+        switch (gender) {
+            case 'MALE':
+                return 'Nam';
+            case 'FEMALE':
+                return 'Nữ';
+            default:
+                return 'Không xác định';
+        }
+    };
+
     if (loading) {
         return (
             <div className="text-center py-10">
@@ -380,222 +408,6 @@ const TutorProfile: React.FC = () => {
                                 </button>
                             )}
 
-                            {showRequestModal && (
-                                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
-                                    <div className="bg-white p-8 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto relative z-[10000]">
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h2 className="text-2xl font-bold text-[#1B223B]">Gửi yêu cầu dạy</h2>
-                                            <button
-                                                onClick={() => setShowRequestModal(false)}
-                                                className="text-gray-500 hover:text-gray-700"
-                                            >
-                                                <svg
-                                                    className="w-6 h-6"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M6 18L18 6M6 6l12 12"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <div>
-                                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                    Tiêu đề
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    name="title"
-                                                    value={requestForm.title}
-                                                    onChange={handleChange}
-                                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                    placeholder="Nhập tiêu đề yêu cầu"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                    Yêu cầu đối với gia sư
-                                                </label>
-                                                <textarea
-                                                    name="content"
-                                                    value={requestForm.content}
-                                                    onChange={handleChange}
-                                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                    rows={4}
-                                                    placeholder="Mô tả chi tiết yêu cầu của bạn"
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                        Môn học
-                                                    </label>
-                                                    <select
-                                                        name="specializations"
-                                                        value={requestForm.specializations}
-                                                        onChange={handleChange}
-                                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                    >
-                                                        {tutor.tutorProfile?.specializations?.length ? (
-                                                            tutor.tutorProfile.specializations.map((spec) => (
-                                                                <option key={spec} value={spec}>
-                                                                    {spec}
-                                                                </option>
-                                                            ))
-                                                        ) : (
-                                                            <option value="">Không có môn học</option>
-                                                        )}
-                                                    </select>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                        Địa điểm
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        name="location"
-                                                        value={requestForm.location}
-                                                        onChange={handleChange}
-                                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                        placeholder="Nhập địa điểm học"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                        Số buổi/tuần
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={sessionCount}
-                                                        onChange={(e) =>
-                                                            setSessionCount(Math.max(1, parseInt(e.target.value) || 1))
-                                                        }
-                                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                        min="1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                        Thời lượng/Buổi (phút)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        name="duration"
-                                                        value={requestForm.duration}
-                                                        onChange={handleChange}
-                                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                        min="30"
-                                                        step="30"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                    Hình thức học
-                                                </label>
-                                                <div className="flex space-x-6">
-                                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name="mode"
-                                                            value="online"
-                                                            checked={requestForm.mode === 'online'}
-                                                            onChange={handleChange}
-                                                            className="text-[#1B223B] focus:ring-[#FFC569]"
-                                                        />
-                                                        <span className="text-gray-700">Online</span>
-                                                    </label>
-                                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name="mode"
-                                                            value="offline"
-                                                            checked={requestForm.mode === 'offline'}
-                                                            onChange={handleChange}
-                                                            className="text-[#1B223B] focus:ring-[#FFC569]"
-                                                        />
-                                                        <span className="text-gray-700">Offline</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Không hiển thị chọn giờ vì dữ liệu mẫu không có schedule */}
-                                            {/* Nếu muốn hiển thị freeTime */}
-                                            <div>
-                                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                    Thời gian rảnh
-                                                </label>
-                                                <div className="bg-gray-50 p-4 rounded-lg">
-                                                    {tutor.tutorProfile?.freeTime?.length &&
-                                                    tutor.tutorProfile.freeTime[0] ? (
-                                                        tutor.tutorProfile.freeTime.map((time) => (
-                                                            <span
-                                                                key={time}
-                                                                className="inline-block bg-green-200 text-gray-700 px-3 py-1 rounded-lg mr-2 mb-2"
-                                                            >
-                                                                {time || 'Không xác định'}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <p className="text-gray-500">Chưa có thời gian rảnh</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-gray-50 p-4 rounded-lg">
-                                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                                    Giá/giờ:
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    name="hourlyPrice"
-                                                    value={requestForm.hourlyPrice}
-                                                    onChange={handleChange}
-                                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                                    placeholder={new Intl.NumberFormat('vi-VN').format(
-                                                        (requestForm.duration / 60) *
-                                                            (tutor.tutorProfile?.hourlyPrice || 0),
-                                                    )}
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-end gap-4 pt-4">
-                                                <Button
-                                                    title="Hủy"
-                                                    backgroundColor="#D1D5DB"
-                                                    hoverBackgroundColor="#B3B8C2"
-                                                    foreColor="#1B223B"
-                                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
-                                                    onClick={() => setShowRequestModal(false)}
-                                                />
-                                                <Button
-                                                    title="Gửi yêu cầu"
-                                                    backgroundColor="#1B223B"
-                                                    hoverBackgroundColor="#2A3349"
-                                                    foreColor="white"
-                                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
-                                                    onClick={handleSubmit}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                             <div className="text-gray-700 mt-2">
                                 <div className="flex space-x-2 items-center justify-center">
                                     <HeartIcon
@@ -649,7 +461,9 @@ const TutorProfile: React.FC = () => {
                             <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
                             <p className="text-gray-800 col-span-3">{tutor.tutorProfile?.description || ''}</p>
                             <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
-                            <p className="text-gray-800 col-span-3">{tutor.userProfile?.gender || 'Unknown'}</p>
+                            <p className="text-gray-800 col-span-3">
+                                {translateGender(tutor.userProfile?.gender || 'Unknown')}
+                            </p>
                             <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
                             <p className="text-gray-800 col-span-3">
                                 {tutor.userProfile?.dob
@@ -658,7 +472,9 @@ const TutorProfile: React.FC = () => {
                                       )} tuổi)`
                                     : 'Chưa cập nhật'}
                             </p>
-                            <p className="text-gray-600 font-semibold col-span-1">Trình độ</p>
+                            <p className="text-gray-600 font-semibold col-span-1">Khối</p>
+                            <p className="text-gray-800 col-span-3">{tutor.tutorProfile?.level || ''}</p>
+                            <p className="text-gray-600 font-semibold col-span-1">Trình độ chuyên môn</p>
                             <p className="col-span-3">
                                 <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg inline-block">
                                     {tutor.tutorProfile?.qualification || 'Chưa cập nhật'}
@@ -760,6 +576,16 @@ const TutorProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <RequestModal
+                show={showRequestModal}
+                onClose={() => setShowRequestModal(false)}
+                onSubmit={handleSubmit}
+                requestForm={requestForm}
+                handleChange={handleChange}
+                tutorSpecializations={tutor.tutorProfile?.specializations || []}
+                tutorLearningTypes={tutor.tutorProfile?.learningTypes || []}
+                tutorHourlyPrice={tutor.tutorProfile?.hourlyPrice || 0}
+            />
         </>
     );
 };
