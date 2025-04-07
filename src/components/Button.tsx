@@ -1,9 +1,8 @@
 import React from 'react';
-import { Text } from './Text'; // Import Text component
 
 interface ButtonProps {
     variant?: 'primary' | 'secondary' | 'danger';
-    onClick?: (e: React.MouseEvent<Element>) => void;
+    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
     className?: string;
     children?: React.ReactNode; // Thêm thuộc tính children
     title: string; // Tiêu đề của nút
@@ -62,12 +61,32 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantStyles = getVariantStyles();
 
+    const getSizeClass = () => {
+        switch (size) {
+            case 'small':
+                return 'text-sm';
+            case 'large':
+                return 'text-lg';
+            default:
+                return 'text-base';
+        }
+    };
+
     return (
         <button
             type={type}
             onClick={onClick}
             disabled={disabled}
-            className={`py-2 px-4 rounded-md ${className} transition-all duration-300`}
+            className={`
+                py-2 
+                px-4 
+                rounded-md 
+                transition-all 
+                duration-300
+                ${getSizeClass()}
+                ${weight === 'bold' ? 'font-bold' : 'font-normal'}
+                ${className}
+            `}
             style={{
                 backgroundColor: variantStyles.bg,
                 color: variantStyles.color,
@@ -75,26 +94,18 @@ export const Button: React.FC<ButtonProps> = ({
             }}
             onMouseEnter={(e) => {
                 if (!disabled) {
-                    (e.target as HTMLButtonElement).style.backgroundColor = variantStyles.hoverBg;
-                    (e.target as HTMLButtonElement).style.color = hoverForeColor;
+                    e.currentTarget.style.backgroundColor = variantStyles.hoverBg;
+                    e.currentTarget.style.color = hoverForeColor;
                 }
             }}
             onMouseLeave={(e) => {
                 if (!disabled) {
-                    (e.target as HTMLButtonElement).style.backgroundColor = variantStyles.bg;
-                    (e.target as HTMLButtonElement).style.color = variantStyles.color;
+                    e.currentTarget.style.backgroundColor = variantStyles.bg;
+                    e.currentTarget.style.color = variantStyles.color;
                 }
             }}
         >
-            {/* Sử dụng Text component để hiển thị nội dung */}
-            <Text
-                size={size}
-                weight={weight}
-                color={disabled ? disabledForeColor : variantStyles.color}
-                className="flex items-center justify-center"
-            >
-                {title}
-            </Text>
+            <span className="flex items-center justify-center">{title}</span>
         </button>
     );
 };

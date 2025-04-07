@@ -6,7 +6,7 @@ import { FilterIcon, ResetIcon } from '../components/icons';
 import TutorDetailCard from '../components/TutorDetailCard';
 import TutorSkeleton from '../components/TutorSkeleton';
 import { TutorProfileComponentTutor } from './TutorProfile';
-import { Button } from '../components/Button';
+import { RequestModal } from '../components/ModalComponent';
 
 const Tutor: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
@@ -27,10 +27,11 @@ const Tutor: React.FC = () => {
         duration: 60,
         mode: 'online' as 'online' | 'offline',
         hourlyPrice: 0, // Thay pricePerSession bằng hourlyPrice
+        learningTypes: '', // Thêm thuộc tính này
+        level: '', // Thêm thuộc tính này
+        sessionsPerWeek: 1, // Thêm thuộc tính này
     });
-    const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [selectedTimes] = useState<string[]>([]);
-    const [sessionCount, setSessionCount] = useState<number>(1);
     const [notification, setNotification] = useState<{
         message: string;
         show: boolean;
@@ -191,6 +192,9 @@ const Tutor: React.FC = () => {
             duration: 60,
             mode: 'online',
             hourlyPrice: tutor.tutorProfile?.hourlyPrice || 0,
+            learningTypes: tutor.tutorProfile?.learningTypes?.[0] || '',
+            level: tutor.tutorProfile?.level || '',
+            sessionsPerWeek: 1,
         });
         setShowRequestModal(true);
     };
@@ -437,241 +441,16 @@ const Tutor: React.FC = () => {
             </div>
 
             {showRequestModal && selectedTutor && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
-                    <div className="bg-white p-8 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto relative z-[10000]">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-[#1B223B]">Gửi yêu cầu dạy</h2>
-                            <button
-                                onClick={() => setShowRequestModal(false)}
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block font-semibold text-gray-700 mb-2 text-left">Tiêu đề</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={requestForm.title}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                    placeholder="Nhập tiêu đề yêu cầu"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                    Yêu cầu đối với gia sư
-                                </label>
-                                <textarea
-                                    name="content"
-                                    value={requestForm.content}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                    rows={4}
-                                    placeholder="Mô tả chi tiết yêu cầu của bạn"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block font-semibold text-gray-700 mb-2 text-left">Môn học</label>
-                                    <select
-                                        name="specializations"
-                                        value={requestForm.specializations}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                    >
-                                        {selectedTutor.tutorProfile?.specializations?.length ? (
-                                            selectedTutor.tutorProfile.specializations.map((spec) => (
-                                                <option key={spec} value={spec}>
-                                                    {spec}
-                                                </option>
-                                            ))
-                                        ) : (
-                                            <option value="">Không có môn học</option>
-                                        )}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block font-semibold text-gray-700 mb-2 text-left">Địa điểm</label>
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={requestForm.location}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                        placeholder="Nhập địa điểm học"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                        Số buổi/tuần
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={sessionCount}
-                                        onChange={(e) => setSessionCount(Math.max(1, parseInt(e.target.value) || 1))}
-                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                        min="1"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                        Thời lượng/Buổi (phút)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="duration"
-                                        value={requestForm.duration}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                        min="30"
-                                        step="30"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                    Hình thức học
-                                </label>
-                                <div className="flex space-x-6">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="mode"
-                                            value="online"
-                                            checked={requestForm.mode === 'online'}
-                                            onChange={handleChange}
-                                            className="text-[#1B223B] focus:ring-[#FFC569]"
-                                        />
-                                        <span className="text-gray-700">Online</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="mode"
-                                            value="offline"
-                                            checked={requestForm.mode === 'offline'}
-                                            onChange={handleChange}
-                                            className="text-[#1B223B] focus:ring-[#FFC569]"
-                                        />
-                                        <span className="text-gray-700">Offline</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block font-semibold text-gray-700 mb-2 text-left">
-                                    Chọn ngày và giờ học
-                                </label>
-                                <div className="space-y-4">
-                                    <div className="flex gap-2 flex-wrap">
-                                        {Object.keys(selectedTutor.tutorProfile?.freeTime || {}).map((day) => (
-                                            <Button
-                                                key={day}
-                                                title={day}
-                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                                    selectedDay === day
-                                                        ? 'bg-[#1B223B] text-white shadow-md'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                                onClick={() => setSelectedDay(day)}
-                                            />
-                                        ))}
-                                    </div>
-
-                                    {/* {selectedDay && selectedTutor.tutorProfile?.freeTime?.[selectedDay] && (
-                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                            <h3 className="text-lg font-semibold text-gray-700 mb-3 text-left">
-                                                Chọn khung giờ:
-                                            </h3>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {Object.entries(
-                                                    selectedTutor.tutorProfile.freeTime[selectedDay],
-                                                ).flatMap(([period, times]) =>
-                                                    times?.map(([start, end]) => {
-                                                        const timeRange = `${start}-${end}`;
-                                                        return (
-                                                            <Button
-                                                                key={timeRange}
-                                                                title={`${period}: ${start}-${end}`}
-                                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                                                    selectedTimes.includes(timeRange)
-                                                                        ? 'bg-[#1B223B] text-white shadow-md'
-                                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                                }`}
-                                                                onClick={() => toggleTimeSelection(timeRange)}
-                                                                disabled={
-                                                                    selectedTimes.length >= sessionCount &&
-                                                                    !selectedTimes.includes(timeRange)
-                                                                }
-                                                            />
-                                                        );
-                                                    }),
-                                                )}
-                                            </div>
-                                            <div className="mt-3 text-right">
-                                                <span className="text-sm text-gray-600">
-                                                    Đã chọn {selectedTimes.length}/{sessionCount} khung giờ
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )} */}
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <label className="block font-semibold text-gray-700 mb-2 text-left">Giá/giờ:</label>
-                                <input
-                                    type="number"
-                                    name="hourlyPrice"
-                                    value={requestForm.hourlyPrice}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FFC569] focus:outline-none focus:border-transparent"
-                                    placeholder={new Intl.NumberFormat('vi-VN').format(
-                                        (requestForm.duration / 60) * (selectedTutor.tutorProfile?.hourlyPrice || 0),
-                                    )}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-4 pt-4">
-                                <Button
-                                    title="Hủy"
-                                    backgroundColor="#D1D5DB"
-                                    hoverBackgroundColor="#B3B8C2"
-                                    foreColor="#1B223B"
-                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
-                                    onClick={() => setShowRequestModal(false)}
-                                />
-                                <Button
-                                    title="Gửi yêu cầu"
-                                    backgroundColor="#1B223B"
-                                    hoverBackgroundColor="#2A3349"
-                                    foreColor="white"
-                                    className="px-6 py-2.5 rounded-lg text-sm font-semibold"
-                                    onClick={handleSubmit}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <RequestModal
+                    show={showRequestModal}
+                    onClose={() => setShowRequestModal(false)}
+                    onSubmit={handleSubmit}
+                    requestForm={requestForm}
+                    handleChange={handleChange}
+                    tutorSpecializations={selectedTutor.tutorProfile?.specializations || []}
+                    tutorLearningTypes={selectedTutor.tutorProfile?.learningTypes || []}
+                    tutorHourlyPrice={selectedTutor.tutorProfile?.hourlyPrice || 0}
+                />
             )}
 
             {notification.show && (
