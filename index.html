@@ -98,11 +98,36 @@
             async
             defer
             crossorigin="anonymous"
-            src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0&appId=YOUR_FB_APP_ID"
+            src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0&appId=3963467407266355"
             nonce="YOUR_NONCE"
         ></script>
 
         <div id="root"></div>
+
+        <script>
+            window.fbAsyncInit = function () {
+                FB.init({
+                    appId: '3963467407266355',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v22.0',
+                });
+
+                FB.AppEvents.logPageView();
+            };
+
+            (function (d, s, id) {
+                var js,
+                    fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {
+                    return;
+                }
+                js = d.createElement(s);
+                js.id = id;
+                js.src = 'https://connect.facebook.net/en_US/sdk.js';
+                fjs.parentNode.insertBefore(js, fjs);
+            })(document, 'script', 'facebook-jssdk');
+        </script>
         <script type="module" src="/src/main.tsx"></script>
         <noscript
             ><iframe

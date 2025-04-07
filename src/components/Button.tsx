@@ -1,7 +1,11 @@
 import React from 'react';
 import { Text } from './Text'; // Import Text component
 
-type ButtonProps = {
+interface ButtonProps {
+    variant?: 'primary' | 'secondary' | 'danger';
+    onClick?: (e: React.MouseEvent<Element>) => void;
+    className?: string;
+    children?: React.ReactNode; // Thêm thuộc tính children
     title: string; // Tiêu đề của nút
     foreColor?: string; // Màu chữ
     backgroundColor?: string; // Màu nền
@@ -11,13 +15,12 @@ type ButtonProps = {
     disabledBackgroundColor?: string; // Màu nền khi nút bị disable
     size?: 'small' | 'medium' | 'large'; // Kích thước chữ
     weight?: 'normal' | 'bold'; // Độ đậm
-    className?: string; // ClassName để tùy chỉnh width và height
-    onClick?: () => void; // Hàm callback khi nút được nhấn
     disabled?: boolean; // Trạng thái nút bị vô hiệu hóa
     type?: 'button' | 'submit' | 'reset'; // Loại nút
-};
+}
 
 export const Button: React.FC<ButtonProps> = ({
+    variant = 'primary',
     title,
     foreColor = 'white',
     backgroundColor = '#1E3A8A', // blue-900
@@ -32,6 +35,33 @@ export const Button: React.FC<ButtonProps> = ({
     disabled = false,
     type = 'button',
 }) => {
+    // Thêm logic sử dụng variant
+    const getVariantStyles = () => {
+        switch (variant) {
+            case 'secondary':
+                return {
+                    bg: disabled ? disabledBackgroundColor : '#4B5563', // gray-600
+                    color: disabled ? disabledForeColor : 'white',
+                    hoverBg: '#374151', // gray-700
+                };
+            case 'danger':
+                return {
+                    bg: disabled ? disabledBackgroundColor : '#DC2626', // red-600
+                    color: disabled ? disabledForeColor : 'white',
+                    hoverBg: '#B91C1C', // red-700
+                };
+            case 'primary':
+            default:
+                return {
+                    bg: disabled ? disabledBackgroundColor : backgroundColor,
+                    color: disabled ? disabledForeColor : foreColor,
+                    hoverBg: hoverBackgroundColor,
+                };
+        }
+    };
+
+    const variantStyles = getVariantStyles();
+
     return (
         <button
             type={type}
@@ -39,20 +69,20 @@ export const Button: React.FC<ButtonProps> = ({
             disabled={disabled}
             className={`py-2 px-4 rounded-md ${className} transition-all duration-300`}
             style={{
-                backgroundColor: disabled ? disabledBackgroundColor : backgroundColor,
-                color: disabled ? disabledForeColor : foreColor,
+                backgroundColor: variantStyles.bg,
+                color: variantStyles.color,
                 cursor: disabled ? 'not-allowed' : 'pointer',
             }}
             onMouseEnter={(e) => {
                 if (!disabled) {
-                    (e.target as HTMLButtonElement).style.backgroundColor = hoverBackgroundColor;
+                    (e.target as HTMLButtonElement).style.backgroundColor = variantStyles.hoverBg;
                     (e.target as HTMLButtonElement).style.color = hoverForeColor;
                 }
             }}
             onMouseLeave={(e) => {
                 if (!disabled) {
-                    (e.target as HTMLButtonElement).style.backgroundColor = backgroundColor;
-                    (e.target as HTMLButtonElement).style.color = foreColor;
+                    (e.target as HTMLButtonElement).style.backgroundColor = variantStyles.bg;
+                    (e.target as HTMLButtonElement).style.color = variantStyles.color;
                 }
             }}
         >
@@ -60,7 +90,7 @@ export const Button: React.FC<ButtonProps> = ({
             <Text
                 size={size}
                 weight={weight}
-                color={disabled ? disabledForeColor : foreColor}
+                color={disabled ? disabledForeColor : variantStyles.color}
                 className="flex items-center justify-center"
             >
                 {title}

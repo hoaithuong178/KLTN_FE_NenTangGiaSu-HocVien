@@ -95,9 +95,10 @@ export const CalendarTodayIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
-export const ChatIcon = ({ className }: { className?: string }) => (
+export const ChatIcon = ({ className, onClick }: { className?: string; onClick?: (e: React.MouseEvent) => void }) => (
     <svg
         className={className}
+        onClick={onClick}
         xmlns="http://www.w3.org/2000/svg"
         width={24}
         height={24}
@@ -257,7 +258,7 @@ export const FilterIcon = ({ className, onClick }: { className?: string; onClick
     </svg>
 );
 
-export const HeartIcon = ({ className, onClick }: { className?: string; onClick?: () => void }) => (
+export const HeartIcon = ({ className, onClick }: { className?: string; onClick: (e: React.MouseEvent) => void }) => (
     <svg
         className={className}
         onClick={onClick} // Thêm sự kiện onClick vào SVG
@@ -365,7 +366,7 @@ export const StarIcon = ({ className }: { className?: string }) => (
         width={24}
         height={24}
         viewBox="0 0 24 24"
-        stroke-width="1.5"
+        strokeWidth="1.5"
         stroke="currentColor"
         className={className}
     >
@@ -466,7 +467,7 @@ export const AddressIcon = ({ className }: { className?: string }) => (
         />
     </svg>
 );
-export const FlagIcon = ({ className }: { className?: string }) => (
+export const WorldIcon = ({ className }: { className?: string }) => (
     <svg
         className={className}
         xmlns="http://www.w3.org/2000/svg"
@@ -477,7 +478,11 @@ export const FlagIcon = ({ className }: { className?: string }) => (
         strokeWidth="1.5"
         stroke="currentColor"
     >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 21V5h16l-4 4-4-4H4" />
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"
+        />
     </svg>
 );
 export const ResetIcon = ({ className }: { className?: string }) => (
@@ -495,6 +500,42 @@ export const ResetIcon = ({ className }: { className?: string }) => (
             fillRule="evenodd"
             d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z"
             clipRule="evenodd"
+        />
+    </svg>
+);
+export const KhieuNaiIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.182 16.318A4.486 4.486 0 0 0 12.016 15a4.486 4.486 0 0 0-3.198 1.318M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z"
+        />
+    </svg>
+);
+export const UsersIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
         />
     </svg>
 );

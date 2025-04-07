@@ -1,26 +1,26 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-    AnalyticsIcon,
     ChatIcon,
     MyClassIcon,
     NewsIcon,
-    UserIcon,
     QuestionIcon,
     ArrowLeftIcon,
     ArrowRightIcon,
     MoneyIcon,
+    KhieuNaiIcon,
+    UsersIcon,
 } from '../components/icons';
 import { Text } from '../components/Text';
 import FullLogo from '../assets/FullLogo.png';
 import SmallLogo from '../assets/SmallLogo.png';
 
-interface NavbarProps {
+interface NavbarAdminProps {
     isExpanded: boolean;
     toggleNavbar: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
+const NavbarAdmin: React.FC<NavbarAdminProps> = ({ isExpanded, toggleNavbar }) => {
     const location = useLocation(); // Lấy thông tin đường dẫn hiện tại
 
     // Hàm để kiểm tra xem mục menu nào đang được chọn
@@ -65,44 +65,44 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
             {/* Menu Items */}
             <div className="flex-1">
                 <ul className="space-y-4">
-                    <Link to="/post" className="text-decoration-none">
+                    <Link to="/admin-post" className="text-decoration-none">
                         <li
                             className={`flex items-center ${
                                 isExpanded ? 'space-x-4' : 'justify-center'
-                            } p-2 ${getLinkClass('/post')}`}
+                            } p-2 ${getLinkClass('/admin-post')}`}
                         >
                             <NewsIcon className="w-6 h-6" />
                             {isExpanded && (
-                                <Text size="medium" weight="bold" color={getTextColor('/post')}>
-                                    Bài đăng
+                                <Text size="medium" weight="bold" color={getTextColor('/admin-post')}>
+                                    Quản lý bài đăng
                                 </Text>
                             )}
                         </li>
                     </Link>
-                    <Link to="/tutors" className="text-decoration-none">
+                    <Link to="/admin-user" className="text-decoration-none">
                         <li
                             className={`flex items-center ${
                                 isExpanded ? 'space-x-4' : 'justify-center'
-                            } p-2 ${getLinkClass('/tutors')}`}
+                            } p-2 ${getLinkClass('/admin-user')}`}
                         >
-                            <UserIcon className="w-6 h-6" />
+                            <UsersIcon className="w-6 h-6" />
                             {isExpanded && (
-                                <Text size="medium" weight="bold" color={getTextColor('/tutors')}>
-                                    Gia sư
+                                <Text size="medium" weight="bold" color={getTextColor('/admin-user')}>
+                                    Quản lý người dùng
                                 </Text>
                             )}
                         </li>
                     </Link>
-                    <Link to="/my-class" className="text-decoration-none">
+                    <Link to="/admin-class" className="text-decoration-none">
                         <li
                             className={`flex items-center ${
                                 isExpanded ? 'space-x-4' : 'justify-center'
-                            } p-2 ${getLinkClass('/my-class')}`}
+                            } p-2 ${getLinkClass('/admin-class')}`}
                         >
                             <MyClassIcon className="w-6 h-6" />
                             {isExpanded && (
-                                <Text size="medium" weight="bold" color={getTextColor('/my-class')}>
-                                    Lớp học của tôi
+                                <Text size="medium" weight="bold" color={getTextColor('/admin-class')}>
+                                    Quản lý lớp học
                                 </Text>
                             )}
                         </li>
@@ -116,7 +116,7 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                             <ChatIcon className="w-6 h-6" />
                             {isExpanded && (
                                 <Text size="medium" weight="bold" color={getTextColor('/conservation')}>
-                                    Tin nhắn
+                                    Quản lý tin nhắn
                                 </Text>
                             )}
                         </li>
@@ -127,10 +127,10 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                                 isExpanded ? 'space-x-4' : 'justify-center'
                             } p-2 ${getLinkClass('/dashboard')}`}
                         >
-                            <AnalyticsIcon className="w-6 h-6" />
+                            <KhieuNaiIcon className="w-6 h-6" />
                             {isExpanded && (
                                 <Text size="medium" weight="bold" color={getTextColor('/dashboard')}>
-                                    Thống kê
+                                    Quản lý khiếu nại
                                 </Text>
                             )}
                         </li>
@@ -144,7 +144,7 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                             <MoneyIcon className="w-6 h-6" />
                             {isExpanded && (
                                 <Text size="medium" weight="bold" color={getTextColor('/transaction')}>
-                                    Giao dịch
+                                    Quản lý ví
                                 </Text>
                             )}
                         </li>
@@ -158,7 +158,7 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
                             <QuestionIcon className="w-6 h-6" />
                             {isExpanded && (
                                 <Text size="medium" weight="bold" color={getTextColor('/faqs')}>
-                                    FAQs
+                                    Quản lý FAQs
                                 </Text>
                             )}
                         </li>
@@ -169,4 +169,4 @@ const Navbar: React.FC<NavbarProps> = ({ isExpanded, toggleNavbar }) => {
     );
 };
 
-export default Navbar;
+export default NavbarAdmin;
