@@ -14,6 +14,8 @@ import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Slider } from 'antd';
+import { TimeSlotSelector } from '../components/WeeklySchedule';
+import type { TimeSlot } from '../components/WeeklySchedule';
 
 interface Subject {
     id: string;
@@ -188,7 +190,7 @@ const Post: React.FC = () => {
         setSelectedGrade('');
         setSelectedSessionPerWeek([]);
         setSelectedDuration([]);
-        setFilterAvailableTimes([{ day: '', from: '', to: '' }]); // Reset filter times
+        setFilterAvailableTimes([{ day: '', from: '', to: '' }]);
     };
 
     const [isNegotiationOpen, setIsNegotiationOpen] = useState(false);
@@ -310,10 +312,10 @@ const Post: React.FC = () => {
         fetchSubjects();
     }, []);
 
-    const openNegotiationPopup = (post: Post) => {
-        setSelectedPost(post);
-        setIsNegotiationOpen(true);
-    };
+    // const openNegotiationPopup = (post: Post) => {
+    //     setSelectedPost(post);
+    //     setIsNegotiationOpen(true);
+    // };
 
     const closeNegotiationPopup = () => {
         setIsNegotiationOpen(false);
@@ -607,113 +609,245 @@ const Post: React.FC = () => {
         }
     };
 
-    // Thêm state để lưu thời gian được chọn
-    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+    // Component để chọn thời gian và chu kỳ lặp lại
+    interface TimeSelectionData {
+        sessionPerWeek: number;
+        selectedSlots: Array<{ day: string; startTime: string; endTime: string }>;
+        feePerSession: number;
+        mode: boolean;
+        repeatWeeks: number;
+    }
 
-    // Component để hiển thị và chọn thời gian
-    const ScheduleSelector = ({
-        schedule,
-        selectedTimes,
-        onChange,
+    const TimeSelectionModal = ({
+        post,
+        onClose,
+        onSubmit,
     }: {
-        schedule: string[];
-        selectedTimes: string[];
-        onChange: (times: string[]) => void;
+        post: Post;
+        onClose: () => void;
+        onSubmit: (data: TimeSelectionData) => void;
     }) => {
-        const handleTimeChange = (time: string) => {
-            if (selectedTimes.includes(time)) {
-                onChange(selectedTimes.filter((t) => t !== time));
-            } else {
-                onChange([...selectedTimes, time]);
+        const [sessionPerWeek, setSessionPerWeek] = useState<number>(Number(post.sessionPerWeek));
+        const [selectedSlots, setSelectedSlots] = useState<Array<{ day: string; startTime: string; endTime: string }>>(
+            [],
+        );
+        const [feePerSession, setFeePerSession] = useState<number>(Number(post.feePerSession));
+        const [mode, setMode] = useState<boolean>(post.mode);
+        const [repeatWeeks, setRepeatWeeks] = useState<number>(1);
+
+        const handleSlotsChange = (slots: TimeSlot[]) => {
+            const formattedSlots = slots.map((slot) => ({
+                day: slot.day,
+                startTime: `${slot.startHour}:${slot.startMinute}`,
+                endTime: `${slot.endHour}:${slot.endMinute}`,
+            }));
+            setSelectedSlots(formattedSlots);
+        };
+
+        const handleSubmit = () => {
+            if (selectedSlots.length !== sessionPerWeek) {
+                setNotification({
+                    message: `Vui lòng chọn đủ ${sessionPerWeek} khung thời gian`,
+                    show: true,
+                    type: 'error',
+                });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+                return;
             }
+
+            onSubmit({
+                sessionPerWeek,
+                selectedSlots,
+                feePerSession,
+                mode,
+                repeatWeeks,
+            });
         };
 
         return (
-            <div className="mt-4">
-                <p className="font-medium mb-2">Chọn thời gian dạy:</p>
-                <div className="space-y-2">
-                    {schedule.map((time, index) => (
-                        <label key={index} className="flex items-center space-x-2">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg w-[600px] max-w-full max-h-[90vh] overflow-y-auto">
+                    <h2 className="text-xl font-bold mb-4">Xác nhận nhận lớp</h2>
+
+                    {/* Hiển thị thông tin từ post */}
+                    <div className="mb-4 space-y-2">
+                        <div>
+                            <span className="font-semibold">Môn học:</span> {post.subject.name}
+                        </div>
+                        <div>
+                            <span className="font-semibold">Khối học:</span> {post.grade}
+                        </div>
+                        <div>
+                            <span className="font-semibold">Địa điểm:</span> {post.locations.join(', ')}
+                        </div>
+                        <div>
+                            <span className="font-semibold">Thời lượng/buổi:</span> {post.duration} phút
+                        </div>
+                        <div>
+                            <span className="font-semibold">Học phí/giờ:</span>
                             <input
-                                type="checkbox"
-                                checked={selectedTimes.includes(time)}
-                                onChange={() => handleTimeChange(time)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                type="number"
+                                value={feePerSession}
+                                onChange={(e) => setFeePerSession(Number(e.target.value))}
+                                className="ml-2 p-1 border rounded w-32"
                             />
-                            <span>{time}</span>
-                        </label>
-                    ))}
+                            <span className="ml-1">đ</span>
+                        </div>
+                        <div>
+                            <span className="font-semibold">Hình thức học:</span>
+                            <select
+                                value={mode ? 'Online' : 'Offline'}
+                                onChange={(e) => setMode(e.target.value === 'Online')}
+                                className="ml-2 p-1 border rounded"
+                            >
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Số buổi/tuần</label>
+                        <select
+                            value={sessionPerWeek}
+                            onChange={(e) => setSessionPerWeek(Number(e.target.value))}
+                            className="w-full p-2 border rounded"
+                        >
+                            {Array.from({ length: Number(post.sessionPerWeek) }, (_, i) => i + 1).map((num) => (
+                                <option key={num} value={num}>
+                                    {num} buổi
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Chọn khung thời gian</label>
+                        <TimeSlotSelector
+                            availableSlots={post.schedule}
+                            sessionPerWeek={sessionPerWeek}
+                            onSlotsChange={handleSlotsChange}
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Lặp lại trong</label>
+                        <select
+                            className="w-full p-2 border rounded"
+                            value={repeatWeeks}
+                            onChange={(e) => setRepeatWeeks(Number(e.target.value))}
+                        >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                                <option key={num} value={num}>
+                                    {num} {num === 1 ? 'tuần' : 'tuần'}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-sm text-gray-500 mt-1">Chọn số tuần lặp lại lịch học</p>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                        <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                            Hủy
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Xác nhận
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     };
 
-    // Cập nhật hàm handleTeachRequest để sử dụng thời gian đã chọn
-    const handleTeachRequest = async (post: Post) => {
+    const handleTeachRequest = async (post: Post, data: TimeSelectionData) => {
         try {
-            const formattedSchedule = selectedTimes.map((scheduleStr) => {
-                // Giả sử scheduleStr có dạng "Thứ 3 từ 16:00 - 20:00"
-                const [day, time] = scheduleStr.split(' từ ');
-                const [startTime, endTime] = time.split(' - ');
+            // Tạo ngày bắt đầu từ tuần tới
+            const startOfNextWeek = new Date();
+            startOfNextWeek.setDate(startOfNextWeek.getDate() + (8 - startOfNextWeek.getDay()));
 
-                // Convert day sang tiếng Anh
-                const dayMap: { [key: string]: string } = {
-                    'Thứ 2': 'Monday',
-                    'Thứ 3': 'Tuesday',
-                    'Thứ 4': 'Wednesday',
-                    'Thứ 5': 'Thursday',
-                    'Thứ 6': 'Friday',
-                    'Thứ 7': 'Saturday',
-                    'Chủ nhật': 'Sunday',
-                };
+            // Map ngày trong tuần sang tiếng Anh
+            const dayMap: { [key: string]: string } = {
+                'Thứ 2': 'Monday',
+                'Thứ 3': 'Tuesday',
+                'Thứ 4': 'Wednesday',
+                'Thứ 5': 'Thursday',
+                'Thứ 6': 'Friday',
+                'Thứ 7': 'Saturday',
+                'Chủ nhật': 'Sunday',
+            };
 
-                // Tạo date object cho startTime và endTime
-                const today = new Date();
-                const [startHour, startMinute] = startTime.split(':');
-                const [endHour, endMinute] = endTime.split(':');
+            // Tạo schedule cho mỗi tuần
+            interface ScheduleItem {
+                day: string;
+                startTime: string;
+                endTime: string;
+            }
 
-                const startDate = new Date(today);
-                startDate.setHours(parseInt(startHour), parseInt(startMinute), 0);
+            const formattedSchedule: ScheduleItem[] = [];
+            for (let weekIndex = 0; weekIndex < data.repeatWeeks; weekIndex++) {
+                // Tính ngày bắt đầu của mỗi tuần
+                const weekStartDate = new Date(startOfNextWeek);
+                weekStartDate.setDate(weekStartDate.getDate() + weekIndex * 7);
 
-                const endDate = new Date(today);
-                endDate.setHours(parseInt(endHour), parseInt(endMinute), 0);
+                // Thêm tất cả các slot đã chọn vào tuần này
+                data.selectedSlots.forEach((slot) => {
+                    const dayInEnglish = dayMap[slot.day];
+                    const [startHour, startMinute] = slot.startTime.split(':');
+                    const [endHour, endMinute] = slot.endTime.split(':');
 
-                return {
-                    day: dayMap[day] || day,
-                    startTime: startDate.toISOString(),
-                    endTime: endDate.toISOString(),
-                };
-            });
+                    const slotDate = new Date(weekStartDate);
+                    const daysUntilSlot =
+                        ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(
+                            dayInEnglish,
+                        ) - weekStartDate.getDay();
+                    slotDate.setDate(slotDate.getDate() + daysUntilSlot);
+
+                    // Set giờ và phút cho thời gian bắt đầu
+                    const startTime = new Date(slotDate);
+                    startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
+
+                    // Set giờ và phút cho thời gian kết thúc
+                    const endTime = new Date(slotDate);
+                    endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
+
+                    formattedSchedule.push({
+                        day: dayInEnglish,
+                        startTime: startTime.toISOString(),
+                        endTime: endTime.toISOString(),
+                    });
+                });
+            }
 
             const requestData = {
                 type: 'RECEIVE_CLASS',
                 toId: post.user.id,
                 grade: post.grade,
                 locations: post.locations,
-                sessionPerWeek: Number(post.sessionPerWeek),
+                sessionPerWeek: data.sessionPerWeek,
                 duration: Number(post.duration),
                 subjectId: post.subject.id,
                 schedule: formattedSchedule,
-                mode: post.mode,
-                feePerSession: Number(post.feePerSession),
+                mode: data.mode,
+                feePerSession: data.feePerSession,
             };
 
-            console.log('Sending teach request:', requestData);
+            // Log ra để debug
+            console.log('Request data:', JSON.stringify(requestData, null, 2));
 
-            const response = await axiosClient.post('/requests', requestData);
-
-            if (response.status === 201) {
-                setNotification({
-                    message: 'Đã gửi yêu cầu nhận lớp thành công',
-                    show: true,
-                    type: 'success',
-                });
-                setTimeout(() => {
-                    setNotification((prev) => ({ ...prev, show: false }));
-                }, 3000);
-                closeConfirmPopup();
-                setSelectedTimes([]); // Reset selected times
-            }
+            await axiosClient.post('/requests', requestData);
+            setNotification({
+                message: 'Đã gửi yêu cầu nhận lớp thành công',
+                show: true,
+                type: 'success',
+            });
+            setTimeout(() => {
+                setNotification((prev) => ({ ...prev, show: false }));
+            }, 3000);
+            closeConfirmPopup();
         } catch (error) {
             console.error('Error sending teach request:', error);
             if (error instanceof AxiosError) {
@@ -1221,7 +1355,7 @@ const Post: React.FC = () => {
                                             className="flex justify-end space-x-4 mt-4"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <button
+                                            {/* <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     openNegotiationPopup(post);
@@ -1229,7 +1363,7 @@ const Post: React.FC = () => {
                                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                             >
                                                 Thương lượng giá
-                                            </button>
+                                            </button> */}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -1288,49 +1422,14 @@ const Post: React.FC = () => {
                             </div>
                         )}
                         {isConfirmOpen && selectedPost && (
-                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                                <div
-                                    className="bg-white p-6 rounded-lg shadow-lg w-1/2"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <h2 className="text-xl font-semibold mb-4">Xác nhận nhận lớp</h2>
-                                    <p className="text-lg text-gray-600 mb-4">
-                                        Bạn muốn gửi yêu cầu nhận lớp đến {selectedPost.user?.name}?
-                                    </p>
-
-                                    <ScheduleSelector
-                                        schedule={selectedPost.schedule}
-                                        selectedTimes={selectedTimes}
-                                        onChange={setSelectedTimes}
-                                    />
-
-                                    {selectedTimes.length === 0 && (
-                                        <p className="text-red-500 text-sm mt-2">
-                                            Vui lòng chọn ít nhất một khung thời gian
-                                        </p>
-                                    )}
-
-                                    <div className="flex justify-between mt-6">
-                                        <button
-                                            onClick={closeConfirmPopup}
-                                            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
-                                        >
-                                            Hủy
-                                        </button>
-                                        <button
-                                            onClick={() => handleTeachRequest(selectedPost)}
-                                            disabled={selectedTimes.length === 0}
-                                            className={`px-4 py-2 rounded-md text-white transition-colors ${
-                                                selectedTimes.length === 0
-                                                    ? 'bg-gray-400 cursor-not-allowed'
-                                                    : 'bg-blue-900 hover:bg-blue-800'
-                                            }`}
-                                        >
-                                            Gửi yêu cầu
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            <TimeSelectionModal
+                                post={selectedPost}
+                                onClose={closeConfirmPopup}
+                                onSubmit={(data) => {
+                                    setSelectedSessionPerWeek([data.sessionPerWeek.toString()]);
+                                    handleTeachRequest(selectedPost, data);
+                                }}
+                            />
                         )}
                     </>
                 )}
