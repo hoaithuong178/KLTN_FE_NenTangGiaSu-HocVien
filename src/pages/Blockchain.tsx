@@ -7,7 +7,7 @@ import contract from '../assets/TeachMeContract.json';
 import { useWallet } from '../hooks/useWallet';
 import { v4 } from 'uuid';
 
-const contractAddress = '0x00FC4c58dB7DBCA3693c1367994F74da362a3958';
+const contractAddress = import.meta.env.VITE_APP_CONTRACT_ADDRESS ?? '0xec6cEde720fF57c3A6DFA9FD2c5d7E9235Ca34c7';
 const contractABI = contract.abi;
 
 export interface UserProfile {
@@ -27,6 +27,7 @@ export interface UserProfile {
 
 const Blockchain = () => {
     const { userProfile, connectedWallet, setUserProfile } = useUserProfileStore();
+    console.log('🚀 ~ Blockchain ~ userProfile:', userProfile);
     const [teachMeContract, setTeachMeContract] = useState<ethers.Contract | null>(null);
     const { connectWallet } = useWallet();
 
@@ -97,6 +98,33 @@ const Blockchain = () => {
         }
     };
 
+    const handleBuyBenefit = async () => {
+        try {
+            if (!teachMeContract) {
+                alert('Vui lòng kết nối ví MetaMask trước!');
+                return;
+            }
+
+            if (!connectedWallet) {
+                await connectWallet();
+            }
+
+            const tx = await teachMeContract.buyBenefit(
+                v4(),
+                userProfile?.id ?? '',
+                'cm955x03a0000op0oefwekqw7',
+                5,
+                100000,
+                { value: ethers.utils.parseEther('0.1') }, // 0.1 ETH
+            );
+            await tx.wait();
+            alert('Mua gói Benefit thành công!');
+        } catch (error) {
+            console.error('Lỗi khi mua gói Benefit:', error);
+            alert('Có lỗi xảy ra khi mua gói Benefit!');
+        }
+    };
+
     return (
         <div>
             <h1>blockchain</h1>
@@ -107,6 +135,12 @@ const Blockchain = () => {
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mt-4"
             >
                 Tạo Hợp Đồng Mới
+            </button>
+            <button
+                onClick={handleBuyBenefit}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mt-4"
+            >
+                Mua gói Benefit
             </button>
         </div>
     );
