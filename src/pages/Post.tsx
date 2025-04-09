@@ -4,7 +4,7 @@ import Avatar from '../assets/avatar.jpg';
 import FreeTimeSelection from '../components/FreeTimeSelection';
 import { CoppyLinkIcon, FilterIcon } from '../components/icons';
 import { Checkbox, ComboBox, InputField, RadioButton } from '../components/InputField';
-import Navbar from '../components/Navbar'; // Đảm bảo đúng đường dẫn
+import Navbar from '../components/Navbar';
 import { Notification } from '../components/Notification';
 import { MultiLineText, TitleText } from '../components/Text';
 import TopNavbar from '../components/TopNavbar';
@@ -12,7 +12,7 @@ import axiosClient from '../configs/axios.config';
 import { Helmet } from 'react-helmet-async';
 import { PostSkeleton } from '../components/TutorSkeleton';
 import { useAuthStore } from '../store/authStore';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Slider } from 'antd';
 import { TimeSlotSelector } from '../components/WeeklySchedule';
 import type { TimeSlot } from '../components/WeeklySchedule';
@@ -20,15 +20,6 @@ import type { TimeSlot } from '../components/WeeklySchedule';
 interface Subject {
     id: string;
     name: string;
-}
-
-interface User {
-    id: string;
-    avatar?: string;
-    name: string;
-    user?: {
-        avatar?: string;
-    };
 }
 
 // Thêm interfaces cho dữ liệu địa chỉ
@@ -50,16 +41,17 @@ interface Ward {
 const Post: React.FC = () => {
     const [postAvailableTimes, setPostAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
     const [filterAvailableTimes, setFilterAvailableTimes] = useState([{ day: '', from: '', to: '' }]);
-    const locationState = useLocation();
-    const showCreatePostModal = locationState.state?.showCreatePostModal || false;
+    // const locationState = useLocation();
+    // const showCreatePostModal = locationState.state?.showCreatePostModal || false;
 
+    const [showPopup, setShowPopup] = useState(false);
+    const [minPrice, setMinPrice] = useState(20000);
+    const [maxPrice, setMaxPrice] = useState(50000);
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
         const storedState = localStorage.getItem('navbarExpanded');
         return storedState ? JSON.parse(storedState) : true;
     });
-    const [showPopup, setShowPopup] = useState(showCreatePostModal);
-    const [minPrice, setMinPrice] = useState(20000);
-    const [maxPrice, setMaxPrice] = useState(50000);
+
     const toggleNavbar = () => {
         setIsExpanded((prev) => !prev);
     };
@@ -73,18 +65,14 @@ const Post: React.FC = () => {
     const isTutor = user?.role === 'TUTOR';
     type APIPost = Omit<Post, 'mode'> & { mode: string };
     const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true); // Thêm state để theo dõi trạng thái tải dữ liệu
+    const [loading, setLoading] = useState(true);
 
     const [postTitle, setPostTitle] = useState('');
     const [content, setContent] = useState('');
 
-    // Thêm state để lưu địa chỉ nhập vào
-    const [location] = useState<string>(Array.isArray(user?.location) ? user.location[0] || '' : user?.location || '');
-    const [showLocationInput] = useState<boolean>(!user?.location);
-
     const navigate = useNavigate();
 
-    // State cho danh sách địa chỉ
+    // Thêm state cho danh sách địa chỉ
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -92,6 +80,16 @@ const Post: React.FC = () => {
     const [selectedProvince, setSelectedProvince] = useState<string>('');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('');
     const [selectedWard, setSelectedWard] = useState<string>('');
+    const [selectedAddress, setSelectedAddress] = useState<string>('');
+
+    // Thêm useEffect để tự động cập nhật địa chỉ khi có thay đổi trong các select
+    useEffect(() => {
+        if (selectedProvince && selectedDistrict && selectedWard) {
+            const fullAddress = `${selectedWard}, ${selectedDistrict}, ${selectedProvince}`;
+
+            setSelectedAddress(fullAddress);
+        }
+    }, [selectedProvince, selectedDistrict, selectedWard]);
 
     // Fetch danh sách tỉnh/thành phố khi component mount
     useEffect(() => {
@@ -109,19 +107,23 @@ const Post: React.FC = () => {
     }, []);
 
     // Fetch danh sách quận/huyện khi chọn tỉnh/thành phố
-    const handleProvinceChange = (provinceCode: string) => {
-        setSelectedProvince(provinceCode);
+    const handleProvinceChange = (provinceName: string) => {
+        setSelectedProvince(provinceName);
         setSelectedDistrict('');
         setSelectedWard('');
 
-        if (!provinceCode) {
+        if (!provinceName) {
             setDistricts([]);
             return;
         }
 
+        // Tìm code của tỉnh để gọi API
+        const provinceObj = provinces.find((p) => p.name === provinceName);
+        if (!provinceObj) return;
+
         const fetchDistricts = async () => {
             try {
-                const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+                const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceObj.code}?depth=2`);
                 const data = await response.json();
                 setDistricts(data.districts);
             } catch (error) {
@@ -133,18 +135,22 @@ const Post: React.FC = () => {
     };
 
     // Fetch danh sách phường/xã khi chọn quận/huyện
-    const handleDistrictChange = (districtCode: string) => {
-        setSelectedDistrict(districtCode);
+    const handleDistrictChange = (districtName: string) => {
+        setSelectedDistrict(districtName);
         setSelectedWard('');
 
-        if (!districtCode) {
+        if (!districtName) {
             setWards([]);
             return;
         }
 
+        // Tìm code của quận/huyện để gọi API
+        const districtObj = districts.find((d) => d.name === districtName);
+        if (!districtObj) return;
+
         const fetchWards = async () => {
             try {
-                const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+                const response = await fetch(`https://provinces.open-api.vn/api/d/${districtObj.code}?depth=2`);
                 const data = await response.json();
                 setWards(data.wards);
             } catch (error) {
@@ -155,12 +161,31 @@ const Post: React.FC = () => {
         fetchWards();
     };
 
+    // Cập nhật phường/xã và địa chỉ đầy đủ
+    const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const wardName = e.target.value;
+        setSelectedWard(wardName);
+
+        if (selectedProvince && selectedDistrict && wardName) {
+            const fullAddress = `${wardName}, ${selectedDistrict}, ${selectedProvince}`;
+            console.log('Đã cập nhật địa chỉ:', fullAddress);
+            setSelectedAddress(fullAddress);
+
+            // Cũng cập nhật trực tiếp DOM nếu cần
+            if (addressInputRef.current) {
+                addressInputRef.current.value = fullAddress;
+            }
+        } else {
+            console.log('Không thể cập nhật địa chỉ: thiếu thông tin');
+        }
+    };
+
     const bgColors = ['#EBF5FF', '#E6F0FD', '#F0F7FF'];
 
     const [isOpen, setIsOpen] = useState(false);
 
     const togglePopupFilter = () => {
-        console.log('togglePopupFilter được gọi, isOpen hiện tại:', isOpen);
+        // console.log('togglePopupFilter được gọi, isOpen hiện tại:', isOpen);
         setIsOpen(!isOpen);
     };
 
@@ -169,29 +194,16 @@ const Post: React.FC = () => {
     };
 
     const closePopupPost = () => {
-        console.log('Closing post popup');
+        // console.log('Closing post popup');
         setShowPopup(false);
     };
 
     const [selectedSubject, setSelectedSubject] = useState('');
-    const [selectedCity, setSelectedCity] = useState('');
+    const [, setSelectedCity] = useState('');
     const [selectedStudyMode, setSelectedStudyMode] = useState<string[]>([]);
     const [selectedSessionPerWeek, setSelectedSessionPerWeek] = useState<string[]>([]);
     const [selectedDuration, setSelectedDuration] = useState<string[]>([]);
-
-    const resetFilters = () => {
-        setMinPrice(100000);
-        setMaxPrice(500000);
-        setSelectedSubject('');
-        setSelectedCity('');
-        setSelectedDistrict('');
-        setSelectedWard('');
-        setSelectedStudyMode([]);
-        setSelectedGrade('');
-        setSelectedSessionPerWeek([]);
-        setSelectedDuration([]);
-        setFilterAvailableTimes([{ day: '', from: '', to: '' }]);
-    };
+    // const [address, setAddress] = useState('');
 
     const [isNegotiationOpen, setIsNegotiationOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -280,6 +292,15 @@ const Post: React.FC = () => {
             id: string;
             avatar: string;
             name: string;
+            userProfile?: {
+                avatar?: string;
+            };
+            user?: {
+                avatar?: string;
+                userProfile?: {
+                    avatar?: string;
+                };
+            };
         };
         content: string;
         subject: {
@@ -303,7 +324,7 @@ const Post: React.FC = () => {
         const fetchSubjects = async () => {
             try {
                 const response = await axiosClient.get('/subjects');
-                console.log('Fetched subjects:', response.data); // Log để debug
+                // console.log('Fetched subjects:', response.data); // Log để debug
                 setSubjects(response.data);
             } catch (error) {
                 console.error('Error fetching subjects:', error);
@@ -373,8 +394,6 @@ const Post: React.FC = () => {
             });
     };
 
-    const userRole = 'TUTOR';
-
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -382,8 +401,20 @@ const Post: React.FC = () => {
             try {
                 setLoading(true);
                 if (!searchTerm.trim()) {
-                    // Nếu thanh tìm kiếm trống, lấy tất cả bài viết
-                    const response = await axiosClient.get('/posts');
+                    // Nếu thanh tìm kiếm trống, lấy tất cả bài viết theo vai trò người dùng
+                    let apiUrl = '/posts';
+
+                    // Kiểm tra vai trò người dùng để gọi API phù hợp
+                    if (user?.role) {
+                        if (user.role === 'TUTOR') {
+                            apiUrl = '/recommend/post-for-tutor?min_score=0';
+                        } else if (user.role === 'STUDENT') {
+                            apiUrl = '/recommend/post-for-student?min_score=0';
+                        }
+                    }
+
+                    console.log('Gọi API tìm kiếm với đường dẫn:', apiUrl);
+                    const response = await axiosClient.get(apiUrl);
                     const formattedPosts = response.data.map((post: APIPost) => ({
                         ...post,
                         mode: String(post.mode).toLowerCase() === 'true',
@@ -420,7 +451,7 @@ const Post: React.FC = () => {
             } catch (error) {
                 console.error('Error searching posts:', error);
                 if (error instanceof Error) {
-                    console.log('Error details:', (error as AxiosError).response);
+                    // console.log('Error details:', (error as AxiosError).response);
                 }
             } finally {
                 setLoading(false);
@@ -429,6 +460,7 @@ const Post: React.FC = () => {
     };
 
     const handleApplyFilter = () => {
+        /*
         console.log('Áp dụng bộ lọc với các giá trị:', {
             subject: selectedSubject,
             city: selectedCity,
@@ -440,17 +472,17 @@ const Post: React.FC = () => {
             minPrice,
             maxPrice,
         });
-
+        */
         // Định nghĩa filteredPosts
-        const filteredPosts = posts.filter((post) => {
-            // Ví dụ về điều kiện lọc sử dụng post
-            if (selectedSubject && post.subject.id !== selectedSubject) return false;
-            // Thêm các điều kiện lọc khác nếu cần
-            return true;
-        });
-
+        // const filteredPosts = posts.filter((post) => {
+        //     // Ví dụ về điều kiện lọc sử dụng post
+        //     if (selectedSubject && post.subject.id !== selectedSubject) return false;
+        //     // Thêm các điều kiện lọc khác nếu cần
+        //     return true;
+        // });
+        /*
         console.log('Kết quả sau khi lọc:', filteredPosts);
-
+        */
         // Nếu muốn cập nhật state để hiển thị bài đăng đã lọc
         // setPosts(filteredPosts);
     };
@@ -463,13 +495,30 @@ const Post: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmitPost = async () => {
-        // Nếu đang trong quá trình gửi, không cho phép gửi lại
         if (isSubmitting) return;
 
         try {
-            setIsSubmitting(true); // Đánh dấu đang gửi request
+            setIsSubmitting(true);
 
-            // Kiểm tra các trường bắt buộc
+            // Kiểm tra xem người dùng đã đăng nhập chưa
+            if (!user || !user.id) {
+                setNotification({
+                    message: 'Vui lòng đăng nhập để đăng bài',
+                    show: true,
+                    type: 'error',
+                });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Debug: Kiểm tra thông tin người dùng
+            console.log('Người dùng hiện tại:', user);
+            console.log('ID người dùng:', user.id);
+
+            // Kiểm tra các thông tin bắt buộc của form
             if (!postTitle || !content || !selectedSubjectId || !grade || !studyMode || !sessionsPerWeek || !duration) {
                 setNotification({
                     message: 'Vui lòng điền đầy đủ thông tin bắt buộc',
@@ -479,33 +528,51 @@ const Post: React.FC = () => {
                 setTimeout(() => {
                     setNotification((prev) => ({ ...prev, show: false }));
                 }, 3000);
-                setIsSubmitting(false); // Reset trạng thái
+                setIsSubmitting(false);
                 return;
             }
 
-            // Đảm bảo các giá trị số đúng định dạng
+            // Kiểm tra địa chỉ
+            if (!selectedAddress || selectedAddress.trim() === '') {
+                setNotification({
+                    message: 'Vui lòng chọn địa chỉ học',
+                    show: true,
+                    type: 'error',
+                });
+                setTimeout(() => {
+                    setNotification((prev) => ({ ...prev, show: false }));
+                }, 3000);
+                setIsSubmitting(false);
+                return;
+            }
+
             const sessionPerWeekValue = parseInt(sessionsPerWeek.replace(/\D/g, ''));
 
-            // Chuyển đổi duration từ giờ sang phút
             let durationValue = 0;
             if (duration.includes('giờ')) {
-                // Trích xuất số từ chuỗi (ví dụ: "1.5 giờ" -> 1.5)
                 const hourMatch = duration.match(/(\d+(\.\d+)?)/);
                 if (hourMatch) {
                     const hours = parseFloat(hourMatch[0]);
-                    durationValue = Math.round(hours * 60); // Chuyển giờ sang phút và làm tròn
+                    durationValue = Math.round(hours * 60);
                 }
             } else {
-                // Nếu đã là phút thì chỉ cần lấy số
                 durationValue = parseInt(duration.replace(/\D/g, ''));
             }
 
-            console.log(`Chuyển đổi thời lượng: ${duration} -> ${durationValue} phút`);
-
-            // Lọc thời gian rảnh hợp lệ
             const validSchedules = postAvailableTimes
                 .filter((t) => t.day && t.from && t.to)
-                .map((t) => `${t.day} từ ${t.from} - ${t.to}`);
+                .map((t) => {
+                    const dayLabels: { [key: string]: string } = {
+                        '2': 'Thứ 2',
+                        '3': 'Thứ 3',
+                        '4': 'Thứ 4',
+                        '5': 'Thứ 5',
+                        '6': 'Thứ 6',
+                        '7': 'Thứ 7',
+                        CN: 'Chủ nhật',
+                    };
+                    return `${dayLabels[t.day]} ${t.from}-${t.to}`;
+                });
 
             if (validSchedules.length === 0) {
                 setNotification({
@@ -516,96 +583,97 @@ const Post: React.FC = () => {
                 return;
             }
 
-            // Sử dụng địa chỉ từ input nếu đã nhập, nếu không thì dùng địa chỉ của user
-            const userLocation = showLocationInput ? location : user?.location || '';
-
-            // Thêm thời gian đăng bài (thời gian hiện tại)
-            const postTime = new Date().toISOString();
-
-            // Trước khi gửi request
-            console.log('Selected subject ID:', selectedSubjectId);
-
-            // Định dạng dữ liệu theo mẫu API yêu cầu
             const formattedData = {
                 title: postTitle,
                 content: content,
-                subject: selectedSubjectId, // Gửi ID dưới dạng chuỗi, không phải đối tượng
+                subject: selectedSubjectId,
                 grade: grade,
                 mode: studyMode === 'Online',
-                locations: [userLocation],
+                locations: [selectedAddress],
                 sessionPerWeek: sessionPerWeekValue,
                 duration: durationValue,
                 requirements: requirements.split('\n').filter((r) => r),
                 schedule: validSchedules,
                 feePerSession: parseInt(String(maxPrice)),
-                postTime: postTime,
+                postTime: new Date().toISOString(),
             };
 
-            console.log('Sending data:', JSON.stringify(formattedData));
+            console.log('Dữ liệu gửi lên server:', formattedData);
 
-            await axiosClient.post('/posts', formattedData);
+            try {
+                // Thử tạo userProfile nếu chưa có
+                if (!user.userProfile) {
+                    try {
+                        await axiosClient.post('/users/profile', {
+                            gender: 'OTHER',
+                            dob: new Date().toISOString().split('T')[0],
+                            address: selectedAddress,
+                        });
+                        console.log('Đã tạo hồ sơ người dùng tự động');
 
-            console.log('Post created successfully');
+                        // Refresh user data
+                        await useAuthStore.getState().fetchUserData();
+                    } catch (profileError) {
+                        console.error('Không thể tạo hồ sơ người dùng:', profileError);
+                    }
+                }
 
-            // Đóng popup
-            setShowPopup(false);
+                const response = await axiosClient.post('/posts', formattedData);
+                console.log('Kết quả từ server:', response.data);
 
-            // Reset form
-            setPostTitle('');
-            setContent('');
-            setSelectedSubjectId('');
-            setGrade('');
-            setStudyMode('');
-            setSessionsPerWeek('');
-            setDuration('');
-            setRequirements('');
-            setPostAvailableTimes([{ day: '', from: '', to: '' }]);
-            setMaxPrice(30000);
+                setShowPopup(false);
+                setPostTitle('');
+                setContent('');
+                setSelectedSubjectId('');
+                setGrade('');
+                setStudyMode('');
+                setSessionsPerWeek('');
+                setDuration('');
+                setRequirements('');
+                setPostAvailableTimes([{ day: '', from: '', to: '' }]);
+                setMaxPrice(30000);
+                setSelectedAddress('');
 
-            // Hiển thị thông báo thành công
-            setNotification({
-                message: 'Đăng bài thành công, vui lòng chờ admin phê duyệt',
-                show: true,
-                type: 'success',
-            });
+                setNotification({
+                    message: 'Đăng bài thành công, vui lòng chờ admin phê duyệt',
+                    show: true,
+                    type: 'success',
+                });
+            } catch (error) {
+                console.error('Chi tiết lỗi khi đăng bài:', error);
+                if (error instanceof AxiosError) {
+                    const errorMessage = Array.isArray(error.response?.data?.message)
+                        ? error.response.data.message[0]
+                        : error.response?.data?.message || 'Có lỗi xảy ra khi đăng bài';
 
-            // Tự động ẩn thông báo sau 3 giây
+                    if (errorMessage.includes('không tồn tại') || errorMessage.includes('Hồ sơ người dùng')) {
+                        setNotification({
+                            message: 'Vui lòng cập nhật hồ sơ người dùng trước khi đăng bài',
+                            show: true,
+                            type: 'error',
+                        });
+                        // Chuyển hướng tới trang cập nhật hồ sơ sau 2 giây
+                        setTimeout(() => {
+                            navigate('/edit-profile');
+                        }, 2000);
+                    } else {
+                        setNotification({
+                            message: errorMessage,
+                            show: true,
+                            type: 'error',
+                        });
+                    }
+                }
+                throw error; // Re-throw để xử lý bên ngoài
+            }
+
             setTimeout(() => {
                 setNotification((prev) => ({ ...prev, show: false }));
             }, 3000);
         } catch (error) {
             console.error('Error posting:', error);
-            if (error instanceof AxiosError) {
-                console.log('Request data:', error.config?.data);
-                console.log('Error response:', error.response?.data);
-
-                // Hiển thị thông báo lỗi cụ thể từ server nếu có
-                if (error.response?.data?.message) {
-                    const errorMessage = Array.isArray(error.response.data.message)
-                        ? error.response.data.message[0]
-                        : error.response.data.message;
-
-                    setNotification({
-                        message: errorMessage,
-                        show: true,
-                        type: 'error',
-                    });
-                    setTimeout(() => {
-                        setNotification((prev) => ({ ...prev, show: false }));
-                    }, 3000);
-                } else {
-                    setNotification({
-                        message: 'Có lỗi xảy ra khi đăng bài',
-                        show: true,
-                        type: 'error',
-                    });
-                    setTimeout(() => {
-                        setNotification((prev) => ({ ...prev, show: false }));
-                    }, 3000);
-                }
-            }
         } finally {
-            setIsSubmitting(false); // Reset trạng thái khi hoàn thành
+            setIsSubmitting(false);
         }
     };
 
@@ -835,8 +903,9 @@ const Post: React.FC = () => {
                 feePerSession: data.feePerSession,
             };
 
-            // Log ra để debug
+            /*
             console.log('Request data:', JSON.stringify(requestData, null, 2));
+            */
 
             await axiosClient.post('/requests', requestData);
             setNotification({
@@ -851,7 +920,9 @@ const Post: React.FC = () => {
         } catch (error) {
             console.error('Error sending teach request:', error);
             if (error instanceof AxiosError) {
+                /*
                 console.log('Error details:', error.response?.data);
+                */
             }
             setNotification({
                 message: 'Có lỗi xảy ra khi gửi yêu cầu',
@@ -875,16 +946,38 @@ const Post: React.FC = () => {
             try {
                 setLoading(true);
                 console.log('Đang gọi API lấy bài đăng...');
-                const response = await axiosClient.get('/posts');
+
+                let apiUrl = '/posts';
+
+                // Kiểm tra vai trò người dùng để gọi API phù hợp
+                if (user?.role) {
+                    if (user.role === 'TUTOR') {
+                        apiUrl = '/recommend/post-for-tutor?min_score=0';
+                    } else if (user.role === 'STUDENT') {
+                        apiUrl = '/recommend/post-for-student?min_score=0';
+                    }
+                }
+
+                console.log('Gọi API với đường dẫn:', apiUrl);
+                const response = await axiosClient.get(apiUrl);
                 console.log('Kết quả API:', response.data);
 
                 if (response.data) {
-                    setPosts(
-                        response.data.map((post: APIPost) => ({
-                            ...post,
-                            mode: post.mode === 'ONLINE',
-                        })),
-                    );
+                    const formattedPosts = response.data.map((post: APIPost) => ({
+                        ...post,
+                        mode: post.mode === 'ONLINE',
+                    }));
+
+                    // Kiểm tra cấu trúc dữ liệu của bài đăng đầu tiên
+                    if (formattedPosts.length > 0) {
+                        console.log('Chi tiết bài đăng đầu tiên:', formattedPosts[0]);
+                        console.log('User của bài đăng:', formattedPosts[0].user);
+                        console.log('Avatar trực tiếp:', formattedPosts[0].user?.avatar);
+                        console.log('UserProfile của user:', formattedPosts[0].user?.userProfile);
+                        console.log('Avatar từ userProfile:', formattedPosts[0].user?.userProfile?.avatar);
+                    }
+
+                    setPosts(formattedPosts);
                 }
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách bài đăng:', error);
@@ -894,17 +987,73 @@ const Post: React.FC = () => {
         };
 
         fetchPosts();
-    }, []);
+    }, [user?.role]);
 
     // Thêm useEffect để kiểm tra state posts
     useEffect(() => {
+        /*
         console.log('State posts:', posts);
+        */
     }, [posts]);
 
     // Thêm log để kiểm tra state isOpen
     useEffect(() => {
+        /*
         console.log('isOpen state:', isOpen);
+        */
     }, [isOpen]);
+
+    const resetFilters = () => {
+        setMinPrice(100000);
+        setMaxPrice(500000);
+        setSelectedSubject('');
+        setSelectedCity('');
+        setSelectedDistrict('');
+        setSelectedWard('');
+        setSelectedStudyMode([]);
+        setSelectedGrade('');
+        setSelectedSessionPerWeek([]);
+        setSelectedDuration([]);
+        setFilterAvailableTimes([{ day: '', from: '', to: '' }]);
+    };
+
+    const addressInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Hàm trợ giúp lấy avatar từ bất kỳ vị trí nào có thể
+    const getAvatarUrl = (user: Post['user'] | undefined) => {
+        if (!user) return Avatar;
+
+        // Ghi log thông tin chi tiết cho việc debug
+        console.log('Đang tìm avatar cho user:', user.id);
+
+        // Kiểm tra trực tiếp từ thuộc tính avatar của user
+        if (user.avatar && typeof user.avatar === 'string') {
+            console.log('Sử dụng avatar trực tiếp từ user:', user.avatar);
+            return user.avatar;
+        }
+
+        // Kiểm tra từ userProfile nếu có
+        if (user.userProfile?.avatar && typeof user.userProfile.avatar === 'string') {
+            console.log('Sử dụng avatar từ userProfile:', user.userProfile.avatar);
+            return user.userProfile.avatar;
+        }
+
+        // Kiểm tra từ user lồng nhau (nếu có)
+        if (user.user?.avatar && typeof user.user.avatar === 'string') {
+            console.log('Sử dụng avatar từ user lồng nhau:', user.user.avatar);
+            return user.user.avatar;
+        }
+
+        // Kiểm tra từ userProfile của user lồng nhau (nếu có)
+        if (user.user?.userProfile?.avatar && typeof user.user.userProfile.avatar === 'string') {
+            console.log('Sử dụng avatar từ userProfile của user lồng nhau:', user.user.userProfile.avatar);
+            return user.user.userProfile.avatar;
+        }
+
+        // Nếu không tìm thấy avatar hợp lệ, trả về avatar mặc định
+        console.log('Không tìm thấy avatar hợp lệ, sử dụng avatar mặc định');
+        return Avatar;
+    };
 
     return (
         <>
@@ -1060,18 +1209,13 @@ const Post: React.FC = () => {
                                                     onChange={(e) => handleProvinceChange(e.target.value)}
                                                 >
                                                     <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                                                    {provinces && provinces.length > 0 ? (
-                                                        provinces.map((province) => (
-                                                            <option key={province.code} value={province.code}>
-                                                                {province.name}
-                                                            </option>
-                                                        ))
-                                                    ) : (
-                                                        <option value="">-- Không có dữ liệu --</option>
-                                                    )}
+                                                    {provinces.map((province) => (
+                                                        <option key={province.code} value={province.name}>
+                                                            {province.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
-
                                             <div className="w-full md:w-1/3">
                                                 <select
                                                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -1080,37 +1224,37 @@ const Post: React.FC = () => {
                                                     disabled={!selectedProvince}
                                                 >
                                                     <option value="">-- Chọn Quận/Huyện --</option>
-                                                    {districts && districts.length > 0 ? (
-                                                        districts.map((district) => (
-                                                            <option key={district.code} value={district.code}>
-                                                                {district.name}
-                                                            </option>
-                                                        ))
-                                                    ) : (
-                                                        <option value="">-- Không có dữ liệu --</option>
-                                                    )}
+                                                    {districts.map((district) => (
+                                                        <option key={district.code} value={district.name}>
+                                                            {district.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
-
                                             <div className="w-full md:w-1/3">
                                                 <select
                                                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                                     value={selectedWard}
-                                                    onChange={(e) => setSelectedWard(e.target.value)}
+                                                    onChange={handleWardChange}
                                                     disabled={!selectedDistrict}
                                                 >
                                                     <option value="">-- Chọn Phường/Xã --</option>
-                                                    {wards && wards.length > 0 ? (
-                                                        wards.map((ward) => (
-                                                            <option key={ward.code} value={ward.code}>
-                                                                {ward.name}
-                                                            </option>
-                                                        ))
-                                                    ) : (
-                                                        <option value="">-- Không có dữ liệu --</option>
-                                                    )}
+                                                    {wards.map((ward) => (
+                                                        <option key={ward.code} value={ward.name}>
+                                                            {ward.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
+                                        </div>
+                                        <div className="mt-2 flex space-x-2">
+                                            <input
+                                                ref={addressInputRef}
+                                                type="text"
+                                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                value={selectedAddress}
+                                                readOnly
+                                            />
                                         </div>
                                     </div>
                                     <ComboBox
@@ -1280,11 +1424,12 @@ const Post: React.FC = () => {
                                     {/* User Info & Title Section */}
                                     <div className="flex items-center space-x-4 mb-2">
                                         <img
-                                            src={(post.user as User)?.user?.avatar || post.user?.avatar || Avatar}
+                                            src={getAvatarUrl(post.user)}
                                             alt={post.user?.name || 'User'}
-                                            className="w-10 h-10 rounded-full"
+                                            className="w-10 h-10 rounded-full object-cover"
                                             onError={(e) => {
-                                                e.currentTarget.src = 'https://via.placeholder.com/50';
+                                                e.currentTarget.src = Avatar;
+                                                console.log('Avatar bị lỗi cho user:', post.user);
                                             }}
                                         />
                                         <div className="flex-1">
@@ -1323,7 +1468,14 @@ const Post: React.FC = () => {
                                         <div className="col-span-1">
                                             <p className="text-sm text-gray-600">Số buổi/tuần: {post.sessionPerWeek}</p>
                                             <p className="text-sm text-gray-600 mt-2">
-                                                Hình thức học: {post.mode ? 'Trực tuyến' : 'Trực tiếp'}
+                                                Hình thức học:{' '}
+                                                {typeof post.mode === 'boolean'
+                                                    ? post.mode
+                                                        ? 'Trực tuyến'
+                                                        : 'Trực tiếp'
+                                                    : post.mode === 'true' || post.mode === 'ONLINE'
+                                                    ? 'Trực tuyến'
+                                                    : 'Trực tiếp'}
                                             </p>
                                         </div>
                                         <div className="col-span-1">
@@ -1380,7 +1532,7 @@ const Post: React.FC = () => {
                         )}
                     </div>
                 </div>
-                {userRole === 'TUTOR' && (
+                {isTutor && (
                     <>
                         {isNegotiationOpen && selectedPost && (
                             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -1410,7 +1562,7 @@ const Post: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => {
-                                                console.log('Yêu cầu thương lượng giá:', negotiatedPrice);
+                                                // console.log('Yêu cầu thương lượng giá:', negotiatedPrice);
                                                 closeNegotiationPopup();
                                             }}
                                             className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition-colors"
@@ -1495,15 +1647,11 @@ const Post: React.FC = () => {
                                             onChange={(e) => handleProvinceChange(e.target.value)}
                                         >
                                             <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                                            {provinces && provinces.length > 0 ? (
-                                                provinces.map((province) => (
-                                                    <option key={province.code} value={province.code}>
-                                                        {province.name}
-                                                    </option>
-                                                ))
-                                            ) : (
-                                                <option value="">-- Không có dữ liệu --</option>
-                                            )}
+                                            {provinces.map((province) => (
+                                                <option key={province.code} value={province.code}>
+                                                    {province.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -1515,15 +1663,11 @@ const Post: React.FC = () => {
                                             disabled={!selectedProvince}
                                         >
                                             <option value="">-- Chọn Quận/Huyện --</option>
-                                            {districts && districts.length > 0 ? (
-                                                districts.map((district) => (
-                                                    <option key={district.code} value={district.code}>
-                                                        {district.name}
-                                                    </option>
-                                                ))
-                                            ) : (
-                                                <option value="">-- Không có dữ liệu --</option>
-                                            )}
+                                            {districts.map((district) => (
+                                                <option key={district.code} value={district.code}>
+                                                    {district.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -1531,19 +1675,15 @@ const Post: React.FC = () => {
                                         <select
                                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                             value={selectedWard}
-                                            onChange={(e) => setSelectedWard(e.target.value)}
+                                            onChange={handleWardChange}
                                             disabled={!selectedDistrict}
                                         >
                                             <option value="">-- Chọn Phường/Xã --</option>
-                                            {wards && wards.length > 0 ? (
-                                                wards.map((ward) => (
-                                                    <option key={ward.code} value={ward.code}>
-                                                        {ward.name}
-                                                    </option>
-                                                ))
-                                            ) : (
-                                                <option value="">-- Không có dữ liệu --</option>
-                                            )}
+                                            {wards.map((ward) => (
+                                                <option key={ward.code} value={ward.code}>
+                                                    {ward.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

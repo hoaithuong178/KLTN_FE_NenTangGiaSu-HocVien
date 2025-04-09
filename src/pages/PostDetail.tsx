@@ -218,7 +218,7 @@ const PostDetail: React.FC = () => {
                             />
                             <div>
                                 <Link
-                                    to={`/tutor/${post.user.id}`}
+                                    to={`/student-profile/${post.user.id}`}
                                     className="font-medium text-blue-600 hover:underline"
                                 >
                                     {post.user.name}

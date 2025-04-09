@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import axiosClient from '../configs/axios.config';
 
 type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 
@@ -50,12 +51,13 @@ interface User {
 interface AuthState {
     user: User | null;
     token: string | null;
-    isAuthenticated: boolean; // Added this property
+    isAuthenticated: boolean;
     login: (user: User, token: string) => void;
     logout: () => void;
     setUser: (user: User) => void;
     setToken: (token: string) => void;
     resetAuth: () => void;
+    fetchUserData: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -63,12 +65,15 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             user: null,
             token: null,
-            isAuthenticated: false, // Default value for isAuthenticated
+            isAuthenticated: false,
             login: (user, token) => {
                 if (!user || !token) {
                     console.error('Lỗi đăng nhập: Thiếu user hoặc token');
                     return;
                 }
+                console.log('User data from API:', user);
+                console.log('User avatar from API:', user.avatar);
+                console.log('User profile avatar from API:', user.userProfile?.avatar);
                 set({ user, token, isAuthenticated: true });
                 console.log('[Zustand] User login success:', user);
             },
@@ -78,6 +83,16 @@ export const useAuthStore = create<AuthState>()(
             resetAuth: () => {
                 localStorage.removeItem('auth-storage');
                 set({ user: null, token: null, isAuthenticated: false });
+            },
+            fetchUserData: async () => {
+                try {
+                    const response = await axiosClient.get('/users/me');
+                    const userData = response.data;
+                    set((state) => ({ ...state, user: userData }));
+                    console.log('[Zustand] User data updated:', userData);
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                }
             },
         }),
         {
