@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { AddressIcon, ArrowLeftIcon, CoppyLinkIcon, HeartIcon, MailIcon, PhoneIcon } from '../components/icons';
 import { Notification } from '../components/Notification';
@@ -7,12 +8,12 @@ import { Checkbox, ComboBox } from '../components/InputField';
 import { useAuthStore } from '../store/authStore';
 import SEO from '../components/SEO';
 import axiosClient from '../configs/axios.config';
-import { PostSkeleton } from '../components/TutorSkeleton';
+import { PostSkeleton, StudentSkeleton } from '../components/TutorSkeleton';
 import defaultAvatar from '../assets/avatar.jpg';
 
 type Role = 'STUDENT' | 'TUTOR' | 'ADMIN' | null;
 
-const StudentProfile = () => {
+const StudentProfile: React.FC = () => {
     type User = {
         id: string;
         name: string;
@@ -51,8 +52,10 @@ const StudentProfile = () => {
     }
     // Inside the StudentProfile component, add these new states
     const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
-    const [, setIsProfileLoading] = useState(false);
-    const [, setProfileError] = useState<string | null>(null);
+    const [isProfileLoading, setIsProfileLoading] = useState(false);
+    const [profileError, setProfileError] = useState<string | null>(null);
+
+    const { id: studentId } = useParams<{ id: string }>();
 
     type Post = {
         id: number;
@@ -145,7 +148,8 @@ const StudentProfile = () => {
 
     // Thêm useEffect để lấy danh sách bài đăng
     const fetchPosts = useCallback(async () => {
-        if (!currentUser?.id) {
+        const idToFetch = studentId || currentUser?.id;
+        if (!idToFetch) {
             setError('Không có thông tin người dùng để tải bài đăng');
             return;
         }
@@ -153,7 +157,7 @@ const StudentProfile = () => {
         try {
             setIsLoading(true);
             const response = await axiosClient.get('/posts');
-            const userPosts = response.data.filter((post: Post) => post.userId === currentUser.id);
+            const userPosts = response.data.filter((post: Post) => post.userId === idToFetch);
             setPosts(userPosts);
             setError(null);
         } catch (err) {
@@ -162,28 +166,25 @@ const StudentProfile = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser?.id]);
+    }, [studentId, currentUser]);
 
     const fetchUserProfile = useCallback(async () => {
-        if (!currentUser?.id) return;
+        const idToFetch = studentId || currentUser?.id;
+        if (!idToFetch) return;
 
         try {
             setIsProfileLoading(true);
-            const response = await axiosClient.get('/user-profiles');
-            console.log('API Response:', response.data); // Debug API response
-
-            console.log('Current user:', currentUser); // Debug current user
+            const response = await axiosClient.get(`/user-profiles/`);
             if (response.data) {
                 setUserProfileData(response.data);
-                console.log('Updated userProfileData:', response.data); // Check updated state
             }
         } catch (error) {
-            setProfileError('Could not fetch user profile');
-            console.error('Error fetching user profile:', error);
+            setProfileError('Không thể tải thông tin người dùng');
+            console.error('Lỗi fetch user profile:', error);
         } finally {
             setIsProfileLoading(false);
         }
-    }, [currentUser]);
+    }, [studentId, currentUser]);
 
     // Add this useEffect to fetch the profile data
     useEffect(() => {
@@ -261,7 +262,7 @@ const StudentProfile = () => {
         return phone.slice(0, -3) + '***';
     };
 
-    const isCurrentUserProfile = true; // Vì đây là trang profile của người dùng hiện tại
+    const isCurrentUserProfile = !studentId || studentId === currentUser?.id;
     const isTutorOrAdmin = currentUser?.role === 'TUTOR' || currentUser?.role === 'ADMIN';
     const isStudent = currentUser?.role === 'STUDENT';
     const navigate = useNavigate();
@@ -269,6 +270,8 @@ const StudentProfile = () => {
     if (!currentUser) {
         return <div>Không tìm thấy thông tin người dùng.</div>;
     }
+    if (isProfileLoading) return <StudentSkeleton />;
+    if (profileError) return <div>{profileError}</div>;
 
     return (
         <>
