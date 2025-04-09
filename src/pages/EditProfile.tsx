@@ -170,6 +170,8 @@ const EditProfile = () => {
         try {
             const profileData = await fetchUserProfile();
             setUserProfileData(profileData);
+            console.log('currentUser:', currentUser);
+            console.log('profileData:', profileData);
 
             const initialAddress =
                 currentUser.userProfile?.address ||
@@ -177,7 +179,7 @@ const EditProfile = () => {
                 'Phường 5, Quận Gò Vấp, Thành Phố Hồ Chí Minh';
 
             const newFormData: User = {
-                id: currentUser.id,
+                id: currentUser.id || profileData?.id,
                 fullName: currentUser.name || currentUser.fullName || '',
                 avatar: currentUser.avatar || currentUser.userProfile?.avatar || '',
                 email: currentUser.email || '',
@@ -417,43 +419,57 @@ const EditProfile = () => {
         setEndTime(end);
     };
 
-    console.log('Tutor Profile:', formData?.tutorProfile);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData || !formData.id) return;
-        // setFormData((prev) => ({ ...prev, address: fullAddress }));
 
-        // const fullAddress = `${streetAddress}, ${wards.find((w) => w._id === selectedWard)?.name || ''}, ${
-        //     districts.find((d) => d._id === selectedDistrict)?.name || ''
-        // }, ${cities.find((c) => c._id === selectedCity)?.name || ''}`;
+        if (!formData || !formData.id) {
+            setNotification({
+                message: 'Thiếu thông tin người dùng. Không thể cập nhật.',
+                show: true,
+                type: 'error',
+            });
+            return;
+        }
 
         try {
+            setIsLoading(true); // optional: để disable form/nút trong lúc gửi
+
             const formDataToSend = new FormData();
+
+            // Append các field cần thiết
             if (formData.dob) formDataToSend.append('dob', formData.dob);
             if (formData.gender) formDataToSend.append('gender', convertGenderToApi(formData.gender));
             if (formData.address) formDataToSend.append('address', formData.address);
             if (formData.idCardNumber) formDataToSend.append('idCardNumber', formData.idCardNumber);
 
+            // Avatar nếu có
             const file = fileInputRef.current?.files?.[0];
             if (file) formDataToSend.append('avatar', file);
-            await axiosClient.patch(`/user-profiles/${formData.id}`, formDataToSend, {
+
+            // In thử ra để debug
+            for (const pair of formDataToSend.entries()) {
+                console.log(`${pair[0]}: ${pair[1]}`);
+            }
+
+            // Gửi patch request
+            await axiosClient.patch(`/user-profiles`, formDataToSend, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
-            for (const pair of formDataToSend.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            setNotification({ message: 'Cập nhật thông tin thành công', show: true, type: 'success' });
-            setTimeout(() => navigate('/profile'), 2000);
-        } catch (err) {
             setNotification({
-                message: 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau.',
+                message: '🎉 Cập nhật thông tin thành công!',
+                show: true,
+                type: 'success',
+            });
+        } catch (err) {
+            console.error('Error updating user data:', err);
+            setNotification({
+                message: '❌ Có lỗi xảy ra khi cập nhật. Vui lòng thử lại sau.',
                 show: true,
                 type: 'error',
             });
-            console.error('Error updating user data:', err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
