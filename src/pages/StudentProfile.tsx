@@ -143,8 +143,6 @@ const StudentProfile = () => {
         }, 3000);
     };
 
-    console.log(currentUser);
-
     // Thêm useEffect để lấy danh sách bài đăng
     const fetchPosts = useCallback(async () => {
         if (!currentUser?.id) {
@@ -173,19 +171,11 @@ const StudentProfile = () => {
             setIsProfileLoading(true);
             const response = await axiosClient.get('/user-profiles');
             console.log('API Response:', response.data); // Debug API response
+
+            console.log('Current user:', currentUser); // Debug current user
             if (response.data) {
-                setUserProfileData(response.data.data);
-                // Update the auth store with the new profile data
-                useAuthStore.getState().setUser({
-                    ...currentUser,
-                    userProfile: {
-                        ...currentUser.userProfile,
-                        avatar: response.data.data.avatar,
-                        gender: response.data.data.gender,
-                        dob: response.data.data.dob,
-                        address: response.data.data.address,
-                    },
-                });
+                setUserProfileData(response.data);
+                console.log('Updated userProfileData:', response.data); // Check updated state
             }
         } catch (error) {
             setProfileError('Could not fetch user profile');
@@ -276,7 +266,6 @@ const StudentProfile = () => {
     const isStudent = currentUser?.role === 'STUDENT';
     const navigate = useNavigate();
 
-    console.log('Current User:', currentUser);
     if (!currentUser) {
         return <div>Không tìm thấy thông tin người dùng.</div>;
     }
@@ -359,7 +348,7 @@ const StudentProfile = () => {
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Ngày sinh</p>
                                             <p className="text-gray-800 col-span-3">
-                                                {new Date(userProfileData.dob).toLocaleDateString('vi-VN')}(
+                                                {new Date(userProfileData.dob).toLocaleDateString('vi-VN')} (
                                                 {getAge(userProfileData.dob)} tuổi)
                                             </p>
                                         </>
@@ -369,13 +358,6 @@ const StudentProfile = () => {
                                         <>
                                             <p className="text-gray-600 font-semibold col-span-1">Địa chỉ</p>
                                             <p className="text-gray-800 col-span-3">{userProfileData.address}</p>
-                                        </>
-                                    )}
-
-                                    {userProfileData?.idCardNumber && (
-                                        <>
-                                            <p className="text-gray-600 font-semibold col-span-1">CCCD/CMND</p>
-                                            <p className="text-gray-800 col-span-3">{userProfileData.idCardNumber}</p>
                                         </>
                                     )}
                                 </div>

@@ -50,10 +50,12 @@ interface User {
 interface AuthState {
     user: User | null;
     token: string | null;
+    isAuthenticated: boolean; // Added this property
     login: (user: User, token: string) => void;
     logout: () => void;
     setUser: (user: User) => void;
     setToken: (token: string) => void;
+    resetAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -61,61 +63,75 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             user: null,
             token: null,
+            isAuthenticated: false, // Default value for isAuthenticated
             login: (user, token) => {
                 if (!user || !token) {
                     console.error('Lỗi đăng nhập: Thiếu user hoặc token');
                     return;
                 }
-                set({ user, token });
+                set({ user, token, isAuthenticated: true });
+                console.log('[Zustand] User login success:', user);
             },
-            logout: () => set({ user: null, token: null }),
+            logout: () => set({ user: null, token: null, isAuthenticated: false }),
             setUser: (user) => set((state) => ({ ...state, user })),
             setToken: (token) => set((state) => ({ ...state, token })),
+            resetAuth: () => {
+                localStorage.removeItem('auth-storage');
+                set({ user: null, token: null, isAuthenticated: false });
+            },
         }),
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => localStorage),
-            version: 2, // 🔁 Tăng version mỗi khi bạn thay đổi cấu trúc
+            version: 3,
             migrate: async (persistedState, version) => {
                 console.log('[zustand migrate] Old version:', version);
 
-                if (version < 2) {
-                    const user = (persistedState as AuthState).user;
-
+                // Nếu object không hợp lệ, return fallback
+                if (typeof persistedState !== 'object' || persistedState === null) {
                     return {
-                        ...(typeof persistedState === 'object' && persistedState !== null ? persistedState : {}),
-                        user: user
-                            ? {
-                                  ...user,
-                                  userProfile: {
-                                      idCardNumber: '',
-                                      avatar: '',
-                                      gender: '',
-                                      dob: '',
-                                      address: '',
-                                      ...(user.userProfile || {}),
-                                  },
-                                  tutorProfile: {
-                                      hourlyPrice: 0,
-                                      level: '',
-                                      experiences: 0,
-                                      taughtStudentsCount: 0,
-                                      rating: 0,
-                                      fee: 0,
-                                      description: '',
-                                      tutorLocations: [],
-                                      specializations: [],
-                                      learningTypes: [],
-                                      freeTime: [],
-                                      qualification: '',
-                                      ...(user.tutorProfile || {}),
-                                  },
-                              }
-                            : null,
+                        user: null,
+                        token: null,
                     };
                 }
 
-                return persistedState as AuthState;
+                // Ép kiểu rõ ràng để TypeScript khỏi méo mặt
+                const state = persistedState as AuthState;
+                const user = state.user;
+
+                if (version < 2 && user) {
+                    return {
+                        ...state,
+                        user: {
+                            ...user,
+                            userProfile: {
+                                idCardNumber: '',
+                                avatar: '',
+                                gender: '',
+                                dob: '',
+                                address: '',
+                                ...(user.userProfile ?? {}),
+                            },
+                            tutorProfile: {
+                                hourlyPrice: 0,
+                                level: '',
+                                experiences: 0,
+                                taughtStudentsCount: 0,
+                                rating: 0,
+                                fee: 0,
+                                description: '',
+                                tutorLocations: [],
+                                specializations: [],
+                                learningTypes: [],
+                                freeTime: [],
+                                qualification: '',
+                                ...(user.tutorProfile ?? {}),
+                            },
+                        },
+                    };
+                }
+
+                return state;
             },
         },
     ),
