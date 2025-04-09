@@ -22,17 +22,6 @@ interface Subject {
     name: string;
 }
 
-// Định nghĩa interface User nhưng gắn _ để tránh cảnh báo linter
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface User {
-    id: string;
-    avatar?: string;
-    name: string;
-    userProfile?: {
-        avatar?: string;
-    };
-}
-
 // Thêm interfaces cho dữ liệu địa chỉ
 interface Province {
     code: string;
