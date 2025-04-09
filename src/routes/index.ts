@@ -53,6 +53,7 @@ const publicRoutes: Array<IRoute> = [
     { path: '/class-detail', component: ClassDetail },
     { path: '/class-detail-tutor', component: ClassDetailTutor },
     { path: '/student-profile', component: StudentProfile },
+    { path: '/student-profile/:id', component: StudentProfile },
     { path: '/edit-profile', component: EditProfile },
     { path: '/tutor-profile', component: TutorProfile },
     { path: '/tutor-profile/:id', component: TutorProfile },

@@ -38,6 +38,8 @@ const EditProfile = () => {
             hourlyPrice?: number;
             fee?: number;
             freeTime?: string[];
+            level?: string;
+            learningType?: string[];
             qualification?: string;
         };
     };
@@ -199,6 +201,8 @@ const EditProfile = () => {
                     fee: currentUser.tutorProfile?.fee || 0,
                     freeTime: currentUser.tutorProfile?.freeTime || [],
                     qualification: currentUser.tutorProfile?.qualification || '',
+                    level: currentUser.tutorProfile?.level || '',
+                    learningType: currentUser.tutorProfile?.learningType || [],
                 },
             };
             console.log('initialAddress:', initialAddress);
@@ -261,6 +265,35 @@ const EditProfile = () => {
             .replace(/\s+/g, ' ') // loại bỏ khoảng trắng thừa
             .trim()
             .toLowerCase();
+    };
+
+    const validateCCCD = (cccd: string, city: string, gender: string, yearOfBirth: string): string | null => {
+        if (cccd.length !== 12) {
+            return 'CCCD phải có 12 chữ số!';
+        }
+
+        const provinceCode = cccd.slice(1, 3); // Mã tỉnh/thành phố
+        const genderCode = parseInt(cccd[3], 10); // Mã giới tính và thế kỷ
+        const birthYearCode = cccd.slice(4, 6); // Hai chữ số năm sinh
+
+        // Kiểm tra mã tỉnh/thành phố
+        if (provinceCode !== city) {
+            return 'Mã tỉnh/thành phố không khớp!';
+        }
+
+        // Kiểm tra năm sinh
+        const birthCentury = genderCode < 2 ? '19' : '20'; // Thế kỷ 19 hoặc 20
+        if (`${birthCentury}${birthYearCode}` !== yearOfBirth) {
+            return 'Năm sinh không khớp!';
+        }
+
+        // Kiểm tra giới tính
+        const isMale = gender.toLowerCase() === 'male';
+        if ((isMale && genderCode % 2 !== 0) || (!isMale && genderCode % 2 === 0)) {
+            return 'Giới tính không khớp!';
+        }
+
+        return null; // Nếu không có lỗi, trả về null
     };
 
     const convertGender = (gender: string | undefined): string => {
@@ -631,9 +664,25 @@ const EditProfile = () => {
                                         name="idCardNumber"
                                         value={formData.idCardNumber || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                                        onBlur={(e) => {
+                                            const validationError = validateCCCD(
+                                                e.target.value,
+                                                selectedCity, // Mã tỉnh/thành phố
+                                                formData?.gender || '', // Giới tính
+                                                formData?.dob?.split('-')[0] || '', // Năm sinh
+                                            );
+                                            if (validationError) {
+                                                setError(validationError);
+                                            } else {
+                                                setError(null); // Xóa lỗi nếu không có lỗi
+                                            }
+                                        }}
+                                        className={`w-full px-4 py-2.5 rounded-lg border ${
+                                            error ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400`}
                                         placeholder="Nhập số CMND/CCCD"
                                     />
+                                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                                 </div>
                             </div>
                             <div className="mt-6">
@@ -858,33 +907,6 @@ const EditProfile = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Thời gian rảnh
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="freeTime"
-                                                value={formData.tutorProfile?.freeTime?.join(', ') || ''}
-                                                onChange={(e) =>
-                                                    setFormData((prev) =>
-                                                        prev
-                                                            ? {
-                                                                  ...prev,
-                                                                  tutorProfile: {
-                                                                      ...prev.tutorProfile,
-                                                                      freeTime: e.target.value
-                                                                          .split(',')
-                                                                          .map((t) => t.trim()),
-                                                                  },
-                                                              }
-                                                            : null,
-                                                    )
-                                                }
-                                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
-                                                placeholder="Nhập thời gian rảnh, phân tách bằng dấu phẩy"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Bằng cấp
                                             </label>
                                             <input
@@ -906,6 +928,29 @@ const EditProfile = () => {
                                                 }
                                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
                                                 placeholder="Nhập bằng cấp"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Khối</label>
+                                            <input
+                                                type="text"
+                                                name="level"
+                                                value={formData.tutorProfile?.level || ''}
+                                                onChange={(e) =>
+                                                    setFormData((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  tutorProfile: {
+                                                                      ...prev.tutorProfile,
+                                                                      level: e.target.value,
+                                                                  },
+                                                              }
+                                                            : null,
+                                                    )
+                                                }
+                                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                                                placeholder="Nhập Khối"
                                             />
                                         </div>
                                     </div>

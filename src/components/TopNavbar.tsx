@@ -425,7 +425,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         if (user.role === 'STUDENT') {
             navigate('/student-profile');
         } else if (user.role === 'TUTOR') {
-            navigate(`/tutor-profile`);
+            navigate(`/tutor-profile/${user.id}`);
         } else if (user.role === 'ADMIN') {
             navigate('/admin-post');
         }

@@ -7,6 +7,7 @@ import TutorDetailCard from '../components/TutorDetailCard';
 import TutorSkeleton from '../components/TutorSkeleton';
 import { TutorProfileComponentTutor } from './TutorProfile';
 import { RequestModal } from '../components/ModalComponent';
+import defaultAvatar from '../assets/avatar.jpg';
 
 const Tutor: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState<boolean>(() => {
@@ -74,7 +75,7 @@ const Tutor: React.FC = () => {
                 status: tutor.status || 'ACTIVE',
                 violate: tutor.violate || 0,
                 userProfile: tutor.userProfile || {
-                    avatar: 'https://via.placeholder.com/150',
+                    avatar: defaultAvatar,
                     gender: 'Unknown',
                     dob: '',
                     address: '',
