@@ -7,6 +7,7 @@ import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, S
 import { useAuthStore } from '../store/authStore';
 import defaultAvatar from '../assets/avatar.jpg';
 import { RequestModal } from '../components/ModalComponent';
+import axiosClient from '../configs/axios.config';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -180,7 +181,7 @@ const TutorProfile: React.FC = () => {
                     return;
                 }
 
-                const response = await axios.get(`${API_URL}/api/v1/tutors/${tutorId}`);
+                const response = await axiosClient.get(`${API_URL}/api/v1/tutors/${tutorId}`);
                 const tutorData = response.data as TutorProfileComponentTutor;
                 const mappedTutor = mapTutorData(tutorData, false);
                 setTutor(mappedTutor);
@@ -204,6 +205,7 @@ const TutorProfile: React.FC = () => {
             fetchTutorDetail();
         }
     }, [id, location.state, currentUser]);
+    console.log('tutor', tutor);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

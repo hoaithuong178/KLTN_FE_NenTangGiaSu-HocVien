@@ -53,19 +53,6 @@ const SignIn = () => {
             const user = userResponse.data;
             if (!user?.role) throw new Error('Không lấy được thông tin người dùng!');
 
-            // // Nếu là tutor, lấy thêm thông tin chi tiết
-            // if (user.role === 'TUTOR') {
-            //     try {
-            //         const tutorResponse = await axiosClient.get(`/tutors/${user.id}`, {
-            //             headers: { Authorization: `Bearer ${accessToken}` },
-            //         });
-            //         user.tutorProfile = tutorResponse.data;
-            //     } catch (tutorError) {
-            //         console.error('Error fetching tutor profile:', tutorError);
-            //         setErrors({ general: 'Không thể lấy thông tin gia sư. Vui lòng thử lại sau.' });
-            //     }
-            // }
-
             useAuthStore.getState().login(user, accessToken);
             localStorage.setItem('token', accessToken);
 
@@ -93,6 +80,11 @@ const SignIn = () => {
         }, 3000);
         return () => clearInterval(interval);
     }, [images.length]);
+
+    useEffect(() => {
+        // ✅ Reset Zustand Auth Store và localStorage khi vào trang SignIn
+        useAuthStore.getState().resetAuth?.();
+    }, []);
 
     return (
         <div className="flex min-h-screen bg-[#FFFFFF]">
