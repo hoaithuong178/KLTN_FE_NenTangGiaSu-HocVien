@@ -7,6 +7,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import axiosClient from '../configs/axios.config';
 import { Notification } from './Notification';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'moment/locale/vi';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Portal } from '@headlessui/react';
 
 interface TopNavbarProps {
     backgroundColor?: string;
@@ -44,27 +49,50 @@ interface Notification {
     }[];
 }
 
-const notificationTypes: { [key: string]: string } = {
-    TEACH_REQUEST: 'Yêu cầu dạy',
-    RECEIVE_CLASS: 'Yêu cầu nhận lớp',
-    PRICE_ADJUSTMENT: 'Yêu cầu điều chỉnh giá',
-    MODIFY_CLASS: 'Yêu cầu sửa lớp',
-    CREATE_CLASS: 'Yêu cầu tạo lớp',
-    TUTOR_ACCEPTING: 'Gia sư đã chấp nhận',
-    TUTOR_REJECTING: 'Gia sư đã từ chối',
-    STUDENT_ACCEPTING: 'Học viên đã chấp nhận',
-    STUDENT_REJECTING: 'Học viên đã từ chối',
-    CLASS_CANCELLING: 'Hủy lớp',
-    CONTRACT_SIGNING: 'Ký hợp đồng',
-    PAYMENT_REMINDING: 'Nhắc nhở thanh toán',
-    PAYMENT_SUBMITTING: 'Đã thanh toán',
-    COMPLAINT_RESPONDING: 'Phản hồi khiếu nại',
-    TUTOR_RATING: 'Đánh giá gia sư',
-    CLASS_CHECK_IN: 'Điểm danh lớp học',
-    NEW_COMPLAINT: 'Khiếu nại mới',
-    SYSTEM_ALERT: 'Thông báo hệ thống',
-    CONTRACT_UPDATE: 'Cập nhật hợp đồng',
-};
+// Thêm interface cho request detail
+interface RequestDetail {
+    from: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
+    to: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
+    subject: {
+        id: string;
+        name: string;
+    };
+    schedule: Array<{
+        day: string;
+        startTime: string;
+        endTime: string;
+    }>;
+    feePerSessions: Array<{
+        price: number;
+        adjustmentTime: string;
+    }>;
+    id: string;
+    type: string;
+    status: string;
+    grade: string;
+    locations: string[];
+    sessionPerWeek: number;
+    duration: number;
+    mode: boolean;
+}
+
+moment.locale('vi');
+const localizer = momentLocalizer(moment);
+
+interface CalendarEvent {
+    title: string;
+    start: Date;
+    end: Date;
+    resourceId?: string;
+}
 
 const TopNavbar: React.FC<TopNavbarProps> = ({
     backgroundColor = 'white',
@@ -80,7 +108,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [avatar, setAvatar] = useState(user?.userProfile?.avatar || user?.avatar || Avatar);
+    const [avatar, setAvatar] = useState(Avatar);
     const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
     const [showNotificationDetail, setShowNotificationDetail] = useState(false);
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
@@ -88,6 +116,10 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         show: false,
         type: 'success',
     });
+    const [requestDetail, setRequestDetail] = useState<RequestDetail | null>(null);
+    const [negotiatePrice, setNegotiatePrice] = useState<number>(0);
+    const [showNegotiateModal, setShowNegotiateModal] = useState(false);
+    const [showConfirmReject, setShowConfirmReject] = useState(false);
 
     // Lấy state và actions từ store
     const { language, setLanguage } = useStore();
@@ -124,7 +156,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
     // Thêm hàm đánh dấu đã đọc
     const markAsRead = async (id: string) => {
-        console.log('Marking as read, ID:', id); // Thêm log để kiểm tra
+        // console.log('Marking as read, ID:', id); // Thêm log để kiểm tra
         try {
             await axiosClient.patch(`/notifications/${id}/read`);
             setNotifications(notifications.map((noti) => (noti.id === id ? { ...noti, isRead: true } : noti)));
@@ -167,13 +199,43 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     };
 
     useEffect(() => {
-        // Kiểm tra user trong localStorage khi component mount
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            setAvatar(userData.avatar || Avatar);
+        const fetchUserData = async () => {
+            try {
+                await axiosClient.get('/users/me');
+                // console.log('User data from /users/me:', response.data);
+                // console.log('Avatar from /users/me:', response.data.avatar);
+                // console.log('UserProfile from /users/me:', response.data.userProfile);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        if (user) {
+            fetchUserData();
         }
-    }, []);
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            // Kiểm tra và lấy avatar từ các nguồn khác nhau
+            const userAvatar = user.avatar;
+            const profileAvatar = user.userProfile?.avatar;
+
+            // console.log('User data from authStore:', user);
+            // console.log('User avatar from authStore:', userAvatar);
+            // console.log('Profile avatar from authStore:', profileAvatar);
+
+            if (profileAvatar) {
+                setAvatar(profileAvatar);
+            } else if (userAvatar) {
+                setAvatar(userAvatar);
+            } else {
+                setAvatar(Avatar);
+            }
+
+            // console.log('Final avatar:', avatar);
+        }
+    }, [user]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -202,26 +264,19 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         try {
             await markAsRead(noti.id);
 
-            // Lấy role từ auth store
-            const { user } = useAuthStore.getState();
+            // Lấy thông tin chi tiết của request
+            const response = await axiosClient.get(`/requests/${noti.link}`);
+            setRequestDetail(response.data);
+            setSelectedNotification(noti);
 
-            // Kiểm tra role và chuyển hướng tương ứng
-            if (user?.role === 'STUDENT') {
-                navigate('/class-detail');
-            } else if (user?.role === 'TUTOR') {
-                navigate('/class-detail-tutor');
-            } else {
-                console.error('Invalid user role');
-                setNotification({
-                    message: 'Không có quyền truy cập',
-                    show: true,
-                    type: 'error',
-                });
+            // Chỉ hiện chi tiết nếu status không phải là REJECTED
+            if (response.data.status !== 'REJECTED') {
+                setShowNotificationDetail(true);
             }
         } catch (error) {
             console.error('Error handling notification click:', error);
             setNotification({
-                message: 'Có lỗi xảy ra',
+                message: 'Có lỗi xảy ra khi lấy thông tin chi tiết',
                 show: true,
                 type: 'error',
             });
@@ -229,39 +284,156 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     };
 
     // Hàm xử lý đồng ý/từ chối
-    const handleResponse = async (accepted: boolean) => {
-        try {
-            if (selectedNotification?.link) {
-                // Đánh dấu là đã đọc
-                await axiosClient.patch(`/notifications/${selectedNotification.id}/read`);
+    const handleResponse = async (status: 'ACCEPTED' | 'REJECTED') => {
+        if (status === 'REJECTED') {
+            setShowConfirmReject(true);
+            return;
+        }
 
-                // Gọi API xử lý đồng ý/từ chối
-                await axiosClient.post(selectedNotification.link, { accepted });
+        try {
+            if (requestDetail) {
+                await axiosClient.patch(`/requests/${requestDetail.id}`, {
+                    status: 'ACCEPTED',
+                });
+
+                setNotification({
+                    message: 'Đã chấp nhận yêu cầu',
+                    show: true,
+                    type: 'success',
+                });
 
                 // Cập nhật state local
                 setNotifications(
                     notifications.map((noti) =>
-                        noti.id === selectedNotification.id ? { ...noti, isRead: true } : noti,
+                        noti.id === selectedNotification?.id ? { ...noti, isRead: true } : noti,
                     ),
                 );
-
-                setNotification({
-                    message: `Đã ${accepted ? 'đồng ý' : 'từ chối'} yêu cầu`,
-                    show: true,
-                    type: 'success',
-                });
+                setTimeout(() => {
+                    setNotification({
+                        message: '',
+                        show: false,
+                        type: 'success',
+                    });
+                }, 3000);
             }
         } catch (error) {
-            console.error('Error responding to notification:', error);
+            console.error('Error responding to request:', error);
             setNotification({
                 message: 'Có lỗi xảy ra khi xử lý yêu cầu',
                 show: true,
                 type: 'error',
             });
         } finally {
-            // Luôn đóng popup sau khi xử lý xong, bất kể thành công hay thất bại
             setShowNotificationDetail(false);
             setSelectedNotification(null);
+            setRequestDetail(null);
+        }
+    };
+
+    const handleConfirmReject = async () => {
+        try {
+            if (requestDetail) {
+                await axiosClient.patch(`/requests/${requestDetail.id}`, {
+                    status: 'REJECTED',
+                });
+
+                setNotification({
+                    message: 'Đã từ chối yêu cầu',
+                    show: true,
+                    type: 'success',
+                });
+
+                // Cập nhật state local
+                setNotifications(
+                    notifications.map((noti) =>
+                        noti.id === selectedNotification?.id ? { ...noti, isRead: true } : noti,
+                    ),
+                );
+                setTimeout(() => {
+                    setNotification({
+                        message: '',
+                        show: false,
+                        type: 'success',
+                    });
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error rejecting request:', error);
+            setNotification({
+                message: 'Có lỗi xảy ra khi từ chối yêu cầu',
+                show: true,
+                type: 'error',
+            });
+        } finally {
+            setShowConfirmReject(false);
+            setShowNotificationDetail(false);
+            setSelectedNotification(null);
+            setRequestDetail(null);
+        }
+    };
+
+    // Hàm xử lý thương lượng giá
+    const handleNegotiate = () => {
+        if (requestDetail) {
+            // Lấy giá mới nhất từ mảng feePerSessions
+            const latestPrice = requestDetail.feePerSessions[requestDetail.feePerSessions.length - 1].price;
+            setNegotiatePrice(latestPrice);
+            setShowNegotiateModal(true);
+        }
+    };
+
+    // Hàm xử lý gửi yêu cầu thương lượng
+    const handleSubmitNegotiation = async () => {
+        try {
+            if (requestDetail) {
+                // Xác định người gửi và người nhận
+                const currentUserId = user?.id;
+                // Nếu người dùng hiện tại là người gửi yêu cầu ban đầu (from),
+                // thì gửi thông báo cho người nhận yêu cầu ban đầu (to)
+                // và ngược lại
+                const fromId = currentUserId;
+                const toId = currentUserId === requestDetail.from.id ? requestDetail.to.id : requestDetail.from.id;
+
+                // Gửi request cập nhật trạng thái và giá
+                await axiosClient.patch(`/requests/${requestDetail.id}`, {
+                    status: 'PRICE_NEGOTIATION',
+                    feePerSession: negotiatePrice,
+                    fromId,
+                    toId,
+                });
+
+                setNotification({
+                    message: 'Đã gửi yêu cầu thương lượng giá',
+                    show: true,
+                    type: 'success',
+                });
+
+                // Cập nhật state local
+                setNotifications(
+                    notifications.map((noti) =>
+                        noti.id === selectedNotification?.id ? { ...noti, isRead: true } : noti,
+                    ),
+                );
+                setTimeout(() => {
+                    setNotification({
+                        message: '',
+                        show: false,
+                        type: 'success',
+                    });
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error negotiating price:', error);
+            setNotification({
+                message: 'Có lỗi xảy ra khi gửi yêu cầu thương lượng',
+                show: true,
+                type: 'error',
+            });
+        } finally {
+            setShowNegotiateModal(false);
+            setShowNotificationDetail(false);
+            setSelectedNotification(null);
+            setRequestDetail(null);
         }
     };
 
@@ -284,11 +456,37 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         if (user.role === 'STUDENT') {
             navigate('/student-profile');
         } else if (user.role === 'TUTOR') {
-            navigate(`/tutor-profile`);
+            navigate(`/tutor-profile/${user.id}`);
         } else if (user.role === 'ADMIN') {
             navigate('/admin-post');
         }
         setShowUserMenu(false);
+    };
+
+    const EventComponent = ({ event }: { event: CalendarEvent }) => {
+        const [subject, startTime, endTime] = event.title.split('|');
+        return (
+            <div className="flex flex-col items-center text-center w-full h-full text-xs p-1">
+                <div className="font-medium">{subject}</div>
+                <div>{startTime}</div>
+                <div>{endTime}</div>
+            </div>
+        );
+    };
+
+    const convertScheduleToEvents = (
+        schedule: Array<{ startTime: string; endTime: string }>,
+        subjectName: string,
+    ): CalendarEvent[] => {
+        return schedule.map((slot) => {
+            const start = new Date(slot.startTime);
+            const end = new Date(slot.endTime);
+            return {
+                title: `${subjectName}|${moment(start).format('HH:mm')}|${moment(end).format('HH:mm')}`,
+                start,
+                end,
+            };
+        });
     };
 
     return (
@@ -330,21 +528,30 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
                                         onClick={() => handleNotificationClick(noti)}
                                         className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
                                             !noti.isRead ? 'bg-blue-50' : ''
-                                        }`}
+                                        } `}
                                     >
-                                        <div className="flex items-center space-x-2">
+                                        <div className="flex items-start space-x-2">
                                             <img
                                                 src={noti.fromUser?.avatar || Avatar}
                                                 alt=""
                                                 className="w-8 h-8 rounded-full"
                                             />
-                                            <div>
-                                                <p className="font-semibold">{noti.fromUser?.name}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    {notificationTypes[noti.type] || noti.type}
-                                                </p>
+                                            <div className="flex-1 space-y-1">
+                                                <p className="font-bold text-sm">{noti.title}</p>
+                                                <p className="text-sm text-gray-600">{noti.message}</p>
+                                                {noti.feePerSession && (
+                                                    <p className="text-sm text-red-600 font-medium">
+                                                        Giá đề xuất: {noti.feePerSession.toLocaleString('vi-VN')}đ/buổi
+                                                    </p>
+                                                )}
                                                 <p className="text-xs text-gray-400">
-                                                    {new Date(noti.createdAt).toLocaleString('vi-VN')}
+                                                    {new Date(noti.createdAt).toLocaleString('vi-VN', {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                    })}
                                                 </p>
                                             </div>
                                         </div>
@@ -359,59 +566,270 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
             </div>
 
             {/* Popup chi tiết thông báo */}
-            {showNotificationDetail && selectedNotification && (
+            {showNotificationDetail && requestDetail && (
                 <>
                     <div
                         className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
                         onClick={() => {
                             setShowNotificationDetail(false);
                             setSelectedNotification(null);
+                            setRequestDetail(null);
                         }}
                     />
                     <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-                        <div className="bg-white rounded-lg p-6 w-[500px] max-w-full">
-                            <h3 className="text-xl font-bold mb-4">Chi tiết yêu cầu</h3>
-                            <div className="space-y-2">
-                                <p>Môn học: {selectedNotification.subject?.name}</p>
-                                <p>Khối lớp: {selectedNotification.grade}</p>
-                                <p>Hình thức: {selectedNotification.mode ? 'Online' : 'Offline'}</p>
-                                <p>Địa điểm: {selectedNotification.locations?.join(', ')}</p>
-                                <p>Số buổi/tuần: {selectedNotification.sessionPerWeek}</p>
-                                <p>Thời lượng: {selectedNotification.duration} phút</p>
-                                <p>Học phí: {selectedNotification.feePerSession?.toLocaleString('vi-VN')}đ/buổi</p>
-                                <p>
-                                    Thời gian học:{' '}
-                                    {selectedNotification.schedule
-                                        ?.map(
-                                            (s) =>
-                                                `${s.day} từ ${new Date(s.startTime).toLocaleTimeString('vi-VN', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })} - ${new Date(s.endTime).toLocaleTimeString('vi-VN', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}`,
-                                        )
-                                        .join(', ')}
-                                </p>
+                        <div className="bg-white rounded-lg p-6 w-[800px] max-w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-xl font-bold">Chi tiết yêu cầu</h3>
+                                <button
+                                    onClick={() => {
+                                        setShowNotificationDetail(false);
+                                        setSelectedNotification(null);
+                                        setRequestDetail(null);
+                                    }}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ✕
+                                </button>
                             </div>
-                            <div className="flex justify-end space-x-4 mt-6">
-                                <button
-                                    onClick={() => handleResponse(false)}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
-                                >
-                                    Từ chối
-                                </button>
-                                <button
-                                    onClick={() => handleResponse(true)}
-                                    className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
-                                >
-                                    Đồng ý
-                                </button>
+                            <div className="space-y-6">
+                                <div className="flex items-center space-x-3">
+                                    <img
+                                        src={requestDetail.from.avatar || Avatar}
+                                        alt={requestDetail.from.name}
+                                        className="w-12 h-12 rounded-full"
+                                    />
+                                    <div>
+                                        <p className="font-semibold">{requestDetail.from.name}</p>
+                                        <p className="text-sm text-gray-500">Người gửi yêu cầu</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-gray-600">Môn học</p>
+                                        <p className="font-medium">{requestDetail.subject.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Khối lớp</p>
+                                        <p className="font-medium">{requestDetail.grade}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Hình thức</p>
+                                        <p className="font-medium">{requestDetail.mode ? 'Online' : 'Offline'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Số buổi/tuần</p>
+                                        <p className="font-medium">{requestDetail.sessionPerWeek} buổi</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Thời lượng</p>
+                                        <p className="font-medium">{requestDetail.duration} phút/buổi</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Học phí ban đầu</p>
+                                        <p className="font-medium">
+                                            {requestDetail.feePerSessions[0].price.toLocaleString('vi-VN')}đ/giờ
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600 mb-2">Địa điểm</p>
+                                        <p className="font-medium">{requestDetail.locations.join(', ')}</p>
+                                    </div>
+                                    {requestDetail.feePerSessions.length > 1 && (
+                                        <div>
+                                            <p className="text-gray-600">Học phí đề xuất</p>
+                                            <p className="font-medium text-red-600">
+                                                {requestDetail.feePerSessions[
+                                                    requestDetail.feePerSessions.length - 1
+                                                ].price.toLocaleString('vi-VN')}
+                                                đ/giờ
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                {new Date(
+                                                    requestDetail.feePerSessions[
+                                                        requestDetail.feePerSessions.length - 1
+                                                    ].adjustmentTime,
+                                                ).toLocaleString('vi-VN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                })}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {requestDetail.schedule.length > 0 && (
+                                    <div>
+                                        <p className="text-gray-600 mb-2">Lịch học</p>
+                                        <div className="flex items-center mb-2">
+                                            <p className="text-gray-600 mr-2">Tổng số buổi học:</p>
+                                            <p className="font-medium">{requestDetail.schedule.length} buổi</p>
+                                        </div>
+                                        <div className="h-[500px] bg-white rounded-lg">
+                                            <Calendar
+                                                localizer={localizer}
+                                                events={convertScheduleToEvents(
+                                                    requestDetail.schedule,
+                                                    requestDetail.subject.name,
+                                                )}
+                                                startAccessor="start"
+                                                endAccessor="end"
+                                                views={['month']}
+                                                defaultView="month"
+                                                formats={{
+                                                    monthHeaderFormat: (date: Date) => moment(date).format('MMMM YYYY'),
+                                                }}
+                                                messages={{
+                                                    month: 'Tháng',
+                                                    today: 'Hôm nay',
+                                                    next: 'Sau',
+                                                    previous: 'Trước',
+                                                }}
+                                                style={{ height: '100%' }}
+                                                components={{
+                                                    event: EventComponent,
+                                                }}
+                                                eventPropGetter={() => ({
+                                                    style: {
+                                                        minHeight: '70px',
+                                                        height: 'auto',
+                                                        padding: '4px',
+                                                        backgroundColor: '#2563eb',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        fontSize: '13px',
+                                                    },
+                                                })}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex justify-end space-x-3 mt-6">
+                                {user?.role === 'STUDENT' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleResponse('REJECTED')}
+                                            className={`px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 ${
+                                                requestDetail.status === 'ACCEPTED'
+                                                    ? 'opacity-50 cursor-not-allowed'
+                                                    : ''
+                                            }`}
+                                            disabled={requestDetail.status === 'ACCEPTED'}
+                                        >
+                                            Từ chối
+                                        </button>
+                                        <button
+                                            onClick={handleNegotiate}
+                                            className={`px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-500 ${
+                                                requestDetail.status === 'ACCEPTED'
+                                                    ? 'opacity-50 cursor-not-allowed'
+                                                    : ''
+                                            }`}
+                                            disabled={requestDetail.status === 'ACCEPTED'}
+                                        >
+                                            Thương lượng
+                                        </button>
+                                    </>
+                                )}
+                                {requestDetail.status === 'ACCEPTED' && user?.role === 'TUTOR' ? (
+                                    <button
+                                        onClick={() => navigate(`/create-class/${requestDetail.id}`)}
+                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+                                    >
+                                        Tạo lớp
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleResponse('ACCEPTED')}
+                                        className={`px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 ${
+                                            requestDetail.status === 'ACCEPTED' ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                        disabled={requestDetail.status === 'ACCEPTED'}
+                                    >
+                                        Chấp nhận
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Popup thương lượng giá */}
+            {showNegotiateModal && requestDetail && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+                    <div className="bg-white rounded-lg p-6 w-[400px]">
+                        <h3 className="text-xl font-bold mb-4">Thương lượng giá</h3>
+                        <p className="mb-4">
+                            Bạn đang thương lượng giá cho lớp {requestDetail.subject.name} của gia sư{' '}
+                            {requestDetail.from.name}
+                        </p>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">
+                                Giá hiện tại:{' '}
+                                {requestDetail.feePerSessions[
+                                    requestDetail.feePerSessions.length - 1
+                                ].price.toLocaleString('vi-VN')}
+                                đ/giờ
+                            </p>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Giá đề xuất (VNĐ/giờ)
+                            </label>
+                            <input
+                                type="number"
+                                value={negotiatePrice}
+                                onChange={(e) => setNegotiatePrice(Number(e.target.value))}
+                                className="w-full p-2 border rounded"
+                                min="0"
+                                step="1000"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowNegotiateModal(false)}
+                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-400"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleSubmitNegotiation}
+                                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-500"
+                            >
+                                Gửi yêu cầu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal xác nhận từ chối */}
+            {showConfirmReject && requestDetail && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+                    <div className="bg-white rounded-lg p-6 w-[400px]">
+                        <h3 className="text-xl font-bold mb-4">Xác nhận từ chối</h3>
+                        <p className="mb-6">
+                            Bạn có chắc chắn muốn từ chối yêu cầu nhận lớp {requestDetail.subject.name} của gia sư{' '}
+                            {requestDetail.from.name} không?
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowConfirmReject(false)}
+                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-400"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleConfirmReject}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
+                            >
+                                Xác nhận từ chối
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Button chuyển ngôn ngữ */}
@@ -469,30 +887,32 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
                 {/* Popup xác nhận đăng xuất */}
                 {showLogoutConfirm && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-                        <div className="bg-white rounded-lg p-6 w-96">
-                            <TitleText level={3} size="medium" weight="bold" className="mb-4">
-                                Xác nhận đăng xuất
-                            </TitleText>
-                            <Text size="medium" className="mb-6">
-                                Bạn có chắc chắn muốn đăng xuất khỏi trang web?
-                            </Text>
-                            <div className="flex justify-end space-x-4">
-                                <button
-                                    onClick={() => setShowLogoutConfirm(false)}
-                                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                                >
-                                    <Text weight="normal">Hủy</Text>
-                                </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                                >
-                                    <Text weight="normal">Đăng xuất</Text>
-                                </button>
+                    <Portal>
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+                            <div className="bg-white rounded-lg p-6 w-96">
+                                <TitleText level={3} size="medium" weight="bold" className="mb-4">
+                                    Xác nhận đăng xuất
+                                </TitleText>
+                                <Text size="medium" className="mb-6">
+                                    Bạn có chắc chắn muốn đăng xuất khỏi trang web?
+                                </Text>
+                                <div className="flex justify-end space-x-4">
+                                    <button
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                                    >
+                                        <Text weight="normal">Hủy</Text>
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                    >
+                                        <Text weight="normal">Đăng xuất</Text>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </Portal>
                 )}
             </div>
 

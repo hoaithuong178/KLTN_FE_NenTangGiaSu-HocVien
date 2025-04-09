@@ -1,7 +1,6 @@
 import React from 'react';
 
 interface TutorCardProps {
-    key: number;
     name: string;
     experience: string;
     rating: number;
@@ -9,7 +8,7 @@ interface TutorCardProps {
     className?: string;
 }
 
-const TutorCard: React.FC<TutorCardProps> = ({ name, experience, rating, image, className }) => {
+const TutorCard: React.FC<TutorCardProps> = ({ name, experience, rating, image, className = '' }) => {
     return (
         <div
             className={`flex flex-col items-center bg-white shadow-md rounded-2xl p-4 w-64 h-80 border border-gray-200 ${className}`}

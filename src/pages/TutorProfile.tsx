@@ -7,6 +7,7 @@ import { AddressIcon, ArrowLeftIcon, ChatIcon, HeartIcon, MailIcon, PhoneIcon, S
 import { useAuthStore } from '../store/authStore';
 import defaultAvatar from '../assets/avatar.jpg';
 import { RequestModal } from '../components/ModalComponent';
+import axiosClient from '../configs/axios.config';
 
 export type ScheduleDetail = {
     morning?: [string, string][];
@@ -27,35 +28,59 @@ export interface TutorProfileComponentTutor {
     role: Role;
     status?: string;
     violate?: number;
-    userProfile?: {
-        idCardNumber?: string;
-        avatar?: string;
-        gender: string;
-        dob: string;
-        address: string;
-    };
-    tutorProfile?: {
-        hourlyPrice: number;
-        level: string;
-        experiences: number;
-        taughtStudentsCount: number;
-        rating: number;
-        description: string;
-        tutorLocations: string[];
-        specializations: string[];
-        learningTypes: string[];
-        reviews?: {
-            avatar?: string;
-            name: string;
-            date: string;
-            content: string;
-            rating: number;
-        }[];
-        isFavorite?: boolean; // Optional vì dữ liệu mẫu không có
-        freeTime: string[];
-        qualification: string;
-    };
+    score?: number;
+    avatar?: string;
+    isOnline?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+
+    // Dữ liệu từ backend là mảng, nhưng ta có thể dùng cái đầu tiên
+    userProfiles?: UserProfile[];
+    tutorProfiles?: TutorProfile[];
+
+    // Đã xử lý normalize trước khi truyền vào component
+    userProfile?: UserProfile;
+    tutorProfile?: TutorProfile;
+
     currentUserId?: string;
+}
+
+export interface UserProfile {
+    id?: string;
+    address?: string;
+    avatar?: string;
+    gender?: string;
+    dob?: string;
+    idCardNumber?: string;
+    walletAddress?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface TutorProfile {
+    id?: string;
+    description: string;
+    experiences: number;
+    fee?: number;
+    hourlyPrice: number;
+    level: string;
+    qualification: string;
+    taughtStudentsCount: number;
+    rating: number;
+    learningTypes: string[];
+    tutorLocations: string[];
+    specializations: string[];
+    isFavorite?: boolean;
+    freeTime: string[];
+    reviews?: Review[];
+}
+
+export interface Review {
+    avatar?: string;
+    name: string;
+    date: string;
+    content: string;
+    rating: number;
 }
 
 const TutorProfile: React.FC = () => {
@@ -65,6 +90,8 @@ const TutorProfile: React.FC = () => {
     const { user: currentUser } = useAuthStore();
 
     const [tutor, setTutor] = useState<TutorProfileComponentTutor | null>(null);
+
+    const userInfo = tutor ? tutor.userProfiles?.[0] || {} : {};
     const [loading, setLoading] = useState<boolean>(true);
     const [showRequestModal, setShowRequestModal] = useState<boolean>(false);
     const [isFavorite, setIsFavorite] = useState<boolean>(false);
@@ -120,38 +147,47 @@ const TutorProfile: React.FC = () => {
 
     // Fetch dữ liệu gia sư
     useEffect(() => {
-        const mapTutorData = (
-            data: TutorProfileComponentTutor,
-            isCurrentUser: boolean,
-        ): TutorProfileComponentTutor => ({
-            ...data,
-            currentUserId: isCurrentUser ? data.id : data.currentUserId,
-            status: data.status,
-            violate: data.violate,
-            userProfile: {
-                avatar: (data as TutorProfileComponentTutor).userProfile?.avatar || defaultAvatar,
-                gender: (data as TutorProfileComponentTutor).userProfile?.gender || 'Unknown',
-                dob: (data as TutorProfileComponentTutor).userProfile?.dob || '',
-                address: (data as TutorProfileComponentTutor).userProfile?.address || '',
-            },
-            tutorProfile: data.tutorProfile
-                ? {
-                      ...data.tutorProfile,
-                      hourlyPrice: data.tutorProfile.hourlyPrice || 0,
-                      experiences: data.tutorProfile.experiences || 0,
-                      taughtStudentsCount: data.tutorProfile.taughtStudentsCount || 0,
-                      rating: data.tutorProfile.rating || 0,
-                      description: data.tutorProfile.description || '',
-                      tutorLocations: data.tutorProfile.tutorLocations || [],
-                      specializations: data.tutorProfile.specializations || [],
-                      learningTypes: data.tutorProfile.learningTypes || [],
-                      reviews: data.tutorProfile.reviews || [],
-                      isFavorite: data.tutorProfile.isFavorite ?? false,
-                      freeTime: data.tutorProfile.freeTime || [],
-                      qualification: data.tutorProfile.qualification || '',
-                  }
-                : undefined,
-        });
+        const mapTutorData = (data: TutorProfileComponentTutor, isCurrentUser: boolean): TutorProfileComponentTutor => {
+            const userProfile = data.userProfile || data.userProfiles?.[0];
+            const tutorProfile = data.tutorProfile || data.tutorProfiles?.[0];
+
+            return {
+                ...data,
+                currentUserId: isCurrentUser ? data.id : data.currentUserId,
+                status: data.status,
+                violate: data.violate,
+                userProfile: userProfile
+                    ? {
+                          avatar: userProfile.avatar || defaultAvatar,
+                          gender: userProfile.gender || 'Unknown',
+                          dob: userProfile.dob || '',
+                          address: userProfile.address || '',
+                      }
+                    : {
+                          avatar: defaultAvatar,
+                          gender: 'Unknown',
+                          dob: '',
+                          address: '',
+                      },
+                tutorProfile: tutorProfile
+                    ? {
+                          ...tutorProfile,
+                          hourlyPrice: tutorProfile.hourlyPrice || 0,
+                          experiences: tutorProfile.experiences || 0,
+                          taughtStudentsCount: tutorProfile.taughtStudentsCount || 0,
+                          rating: tutorProfile.rating || 0,
+                          description: tutorProfile.description || '',
+                          tutorLocations: tutorProfile.tutorLocations || [],
+                          specializations: tutorProfile.specializations || [],
+                          learningTypes: tutorProfile.learningTypes || [],
+                          reviews: tutorProfile.reviews || [],
+                          isFavorite: tutorProfile.isFavorite ?? false,
+                          freeTime: tutorProfile.freeTime || [],
+                          qualification: tutorProfile.qualification || '',
+                      }
+                    : undefined,
+            };
+        };
 
         const fetchTutorDetail = async () => {
             try {
@@ -163,24 +199,14 @@ const TutorProfile: React.FC = () => {
                 }
 
                 if (currentUser?.role === 'TUTOR' && currentUser.id === tutorId) {
-                    const mappedTutor = mapTutorData(
-                        {
-                            ...currentUser,
-                            userProfile: {
-                                avatar: currentUser.userProfile?.avatar || defaultAvatar,
-                                gender: currentUser.userProfile?.gender || 'Unknown',
-                                dob: currentUser.userProfile?.dob || '',
-                                address: currentUser.userProfile?.address || '',
-                            },
-                        },
-                        true,
-                    );
+                    const mappedTutor = mapTutorData(currentUser, true);
                     setTutor(mappedTutor);
                     setLoading(false);
                     return;
                 }
 
-                const response = await axios.get(`${API_URL}/api/v1/tutors/${tutorId}`);
+                const response = await axiosClient.get(`${API_URL}/api/v1/tutors/${tutorId}`);
+                console.log('Raw tutorData:', response.data);
                 const tutorData = response.data as TutorProfileComponentTutor;
                 const mappedTutor = mapTutorData(tutorData, false);
                 setTutor(mappedTutor);
@@ -198,12 +224,15 @@ const TutorProfile: React.FC = () => {
 
         if (location.state) {
             const stateTutor = location.state as TutorProfileComponentTutor;
-            setTutor(stateTutor);
+            const mappedTutor = mapTutorData(stateTutor, false);
+            setTutor(mappedTutor);
             setLoading(false);
         } else {
             fetchTutorDetail();
         }
     }, [id, location.state, currentUser]);
+    console.log('tutor', tutor);
+    console.log('userInfo', userInfo);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -327,7 +356,7 @@ const TutorProfile: React.FC = () => {
                           } học sinh.`
                         : 'Thông tin gia sư'
                 }
-                ogImage={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
+                ogImage={tutor.userProfile?.avatar || defaultAvatar}
             />
             <div className="w-full">
                 <header className="w-full bg-white shadow-md">
@@ -347,10 +376,10 @@ const TutorProfile: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                         <div className="flex items-center mb-4 md:mb-0">
                             <img
-                                src={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
+                                src={userInfo.avatar || defaultAvatar}
                                 alt={tutor.name}
                                 className="w-24 h-24 rounded-full mr-4 object-cover"
-                                onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
+                                onError={(e) => (e.currentTarget.src = defaultAvatar)}
                             />
                             <div>
                                 <h1 className="text-2xl font-bold">{tutor.name}</h1>
@@ -461,14 +490,14 @@ const TutorProfile: React.FC = () => {
                             <p className="text-gray-600 font-semibold col-span-1">Về tôi</p>
                             <p className="text-gray-800 col-span-3">{tutor.tutorProfile?.description || ''}</p>
                             <p className="text-gray-600 font-semibold col-span-1">Giới tính</p>
-                            <p className="text-gray-800 col-span-3">
-                                {translateGender(tutor.userProfile?.gender || 'Unknown')}
-                            </p>
+                            <p className="text-gray-800 col-span-3">{translateGender(userInfo.gender || 'Unknown')}</p>
                             <p className="text-gray-600 font-semibold col-span-1">Năm sinh</p>
                             <p className="text-gray-800 col-span-3">
-                                {tutor.userProfile?.dob
-                                    ? `${new Date(tutor.userProfile.dob).getFullYear()} (${getAge(
-                                          tutor.userProfile.dob,
+                                {tutor.userProfile?.dob || tutor.userProfiles?.[0]?.dob
+                                    ? `${new Date(
+                                          tutor.userProfile?.dob || tutor.userProfiles?.[0]?.dob || '',
+                                      ).getFullYear()} (${getAge(
+                                          tutor.userProfile?.dob || tutor.userProfiles?.[0]?.dob || '',
                                       )} tuổi)`
                                     : 'Chưa cập nhật'}
                             </p>
@@ -546,10 +575,10 @@ const TutorProfile: React.FC = () => {
                             tutor.tutorProfile.reviews.map((review) => (
                                 <div key={`${review.name}-${review.date}`} className="flex items-start mb-4">
                                     <img
-                                        src={review.avatar || 'https://via.placeholder.com/50'}
+                                        src={review.avatar || defaultAvatar}
                                         alt={review.name}
                                         className="w-12 h-12 rounded-full mr-4"
-                                        onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/50')}
+                                        onError={(e) => (e.currentTarget.src = defaultAvatar)}
                                     />
                                     <div>
                                         <h3 className="text-lg font-bold">{review.name}</h3>

@@ -4,7 +4,7 @@ import axiosClient from '../configs/axios.config';
 import { AxiosError } from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/Button';
-import { HeartIcon, ArrowLeftIcon, ChatIcon, StarIcon } from '../components/icons';
+import { ArrowLeftIcon, ChatIcon, StarIcon } from '../components/icons';
 import SEO from '../components/SEO';
 import Avatar from '../assets/avatar.jpg';
 import { MultiLineText } from '../components/Text';
@@ -42,12 +42,6 @@ interface Post {
     };
 }
 
-// Interface cho bài viết yêu thích
-interface FavoritePost {
-    id: string;
-    // Thêm các trường khác nếu cần
-}
-
 const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -55,7 +49,6 @@ const PostDetail: React.FC = () => {
 
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const [isFavorite, setIsFavorite] = useState<boolean>(false);
     const [notification, setNotification] = useState<{
         message: string;
         show: boolean;
@@ -78,15 +71,6 @@ const PostDetail: React.FC = () => {
                         ...response.data,
                         mode: String(response.data.mode).toLowerCase() === 'true',
                     });
-
-                    // Kiểm tra xem bài viết có trong danh sách yêu thích không
-                    if (user?.id) {
-                        const favResponse = await axiosClient.get('/favorite-posts');
-                        if (favResponse.data) {
-                            const isFav = favResponse.data.some((favPost: FavoritePost) => favPost.id === id);
-                            setIsFavorite(isFav);
-                        }
-                    }
                 }
             } catch (error) {
                 console.error('Error fetching post detail:', error);
@@ -109,46 +93,6 @@ const PostDetail: React.FC = () => {
     }, [id, user?.id]);
 
     // Xử lý thêm/xóa bài viết khỏi danh sách yêu thích
-    const handleFavorite = async () => {
-        try {
-            if (!user || !user.id) {
-                setNotification({
-                    message: 'Vui lòng đăng nhập để thêm bài viết vào danh sách yêu thích',
-                    show: true,
-                    type: 'error',
-                });
-                return;
-            }
-
-            if (isFavorite) {
-                // Xóa khỏi danh sách yêu thích
-                await axiosClient.delete(`/favorite-posts/${id}`);
-                setIsFavorite(false);
-                setNotification({
-                    message: 'Đã xóa bài viết khỏi danh sách yêu thích',
-                    show: true,
-                    type: 'success',
-                });
-            } else {
-                // Thêm vào danh sách yêu thích
-                await axiosClient.post(`/favorite-posts/${id}`);
-                setIsFavorite(true);
-                setNotification({
-                    message: 'Đã thêm bài viết vào danh sách yêu thích',
-                    show: true,
-                    type: 'success',
-                });
-            }
-        } catch (error) {
-            console.error('Error toggling favorite post:', error);
-            setLoading(false);
-            setNotification({
-                message: 'Có lỗi xảy ra khi thao tác với bài viết yêu thích',
-                show: true,
-                type: 'error',
-            });
-        }
-    };
 
     // Xử lý gửi yêu cầu dạy
     const handleSendRequest = () => {
@@ -192,28 +136,28 @@ const PostDetail: React.FC = () => {
     };
 
     // Xử lý thương lượng giá
-    const handleNegotiatePrice = () => {
-        if (!user) {
-            setNotification({
-                message: 'Vui lòng đăng nhập để thương lượng giá',
-                show: true,
-                type: 'error',
-            });
-            return;
-        }
+    // const handleNegotiatePrice = () => {
+    //     if (!user) {
+    //         setNotification({
+    //             message: 'Vui lòng đăng nhập để thương lượng giá',
+    //             show: true,
+    //             type: 'error',
+    //         });
+    //         return;
+    //     }
 
-        if (user.role !== 'TUTOR') {
-            setNotification({
-                message: 'Chỉ gia sư mới có thể thương lượng giá',
-                show: true,
-                type: 'error',
-            });
-            return;
-        }
+    //     if (user.role !== 'TUTOR') {
+    //         setNotification({
+    //             message: 'Chỉ gia sư mới có thể thương lượng giá',
+    //             show: true,
+    //             type: 'error',
+    //         });
+    //         return;
+    //     }
 
-        // Chuyển hướng đến trang thương lượng giá với ID bài viết
-        navigate(`/negotiate-price/${id}`);
-    };
+    //     // Chuyển hướng đến trang thương lượng giá với ID bài viết
+    //     navigate(`/negotiate-price/${id}`);
+    // };
 
     if (loading) {
         return (
@@ -254,12 +198,6 @@ const PostDetail: React.FC = () => {
                         <div className="flex justify-between items-start mb-4">
                             <h1 className="text-2xl font-bold text-gray-800">{post.title}</h1>
                             <div className="flex space-x-2">
-                                <HeartIcon
-                                    className={`h-6 w-6 cursor-pointer transition-colors duration-200 ${
-                                        isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'
-                                    }`}
-                                    onClick={handleFavorite}
-                                />
                                 <ChatIcon
                                     className="h-6 w-6 cursor-pointer text-gray-400 hover:text-blue-500"
                                     onClick={handleChat}
@@ -280,7 +218,7 @@ const PostDetail: React.FC = () => {
                             />
                             <div>
                                 <Link
-                                    to={`/tutor/${post.user.id}`}
+                                    to={`/student-profile/${post.user.id}`}
                                     className="font-medium text-blue-600 hover:underline"
                                 >
                                     {post.user.name}
@@ -362,21 +300,21 @@ const PostDetail: React.FC = () => {
                         {/* Action Buttons */}
                         {user?.role === 'TUTOR' && user.id !== post.user.id && (
                             <div className="mt-6 flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
-                                <Button
+                                {/* <Button
                                     variant="primary"
                                     onClick={handleNegotiatePrice}
                                     className="px-4 py-3 text-lg font-semibold"
                                     title="Thương lượng giá"
                                 >
                                     Thương lượng giá
-                                </Button>
+                                </Button> */}
                                 <Button
                                     variant="primary"
                                     onClick={handleSendRequest}
                                     className="px-4 py-3 text-lg font-semibold"
-                                    title="Gửi yêu cầu dạy"
+                                    title="Gửi yêu cầu nhận lớp"
                                 >
-                                    Gửi yêu cầu dạy
+                                    Gửi yêu cầu nhận lớp
                                 </Button>
                             </div>
                         )}
