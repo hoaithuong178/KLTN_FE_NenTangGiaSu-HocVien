@@ -6,7 +6,7 @@ interface NotiTrueProps {
 
 export const NotiTrue: React.FC<NotiTrueProps> = ({ message }) => {
     return (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in-out">
+        <div className="fixed top-4 right-4 z-99 animate-fade-in-out">
             <div className="bg-white border-l-4 border-blue-300 shadow-lg rounded-lg p-4 min-w-[300px] max-w-[400px]">
                 <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -42,7 +42,7 @@ interface NotiFalseProps {
 
 export const NotiFalse: React.FC<NotiFalseProps> = ({ message }) => {
     return (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in-out">
+        <div className="fixed top-4 right-4 z-99 animate-fade-in-out">
             <div className="bg-white border-l-4 border-[#F97564] shadow-lg rounded-lg p-4 min-w-[300px] max-w-[400px]">
                 <div className="flex items-center">
                     <div className="flex-shrink-0">

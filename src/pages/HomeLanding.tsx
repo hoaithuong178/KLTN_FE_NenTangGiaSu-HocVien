@@ -39,35 +39,43 @@ const TutorSection = () => {
                 const mapTutorData = (
                     data: TutorProfileComponentTutor,
                     isCurrentUser: boolean,
-                ): TutorProfileComponentTutor => ({
-                    ...data,
-                    currentUserId: isCurrentUser ? data.id : data.currentUserId,
-                    status: data.status || 'ACTIVE',
-                    violate: data.violate || 0,
-                    userProfile: data.userProfile || {
-                        avatar: defaultAvatar,
-                        gender: 'Unknown',
-                        dob: '',
-                        address: '',
-                    },
-                    tutorProfile: data.tutorProfile
-                        ? {
-                              ...data.tutorProfile,
-                              hourlyPrice: data.tutorProfile.hourlyPrice || 0,
-                              experiences: data.tutorProfile.experiences || 0,
-                              taughtStudentsCount: data.tutorProfile.taughtStudentsCount || 0,
-                              rating: data.tutorProfile.rating || 0,
-                              description: data.tutorProfile.description || '',
-                              tutorLocations: data.tutorProfile.tutorLocations || [],
-                              specializations: data.tutorProfile.specializations || [],
-                              learningTypes: data.tutorProfile.learningTypes || [],
-                              reviews: data.tutorProfile.reviews || [],
-                              isFavorite: data.tutorProfile.isFavorite ?? false,
-                              freeTime: data.tutorProfile.freeTime || [],
-                              qualification: data.tutorProfile.qualification || '',
-                          }
-                        : undefined,
-                });
+                ): TutorProfileComponentTutor => {
+                    const baseTutorProfile = data.tutorProfile || data.tutorProfiles?.[0];
+                    const baseUserProfile = data.userProfile || data.userProfiles?.[0];
+
+                    return {
+                        ...data,
+                        currentUserId: isCurrentUser ? data.id : data.currentUserId,
+                        status: data.status || 'ACTIVE',
+                        violate: data.violate || 0,
+                        userProfile: baseUserProfile
+                            ? {
+                                  ...baseUserProfile,
+                                  avatar: baseUserProfile.avatar || defaultAvatar,
+                                  gender: baseUserProfile.gender || 'Unknown',
+                                  dob: baseUserProfile.dob || '',
+                                  address: baseUserProfile.address || '',
+                              }
+                            : undefined,
+                        tutorProfile: baseTutorProfile
+                            ? {
+                                  ...baseTutorProfile,
+                                  hourlyPrice: baseTutorProfile.hourlyPrice || 0,
+                                  experiences: baseTutorProfile.experiences || 0,
+                                  taughtStudentsCount: baseTutorProfile.taughtStudentsCount || 0,
+                                  rating: baseTutorProfile.rating || 0,
+                                  description: baseTutorProfile.description || '',
+                                  tutorLocations: baseTutorProfile.tutorLocations || [],
+                                  specializations: baseTutorProfile.specializations || [],
+                                  learningTypes: baseTutorProfile.learningTypes || [],
+                                  reviews: baseTutorProfile.reviews || [],
+                                  isFavorite: baseTutorProfile.isFavorite ?? false,
+                                  freeTime: baseTutorProfile.freeTime || [],
+                                  qualification: baseTutorProfile.qualification || '',
+                              }
+                            : undefined,
+                    };
+                };
 
                 const processedTutors: TutorProfileComponentTutor[] = tutorsData.map((tutor) =>
                     mapTutorData(tutor, false),
@@ -84,6 +92,8 @@ const TutorSection = () => {
 
         fetchTutors();
     }, []);
+
+    console.log('tutors', tutors);
 
     const handleTutorClick = (tutor: TutorProfileComponentTutor) => {
         if (!user) {
@@ -155,11 +165,11 @@ const TutorSection = () => {
                             >
                                 <div className="relative">
                                     <img
-                                        src={tutor.userProfile?.avatar || 'https://via.placeholder.com/150'}
+                                        src={tutor.userProfile?.avatar || defaultAvatar}
                                         alt={tutor.name}
                                         className="w-full h-48 object-cover"
                                         onError={(e) => {
-                                            e.currentTarget.src = 'https://via.placeholder.com/150';
+                                            e.currentTarget.src = defaultAvatar;
                                         }}
                                     />
                                     <div className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-md">
