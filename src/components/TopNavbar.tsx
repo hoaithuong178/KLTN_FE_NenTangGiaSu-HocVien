@@ -107,7 +107,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [avatar, setAvatar] = useState(user?.userProfile?.avatar || user?.avatar || Avatar);
+    const [avatar, setAvatar] = useState(Avatar);
     const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
     const [showNotificationDetail, setShowNotificationDetail] = useState(false);
     const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
@@ -155,7 +155,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
     // Thêm hàm đánh dấu đã đọc
     const markAsRead = async (id: string) => {
-        console.log('Marking as read, ID:', id); // Thêm log để kiểm tra
+        // console.log('Marking as read, ID:', id); // Thêm log để kiểm tra
         try {
             await axiosClient.patch(`/notifications/${id}/read`);
             setNotifications(notifications.map((noti) => (noti.id === id ? { ...noti, isRead: true } : noti)));
@@ -198,13 +198,43 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
     };
 
     useEffect(() => {
-        // Kiểm tra user trong localStorage khi component mount
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            setAvatar(userData.avatar || Avatar);
+        const fetchUserData = async () => {
+            try {
+                await axiosClient.get('/users/me');
+                // console.log('User data from /users/me:', response.data);
+                // console.log('Avatar from /users/me:', response.data.avatar);
+                // console.log('UserProfile from /users/me:', response.data.userProfile);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        if (user) {
+            fetchUserData();
         }
-    }, []);
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            // Kiểm tra và lấy avatar từ các nguồn khác nhau
+            const userAvatar = user.avatar;
+            const profileAvatar = user.userProfile?.avatar;
+
+            // console.log('User data from authStore:', user);
+            // console.log('User avatar from authStore:', userAvatar);
+            // console.log('Profile avatar from authStore:', profileAvatar);
+
+            if (profileAvatar) {
+                setAvatar(profileAvatar);
+            } else if (userAvatar) {
+                setAvatar(userAvatar);
+            } else {
+                setAvatar(Avatar);
+            }
+
+            // console.log('Final avatar:', avatar);
+        }
+    }, [user]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
