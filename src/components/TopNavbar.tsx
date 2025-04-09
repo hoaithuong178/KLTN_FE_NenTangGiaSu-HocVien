@@ -11,6 +11,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Portal } from '@headlessui/react';
 
 interface TopNavbarProps {
     backgroundColor?: string;
@@ -886,30 +887,32 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
                 {/* Popup xác nhận đăng xuất */}
                 {showLogoutConfirm && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-                        <div className="bg-white rounded-lg p-6 w-96">
-                            <TitleText level={3} size="medium" weight="bold" className="mb-4">
-                                Xác nhận đăng xuất
-                            </TitleText>
-                            <Text size="medium" className="mb-6">
-                                Bạn có chắc chắn muốn đăng xuất khỏi trang web?
-                            </Text>
-                            <div className="flex justify-end space-x-4">
-                                <button
-                                    onClick={() => setShowLogoutConfirm(false)}
-                                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                                >
-                                    <Text weight="normal">Hủy</Text>
-                                </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                                >
-                                    <Text weight="normal">Đăng xuất</Text>
-                                </button>
+                    <Portal>
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+                            <div className="bg-white rounded-lg p-6 w-96">
+                                <TitleText level={3} size="medium" weight="bold" className="mb-4">
+                                    Xác nhận đăng xuất
+                                </TitleText>
+                                <Text size="medium" className="mb-6">
+                                    Bạn có chắc chắn muốn đăng xuất khỏi trang web?
+                                </Text>
+                                <div className="flex justify-end space-x-4">
+                                    <button
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                                    >
+                                        <Text weight="normal">Hủy</Text>
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                    >
+                                        <Text weight="normal">Đăng xuất</Text>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </Portal>
                 )}
             </div>
 

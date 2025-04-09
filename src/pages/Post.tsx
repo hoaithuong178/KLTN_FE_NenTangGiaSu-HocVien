@@ -168,7 +168,7 @@ const Post: React.FC = () => {
 
         if (selectedProvince && selectedDistrict && wardName) {
             const fullAddress = `${wardName}, ${selectedDistrict}, ${selectedProvince}`;
-            console.log('Đã cập nhật địa chỉ:', fullAddress);
+            // console.log('Đã cập nhật địa chỉ:', fullAddress);
             setSelectedAddress(fullAddress);
 
             // Cũng cập nhật trực tiếp DOM nếu cần
@@ -413,8 +413,10 @@ const Post: React.FC = () => {
                         }
                     }
 
-                    console.log('Gọi API tìm kiếm với đường dẫn:', apiUrl);
+                    // console.log('Gọi API tìm kiếm với đường dẫn:', apiUrl);
                     const response = await axiosClient.get(apiUrl);
+                    // Kiểm tra dữ liệu trả về từ API
+                    console.log('Dữ liệu trả về từ API:', response.data);
                     const formattedPosts = response.data.map((post: APIPost) => ({
                         ...post,
                         mode: String(post.mode).toLowerCase() === 'true',
@@ -515,8 +517,8 @@ const Post: React.FC = () => {
             }
 
             // Debug: Kiểm tra thông tin người dùng
-            console.log('Người dùng hiện tại:', user);
-            console.log('ID người dùng:', user.id);
+            // console.log('Người dùng hiện tại:', user);
+            // console.log('ID người dùng:', user.id);
 
             // Kiểm tra các thông tin bắt buộc của form
             if (!postTitle || !content || !selectedSubjectId || !grade || !studyMode || !sessionsPerWeek || !duration) {
@@ -598,7 +600,7 @@ const Post: React.FC = () => {
                 postTime: new Date().toISOString(),
             };
 
-            console.log('Dữ liệu gửi lên server:', formattedData);
+            // console.log('Dữ liệu gửi lên server:', formattedData);
 
             try {
                 // Thử tạo userProfile nếu chưa có
@@ -609,7 +611,7 @@ const Post: React.FC = () => {
                             dob: new Date().toISOString().split('T')[0],
                             address: selectedAddress,
                         });
-                        console.log('Đã tạo hồ sơ người dùng tự động');
+                        // console.log('Đã tạo hồ sơ người dùng tự động');
 
                         // Refresh user data
                         await useAuthStore.getState().fetchUserData();
@@ -618,8 +620,8 @@ const Post: React.FC = () => {
                     }
                 }
 
-                const response = await axiosClient.post('/posts', formattedData);
-                console.log('Kết quả từ server:', response.data);
+                await axiosClient.post('/posts', formattedData);
+                // console.log('Kết quả từ server:', response.data);
 
                 setShowPopup(false);
                 setPostTitle('');
@@ -903,11 +905,10 @@ const Post: React.FC = () => {
                 feePerSession: data.feePerSession,
             };
 
-            /*
             console.log('Request data:', JSON.stringify(requestData, null, 2));
-            */
 
             await axiosClient.post('/requests', requestData);
+
             setNotification({
                 message: 'Đã gửi yêu cầu nhận lớp thành công',
                 show: true,
@@ -963,20 +964,50 @@ const Post: React.FC = () => {
                 console.log('Kết quả API:', response.data);
 
                 if (response.data) {
-                    const formattedPosts = response.data.map((post: APIPost) => ({
-                        ...post,
-                        mode: post.mode === 'ONLINE',
-                    }));
+                    const formattedPosts = response.data.map((post: APIPost) => {
+                        // Xử lý trường mode
+                        let mode = false;
+                        if (typeof post.mode === 'boolean') {
+                            mode = post.mode;
+                        } else if (typeof post.mode === 'string') {
+                            mode = post.mode === 'ONLINE' || post.mode === 'true' || post.mode === 'TRUE';
+                        }
 
-                    // Kiểm tra cấu trúc dữ liệu của bài đăng đầu tiên
-                    if (formattedPosts.length > 0) {
-                        console.log('Chi tiết bài đăng đầu tiên:', formattedPosts[0]);
-                        console.log('User của bài đăng:', formattedPosts[0].user);
-                        console.log('Avatar trực tiếp:', formattedPosts[0].user?.avatar);
-                        console.log('UserProfile của user:', formattedPosts[0].user?.userProfile);
-                        console.log('Avatar từ userProfile:', formattedPosts[0].user?.userProfile?.avatar);
-                    }
+                        // Xử lý các trường dữ liệu khác
+                        return {
+                            id: post.id,
+                            user: {
+                                id: post.user.id,
+                                name: post.user.name,
+                                avatar: post.user.avatar || '',
+                            },
+                            content: post.content,
+                            subject: {
+                                id: post.subject.id,
+                                name: post.subject.name,
+                            },
+                            grade: post.grade,
+                            mode: mode,
+                            locations: Array.isArray(post.locations) ? post.locations : [post.locations],
+                            sessionPerWeek: String(post.sessionPerWeek),
+                            duration: Array.isArray(post.duration) ? post.duration : [String(post.duration)],
+                            feePerSession: String(post.feePerSession),
+                            requirements: Array.isArray(post.requirements)
+                                ? post.requirements
+                                : post.requirements
+                                ? [post.requirements]
+                                : [],
+                            schedule: Array.isArray(post.schedule)
+                                ? post.schedule
+                                : post.schedule
+                                ? [post.schedule]
+                                : [],
+                            title: post.title,
+                            createdAt: post.createdAt || new Date().toISOString(),
+                        };
+                    });
 
+                    console.log('Bài đăng đã xử lý:', formattedPosts);
                     setPosts(formattedPosts);
                 }
             } catch (error) {
@@ -1024,11 +1055,11 @@ const Post: React.FC = () => {
         if (!user) return Avatar;
 
         // Ghi log thông tin chi tiết cho việc debug
-        console.log('Đang tìm avatar cho user:', user.id);
+        // console.log('Đang tìm avatar cho user:', user.id);
 
         // Kiểm tra trực tiếp từ thuộc tính avatar của user
         if (user.avatar && typeof user.avatar === 'string') {
-            console.log('Sử dụng avatar trực tiếp từ user:', user.avatar);
+            // console.log('Sử dụng avatar trực tiếp từ user:', user.avatar);
             return user.avatar;
         }
 
@@ -1480,7 +1511,8 @@ const Post: React.FC = () => {
                                         </div>
                                         <div className="col-span-1">
                                             <p className="text-sm text-gray-600 mt-2">
-                                                Thời lượng: {post.duration} phút
+                                                Thời lượng:{' '}
+                                                {Array.isArray(post.duration) ? post.duration[0] : post.duration} phút
                                             </p>
                                             <p className="text-sm text-gray-600">
                                                 Thời gian rảnh:

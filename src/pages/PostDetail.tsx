@@ -312,9 +312,9 @@ const PostDetail: React.FC = () => {
                                     variant="primary"
                                     onClick={handleSendRequest}
                                     className="px-4 py-3 text-lg font-semibold"
-                                    title="Gửi yêu cầu dạy"
+                                    title="Gửi yêu cầu nhận lớp"
                                 >
-                                    Gửi yêu cầu dạy
+                                    Gửi yêu cầu nhận lớp
                                 </Button>
                             </div>
                         )}

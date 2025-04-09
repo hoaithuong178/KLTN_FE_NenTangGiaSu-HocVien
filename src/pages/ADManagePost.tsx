@@ -110,18 +110,20 @@ const ADManagePost: React.FC = () => {
         fetchPostsByStatus('pending');
     }, []);
 
+    const filterById = (id: string) => {
+        return posts.filter((post) => post.id !== id);
+    };
+
     const handleApprove = async (post: Post) => {
         try {
-            const response = await axiosClient.put(`/posts/${post.id}/approve`);
+            await axiosClient.put(`/posts/${post.id}/approve`);
 
-            if (response.status === 200) {
-                setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: 'APPROVED' } : p)));
-                setNotification({
-                    message: 'Đã duyệt bài đăng',
-                    show: true,
-                    type: 'success',
-                });
-            }
+            setPosts(filterById(post.id));
+            setNotification({
+                message: 'Đã duyệt bài đăng',
+                show: true,
+                type: 'success',
+            });
         } catch (error) {
             console.error('Error approving post:', error);
             if (error instanceof AxiosError) {
@@ -138,6 +140,7 @@ const ADManagePost: React.FC = () => {
     const handleReject = (post: Post) => {
         setSelectedPost(post);
         setShowRejectModal(true);
+        setPosts(filterById(post.id));
     };
 
     const confirmReject = async () => {
