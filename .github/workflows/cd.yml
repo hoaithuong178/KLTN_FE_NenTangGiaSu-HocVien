@@ -1,0 +1,57 @@
+name: Build and Push Docker Images
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    frontend:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Log in to Docker Hub
+              run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+            - name: Build Docker image for chat service
+              run: docker build -t ${{ secrets.DOCKER_USERNAME }}/iteachmefrontend:latest .
+
+            - name: Push Docker image to Docker Hub
+              run: docker push ${{ secrets.DOCKER_USERNAME }}/iteachmefrontend:latest
+
+            - name: Install SSH Client and sshpass
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y openssh-client sshpass
+
+            - name: Set up SSH
+              run: |
+                  mkdir -p ~/.ssh
+                  chmod 700 ~/.ssh
+                  echo -e "Host ${{ secrets.VPS_IP }}\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+            - name: Execute Docker Commands
+              run: |
+                  sshpass -p ${{ secrets.VPS_PASSWORD }} ssh -tt -o StrictHostKeyChecking=no root@${{ secrets.VPS_IP }} << 'EOF'
+                    # Stop container cũ
+                    docker stop teachme-frontend
+
+                    # Xóa container cũ
+                    docker rm teachme-frontend
+
+                    # Xóa Docker image
+                    docker rmi thaoanhhaa1/iteachmefrontend
+
+                    # Pull Docker image mới
+                    docker pull thaoanhhaa1/iteachmefrontend
+
+                    # Run container mới
+                    docker run --name teachme-frontend -p 5173:5173 -e VITE_APP_API_BASE_URL=https://iteachme-apigateway.onrender.com/api/v1 -e VITE_APP_GOOGLE_CLIENT_ID=716049140573-kphdao4oaepcvamrut7i5333k4fqf329.apps.googleusercontent.com -e VITE_APP_FACEBOOK_APP_ID=3963467407266355 -e VITE_APP_SOCKET_ENDPOINT=https://iteachme-userservice.onrender.com -e VIRTUAL_HOST="teachme.io.vn" -e VIRTUAL_PORT=5173 -e LETSENCRYPT_HOST="teachme.io.vn" -e LETSENCRYPT_EMAIL="thaoanhhaa1@gmail.com" -d thaoanhhaa1/iteachmefrontend
+
+                    exit
+                  EOF
+              env:
+                  VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
